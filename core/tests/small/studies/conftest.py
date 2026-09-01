@@ -45,12 +45,12 @@ def dae_config_fixture(local_gpf_instance: GPFInstance) -> Box:
 
 @pytest.fixture(scope="session")
 def variants_db_fixture(local_gpf_instance: GPFInstance) -> VariantsDb:
-    return local_gpf_instance._variants_db  # noqa: SLF001
+    return local_gpf_instance._variants_db  # ruff: ignore[private-member-access]
 
 
 @pytest.fixture(scope="session")
 def pheno_db(local_gpf_instance: GPFInstance) -> PhenoRegistry:
-    return local_gpf_instance._pheno_registry  # noqa: SLF001
+    return local_gpf_instance._pheno_registry  # ruff: ignore[private-member-access]
 
 
 @pytest.fixture(scope="session")
@@ -69,7 +69,7 @@ def genotype_storage_registry(
 def genotype_data_study_configs(
     variants_db_fixture: VariantsDb,
 ) -> dict[str, Box]:
-    return variants_db_fixture._load_study_configs()  # noqa: SLF001
+    return variants_db_fixture._load_study_configs()  # ruff: ignore[private-member-access]
 
 
 @pytest.fixture(scope="session")
@@ -83,7 +83,7 @@ def quads_f1_config(variants_db_fixture: VariantsDb) -> GenotypeData:
 def genotype_data_group_configs(
     variants_db_fixture: VariantsDb,
 ) -> dict[str, Box]:
-    return variants_db_fixture._load_group_configs()  # noqa: SLF001
+    return variants_db_fixture._load_group_configs()  # ruff: ignore[private-member-access]
 
 
 @pytest.fixture(scope="session")

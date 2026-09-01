@@ -60,7 +60,7 @@ chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
 def test_build_ur_synonymous_background(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
-    t4c8_study_1: GenotypeData,  # noqa: ARG001
+    t4c8_study_1: GenotypeData,  # ruff: ignore[unused-function-argument]
 ) -> None:
 
     output = tmp_path / "ur_synonymous_background.tsv"

@@ -93,7 +93,7 @@ class GeneWeightsEnrichmentBackground(BaseEnrichmentResourceBackground):
         events_counts: EventCountersResult,
         overlapped_counts: EventCountersResult,
         gene_set: Iterable[str],
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ) -> EnrichmentResult:
         """Calculate enrichment statistics."""
         gene_syms = {gs.upper() for gs in gene_set}
@@ -235,7 +235,7 @@ class GeneScoreEnrichmentBackground(BaseEnrichmentBackground):
         events_counts: EventCountersResult,
         overlapped_counts: EventCountersResult,
         gene_set: Iterable[str],
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ) -> EnrichmentResult:
         """Calculate enrichment statistics."""
         gene_syms = {gs.upper() for gs in gene_set}

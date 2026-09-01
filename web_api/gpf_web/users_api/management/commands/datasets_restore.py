@@ -26,7 +26,7 @@ class Command(BaseCommand):
             add_group_perm_to_dataset(group_name, dataset_id)
 
     def handle(
-        self, *args: Any, **options: Any,  # noqa: ARG002
+        self, *args: Any, **options: Any,  # ruff: ignore[unused-method-argument]
     ) -> None:
         csvfilename = options["file"]
         assert os.path.exists(csvfilename)

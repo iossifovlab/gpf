@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pathlib  # noqa: I001
+import pathlib  # ruff: ignore[unsorted-imports]
 from collections.abc import Callable
 
 import pytest

@@ -224,7 +224,7 @@ class RawFamilyVariants(abc.ABC):
         return False
 
     @classmethod
-    def filter_allele(  # noqa: C901
+    def filter_allele(  # ruff: ignore[complex-structure]
         cls,
         allele: FamilyAllele, *,
         genes: list[str] | None = None,
@@ -240,7 +240,7 @@ class RawFamilyVariants(abc.ABC):
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        **kwargs: Any,  # noqa: ARG003
+        **kwargs: Any,  # ruff: ignore[unused-class-method-argument]
     ) -> bool:
         # pylint: disable=too-many-arguments,too-many-return-statements
         # pylint: disable=too-many-branches,unused-argument
@@ -320,7 +320,7 @@ class RawFamilyVariants(abc.ABC):
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
-        **kwargs: Any,  # noqa: ARG003
+        **kwargs: Any,  # ruff: ignore[unused-class-method-argument]
     ) -> bool:
         # pylint: disable=too-many-return-statements,too-many-branches
         # pylint: disable=unused-argument
@@ -563,7 +563,7 @@ class RawFamilyVariants(abc.ABC):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         tags_query: TagsQuery | None = None,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ) -> RawVariantsQueryRunner:
         # pylint: disable=too-many-arguments,unused-argument
         """Return a query runner for the family variants."""

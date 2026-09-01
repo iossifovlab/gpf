@@ -32,6 +32,6 @@ def build_remote_families(
 
     # Setting the families directly since we can assume that
     # the remote has carried out all necessary transformations
-    result._families = families  # noqa: SLF001
+    result._families = families  # ruff: ignore[private-member-access]
 
     return result

@@ -126,7 +126,7 @@ def test_merge_multi_parquets_randomized(
 
     def randomized_glob() -> list[str]:
         files = fs_utils.glob(str(multi_parquet_dir / "**/*.parquet"))
-        return sorted(files, key=lambda _: random.random())  # noqa: S311
+        return sorted(files, key=lambda _: random.random())  # ruff: ignore[suspicious-non-cryptographic-random-usage]
 
     mocker.patch(
         "gain.utils.fs_utils.glob",

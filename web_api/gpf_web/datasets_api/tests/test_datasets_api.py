@@ -10,7 +10,7 @@ from datasets_api.permissions import add_group_perm_to_dataset
 
 def test_datasets_api_get_all(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/datasets")
 
@@ -22,7 +22,7 @@ def test_datasets_api_get_all(
 
 def test_datasets_api_get_one(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/datasets/t4c8_study_1")
     assert response
@@ -36,7 +36,7 @@ def test_datasets_api_get_one(
 
 def test_datasets_default_description_editable(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/datasets/t4c8_study_1")
     assert response
@@ -49,7 +49,7 @@ def test_datasets_default_description_editable(
 
 def test_datasets_api_get_404(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/datasets/alabala")
 
@@ -62,7 +62,7 @@ def test_datasets_api_get_404(
 
 def test_datasets_api_get_forbidden(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = user_client.get("/api/v3/datasets/t4c8_study_1")
 
@@ -76,7 +76,7 @@ def test_datasets_api_get_forbidden(
 
 def test_user_client_get_nonexistant_dataset_details(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = user_client.get("/api/v3/datasets/details/alabala")
 
@@ -86,7 +86,7 @@ def test_user_client_get_nonexistant_dataset_details(
 
 def test_datasets_api_parents(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
 
     response = admin_client.get("/api/v3/datasets/t4c8_study_1")
@@ -100,7 +100,7 @@ def test_datasets_api_parents(
 
 def test_datasets_pedigree_no_such_dataset(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/datasets/pedigree/alabala/col")
     assert response
@@ -113,7 +113,7 @@ def test_datasets_pedigree_no_such_dataset(
 
 def test_datasets_pedigree_no_such_column(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get(
         "/api/v3/datasets/pedigree/t4c8_study_1/alabala")
@@ -127,7 +127,7 @@ def test_datasets_pedigree_no_such_column(
 
 def test_datasets_pedigree_proper_request(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get(
         "/api/v3/datasets/pedigree/t4c8_study_1/phenotype")
@@ -145,7 +145,7 @@ def test_datasets_pedigree_proper_request(
 
 def test_datasets_federation(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/datasets/federation")
     assert response
@@ -155,7 +155,7 @@ def test_datasets_federation(
 
 def test_datasets_description_not_admin(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = user_client.post("/api/v3/datasets/description/t4c8_study_1")
     assert response
@@ -169,7 +169,7 @@ def test_datasets_description_not_admin(
 
 def test_datasets_description_get(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get(
         "/api/v3/datasets/description/t4c8_study_1",
@@ -183,7 +183,7 @@ def test_datasets_description_get(
 
 def test_datasets_description_post(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/datasets/description/t4c8_study_1"
     args = {
@@ -207,7 +207,7 @@ def test_datasets_description_post(
 
 def test_datasets_hierarchy(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/datasets/hierarchy/")
     assert response
@@ -250,7 +250,7 @@ def test_datasets_hierarchy(
 
 def test_datasets_hierarchy_hidden(
     user_client: Client,
-    custom_wgpf: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    custom_wgpf: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = user_client.get("/api/v3/datasets/hierarchy/")
     assert response.status_code == 200
@@ -264,7 +264,7 @@ def test_datasets_hierarchy_hidden(
 
 def test_datasets_permissions(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/datasets/permissions")
 
@@ -285,7 +285,7 @@ def test_datasets_permissions(
 
 def test_datasets_permissions_pagination(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get(
         "/api/v3/datasets/permissions?page_size=3&page=1")
@@ -305,7 +305,7 @@ def test_datasets_permissions_pagination(
 
 def test_datasets_permissions_single(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/datasets/permissions/t4c8_study_1")
     assert response.status_code == status.HTTP_200_OK
@@ -322,7 +322,7 @@ def test_datasets_permissions_single(
 
 def test_datasets_permissions_single_missing(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/datasets/permissions/alabala")
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -330,7 +330,7 @@ def test_datasets_permissions_single_missing(
 
 def test_datasets_permissions_search(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/datasets/permissions?search=set")
     assert response.status_code == status.HTTP_200_OK
@@ -341,7 +341,7 @@ def test_datasets_permissions_search(
 
 def test_datasets_permissions_search_nonexistent(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/datasets/permissions?search=alabala")
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -349,7 +349,7 @@ def test_datasets_permissions_search_nonexistent(
 
 def test_datasets_api_visible_datasets(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/datasets/visible")
     assert response

@@ -17,7 +17,7 @@ from query_base.query_base import QueryBaseView
 
 
 def test_constructing_query_base_view_does_not_reload_datasets(
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockFixture,
 ) -> None:
     """Building the view must not rebuild the dataset hierarchy."""

@@ -27,7 +27,7 @@ class Command(BaseCommand):
         BaseCommand.__init__(self, **kwargs)
 
     def handle(
-        self, *args: Any, **options: Any,  # noqa: ARG002
+        self, *args: Any, **options: Any,  # ruff: ignore[unused-method-argument]
     ) -> None:
         if self.gpf_instance is None:
             try:

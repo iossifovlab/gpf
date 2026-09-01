@@ -11,7 +11,7 @@ import os
 
 from gpf_instance.feature_flags import DEFAULT_FEATURE_FLAGS
 
-from .default_settings import *  # noqa: F403
+from .default_settings import *  # ruff: ignore[undefined-local-with-import-star]
 
 DEBUG = False
 

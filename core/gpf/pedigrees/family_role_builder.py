@@ -72,8 +72,8 @@ class FamilyRoleBuilder:  # pylint: disable=too-few-public-methods
                 person, person.role, role)
 
         # pylint: disable=protected-access
-        person._role = role  # noqa: SLF001
-        person._attributes["role"] = role  # noqa: SLF001
+        person._role = role  # ruff: ignore[private-member-access]
+        person._attributes["role"] = role  # ruff: ignore[private-member-access]
 
     def _get_family_proband(self) -> Person | None:
         probands = self.family.get_members_with_roles([Role.prb])

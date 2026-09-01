@@ -73,8 +73,16 @@ def runProject(Map args) {
                 # ensures their non-zero exit codes never propagate. Their
                 # findings end up in /reports as text and are picked up by
                 # `recordIssues` in the post hook → UNSTABLE quality gate.
-                ruff check --exit-zero --output-format=concise . \\
-                    > /reports/ruff.txt
+                # JSON, not `concise`: ruff 0.16 deprecated rule CODES in
+                # favour of names and dropped them from every TEXT format
+                # (`concise` now emits `file:line:col: line-too-long: ...`).
+                # The flake8() parser in publishReports wants an
+                # `E501`-shaped token and matches nothing without one --
+                # silently, so the Issues tab would just look clean. JSON
+                # is the one format that still carries `code`;
+                # publishReports renders the flake8 line from it.
+                ruff check --exit-zero --output-format=json . \\
+                    > /reports/ruff.json
                 mypy ${mypyExtra} ${mypyTarget} \\
                     > /reports/mypy.txt 2>&1 || true
                 pylint_rcfile=/workspace/${name}/pylintrc
@@ -114,6 +122,15 @@ def publishReports(String name) {
     // would register them in stage-completion order and the column would show
     // whichever finished first, not the combined number.
 
+    // ruff writes JSON (the only 0.16 format that still carries rule
+    // codes); render it as the flake8 syntax the parser below expects.
+    // Runs on the agent rather than in the CI image so the conversion
+    // lives in one place instead of in every project Dockerfile.
+    sh """
+        python3 scripts/convert_ruff_output.py \\
+            reports/${name}/ruff.json reports/${name}/ruff.txt
+    """
+
     // Static-analysis findings (ruff / mypy / pylint) — separate per-tool
     // record so each gets its own "Issues" tab and trend chart. Quality
     // gate marks the build UNSTABLE if any new finding appears; FAILURE
@@ -123,9 +140,11 @@ def publishReports(String name) {
         aggregatingResults: false,
         tools: [
             // Warnings NG doesn't ship a `ruff` parser on this Jenkins
-            // instance, but ruff's `--output-format=concise` emits flake8
-            // syntax (`file:line:col: code message`) which `flake8()`
-            // parses correctly.
+            // instance, so ruff findings go through `flake8()`. It needs
+            // flake8 syntax (`file:line:col: code message`), which ruff
+            // itself no longer emits in any text format as of 0.16 --
+            // `scripts/convert_ruff_output.py` above rebuilds it from the
+            // JSON report.
             flake8(
                 pattern: "reports/${name}/ruff.txt",
                 id: "${name}-ruff",

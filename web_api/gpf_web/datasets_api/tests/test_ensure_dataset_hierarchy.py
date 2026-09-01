@@ -17,7 +17,7 @@ from datasets_api.models import DatasetHierarchy
 
 def test_ensure_builds_hierarchy_when_empty(
     custom_wgpf_module: WGPFInstance,
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """Against an empty hierarchy it builds and returns True."""
     instance_id = custom_wgpf_module.instance_id
@@ -35,7 +35,7 @@ def test_ensure_builds_hierarchy_when_empty(
 
 def test_ensure_skips_when_already_populated(
     custom_wgpf_module: WGPFInstance,
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockFixture,
 ) -> None:
     """Against a populated hierarchy it does NOT rebuild and returns False."""

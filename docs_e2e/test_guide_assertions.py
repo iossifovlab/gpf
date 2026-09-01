@@ -1140,7 +1140,8 @@ class TestAssertEnrichmentTestResult:
             )
         message = str(exc_info.value)
         assert f"{_EN_RST}:26" in message
-        assert "3" in message and "5" in message
+        assert "3" in message
+        assert "5" in message
 
 
 _GP_RST = "getting_started_with_gene_profiles.rst"

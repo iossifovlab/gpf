@@ -26,7 +26,7 @@ fam1     fam1.p2        0              0              M   unaffected  dad       
 fam1     fam1.p3        fam1.p1        fam1.p2        F   affected    prb          fam1.p3        False     False
 fam1     fam1.p2.mother 0              0              F   unspecified unknown      fam1.p2.mother True      True
 fam1     fam1.p1.father 0              0              M   unspecified unknown      fam1.p1.father True      True
-        """)  # noqa: E501
+        """)  # ruff: ignore[line-too-long]
     setup_denovo(
         root_path / "study" / "variants.tsv",
         """

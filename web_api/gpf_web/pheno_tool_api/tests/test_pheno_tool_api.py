@@ -64,7 +64,7 @@ def test_pheno_tool_api_permissions(
     method: str,
     body: dict,
     status: int,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
@@ -79,7 +79,7 @@ def test_pheno_tool_api_permissions(
 
 def test_pheno_tool_view_valid_request(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = copy.deepcopy(QUERY)
 
@@ -94,7 +94,7 @@ def test_pheno_tool_view_valid_request(
 
 def test_pheno_tool_view_missense(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["missense"]
@@ -129,7 +129,7 @@ def test_pheno_tool_view_missense(
 
 def test_pheno_tool_view_cnv_on_non_cnv_study(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["missense", "CNV+"]
@@ -145,7 +145,7 @@ def test_pheno_tool_view_cnv_on_non_cnv_study(
 
 def test_pheno_tool_view_normalize(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["missense"]
@@ -199,7 +199,7 @@ def test_pheno_tool_view_normalize(
 
 def test_pheno_tool_view_family_ids_filter(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["LGDs"]
@@ -221,7 +221,7 @@ def test_pheno_tool_view_family_ids_filter(
 
 def test_pheno_tool_view_na_values(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["frame-shift"]
@@ -248,7 +248,7 @@ def test_pheno_tool_view_na_values(
 
 def test_pheno_tool_view_pheno_filter(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["frame-shift"]
@@ -295,7 +295,7 @@ def test_pheno_tool_view_pheno_filter(
 
 def test_pheno_tool_view_missing_dataset(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["datasetId"] = "???"
@@ -311,7 +311,7 @@ def test_pheno_tool_view_missing_dataset(
 
 def test_pheno_tool_view_missing_measure(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["measureId"] = "???"
@@ -327,7 +327,7 @@ def test_pheno_tool_view_missing_measure(
 
 def test_pheno_tool_download_valid_request(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["missense"]
@@ -357,7 +357,7 @@ def test_pheno_tool_download_valid_request(
 def test_pheno_tool_view_query_no_limit(
     mocker: pytest_mock.MockerFixture,
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     wdae_spy = mocker.spy(WDAEStudy, "query_variants_raw")
     dae_spy = mocker.spy(GenotypeStorageRegistry, "query_variants")

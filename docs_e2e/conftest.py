@@ -18,6 +18,7 @@ local-iteration command in docs_e2e/README.md):
 * ``DOCS_E2E_GRR_CACHE`` — directory persisted as the GRR cache.
 """
 
+import contextlib
 import json
 import os
 import shutil
@@ -50,13 +51,19 @@ _WGPF_READY_TIMEOUT = 600
 _WGPF_SHUTDOWN_TIMEOUT = 30
 
 
-def _run(cmd, *, cwd=None, env=None, check=True, timeout=600):
+def _run(cmd, *, cwd=None, env=None, timeout=600):
     """subprocess.run wrapper that always captures and always
-    returns the CompletedProcess (even on non-zero exit). When
-    ``check=True``, raises only on the timeout or on genuine
-    OSError — leaves return-code handling to the caller, who
-    typically wants to feed the result into ``assert_command_succeeds``
-    so the rich failure message comes through."""
+    returns the CompletedProcess (even on non-zero exit).
+
+    Raises only on the timeout or on a genuine OSError — return-code
+    handling is left to the caller, who typically wants to feed the
+    result into ``assert_command_succeeds`` so the rich failure message
+    comes through.
+
+    There is deliberately no ``check`` parameter: it was accepted and
+    documented but never read (the call below hardcodes
+    ``check=False``), so passing it promised a behaviour that was not
+    there. No caller passed it."""
     return subprocess.run(
         cmd, cwd=cwd, env=env, capture_output=True,
         check=False, timeout=timeout,
@@ -199,7 +206,7 @@ def grr_cache_seeded(grr_cache_dir):
 def gpf_env_prefix(
     tmp_path_factory,
     conda_channel,
-    grr_cache_seeded,  # noqa: ARG001 — ordering dep: cold-cache guard
+    grr_cache_seeded,  # ruff: ignore[unused-function-argument] — ordering dep: cold-cache guard
 ):
     """Create a fresh gpf-web conda env from the local channel +
     the upstream channels the guide tells users to add.
@@ -333,7 +340,7 @@ def prepared_instance(getting_started_clone, gpf_env):
         "\n"
         "studies:\n"
         "  - denovo_example\n"
-        "  - vcf_example\n"
+        "  - vcf_example\n",
     )
 
     return PreparedInstance(
@@ -926,7 +933,7 @@ _PHENO_PED_AWK = r"""gunzip -c example_imports/pheno_import/Supplementary_Table_
                 print fid, fid".s2", fid".fa", fid".mo", "unaffected", $4
             }
         }
-    }' > example_imports/pheno_import/ssc_pheno.ped"""
+    }' > example_imports/pheno_import/ssc_pheno.ped"""  # ruff: ignore[line-too-long]
 
 
 # The phenotype-measures awk pipeline example_pheno_import.rst (RST lines
@@ -943,7 +950,7 @@ _PHENO_MEASURES_AWK = r"""gunzip -c example_imports/pheno_import/Supplementary_T
     }
     $1 != "familyId" {
         print $1".p1", $2, $3, $4, $5, $6, $7, $8
-    }' > example_imports/pheno_import/proband_measures.csv"""
+    }' > example_imports/pheno_import/proband_measures.csv"""  # ruff: ignore[line-too-long]
 
 
 # The single line example_pheno_import.rst (RST line 243, emphasized line
@@ -1265,7 +1272,8 @@ def gene_profiles_instance(gene_sets_instance, gpf_env):
     gene_profiles_yaml = instance_dir / "gene_profiles.yaml"
     gene_profiles_yaml.write_text(_GENE_PROFILES_YAML_SRC.read_text())
 
-    # Step 2: enable the tool — append gene_profiles_config to gpf_instance.yaml.
+    # Step 2: enable the tool — append gene_profiles_config to
+    # gpf_instance.yaml.
     config_path = instance_dir / "gpf_instance.yaml"
     config_path.write_text(
         config_path.read_text() + _GENE_PROFILES_CONFIG_BLOCK)
@@ -1516,17 +1524,19 @@ def wgpf_server(gene_profiles_instance, gpf_env):
 
         Flush the write handle first so the parent sees everything the
         child has emitted; safe to call after terminate()/exit too."""
-        try:
+        with contextlib.suppress(ValueError):  # already closed
             log_fh.flush()
-        except ValueError:
-            pass  # already closed
         try:
             return log_path.read_text(errors="replace")[-n_chars:]
         except OSError:
             return ""
 
+    # S607 wants an absolute path. `wgpf` is deliberately resolved
+    # through PATH: this suite exists to check that the console script the
+    # guide tells a reader to install is on their PATH and runnable, so
+    # hardcoding an interpreter-specific path would test the opposite.
     proc = subprocess.Popen(
-        ["wgpf", "run", "--port", str(port), "--host", "127.0.0.1"],
+        ["wgpf", "run", "--port", str(port), "--host", "127.0.0.1"],  # ruff: ignore[start-process-with-partial-path]
         cwd=gene_profiles_instance.instance_dir,
         env=env,
         stdout=log_fh,
@@ -1652,7 +1662,7 @@ _FEDERATION_REMOTE_ID = "fed_remote"
 # SFARI federation token. The token client puts these in its `remotes:` block;
 # the secret is the plaintext the client authenticates with.
 _FEDERATION_CLIENT_ID = "docs_e2e_federation"
-_FEDERATION_CLIENT_SECRET = "docs-e2e-federation-secret"  # noqa: S105
+_FEDERATION_CLIENT_SECRET = "docs-e2e-federation-secret"  # ruff: ignore[hardcoded-password-string]
 
 # The two demo studies the remote serves: one public, one protected.
 _FEDERATION_PUBLIC_STUDY = "denovo_example"
@@ -1701,10 +1711,8 @@ def _serve_instance(make_cmd, instance_dir, env, *,
     log_fh = log_path.open("wb")
 
     def _log_tail(n_chars=4000):
-        try:
+        with contextlib.suppress(ValueError):
             log_fh.flush()
-        except ValueError:
-            pass
         try:
             return log_path.read_text(errors="replace")[-n_chars:]
         except OSError:
@@ -1828,7 +1836,7 @@ class FederationRemoteInstance:
 @pytest.fixture(scope="session")
 def federation_remote_instance(
         getting_started_clone, gpf_env, tmp_path_factory,
-        grr_cache_seeded,  # noqa: ARG001 — ordering dep: cold-cache guard
+        grr_cache_seeded,  # ruff: ignore[unused-function-argument] — ordering dep: cold-cache guard
 ):
     """Build the authenticated stand-in remote, mirroring the federation
     integration backend (federation/scripts/backend/run_gpf.sh) on the
@@ -1950,7 +1958,7 @@ def _write_federation_client(client_dir, remote_url, *, creds=None):
 @pytest.fixture(scope="session")
 def federation_anon_client_server(
         federation_remote_server, gpf_env, tmp_path_factory,
-        federation_install,  # noqa: ARG001 — ordering dep: env needs federation
+        federation_install,  # ruff: ignore[unused-function-argument] — ordering dep: env needs federation
 ):
     """Token-free federation client: a ``remotes:`` block with NO
     client_id/secret. The federation extension uses an anonymous REST session,
@@ -1966,7 +1974,7 @@ def federation_anon_client_server(
 @pytest.fixture(scope="session")
 def federation_auth_client_server(
         federation_remote_server, gpf_env, tmp_path_factory,
-        federation_install,  # noqa: ARG001 — ordering dep: env needs federation
+        federation_install,  # ruff: ignore[unused-function-argument] — ordering dep: env needs federation
 ):
     """Token federation client: a ``remotes:`` block WITH the OAuth
     client_id/secret. The federation extension authenticates via OAuth

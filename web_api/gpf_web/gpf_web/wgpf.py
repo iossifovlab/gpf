@@ -60,7 +60,7 @@ def _add_host_port_group(parser: argparse.ArgumentParser) -> None:
 
     group.add_argument(
         "-H", "--host", type=str,
-        default="0.0.0.0",  # noqa: S104
+        default="0.0.0.0",  # ruff: ignore[hardcoded-bind-all-interfaces]
         help="The host IP address on which the GPF development server will "
         "listen for incoming connections.")
 

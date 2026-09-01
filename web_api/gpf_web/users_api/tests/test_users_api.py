@@ -12,7 +12,7 @@ from users_api.models import WdaeUser
 
 def test_invalid_reset_code(
     client: Client,
-    researcher: WdaeUser,  # noqa: ARG001
+    researcher: WdaeUser,  # ruff: ignore[unused-function-argument]
 ) -> None:
     url = "/api/v3/users/reset_password"
     session = client.session
@@ -76,7 +76,7 @@ def test_email_validaiton() -> None:
 
 
 def test_password_validation() -> None:
-    generic_password = "esg09dusfd"  # noqa:S105
+    generic_password = "esg09dusfd"  # ruff: ignore[hardcoded-password-string]
 
     # Don't accept passwords shorter than 10 symbols
     for i in range(10):
@@ -124,7 +124,7 @@ def test_password_validation() -> None:
 )
 def test_users_pagination(
     admin_client: Client,
-    hundred_users: list[WdaeUser],  # noqa: ARG001
+    hundred_users: list[WdaeUser],  # ruff: ignore[unused-function-argument]
     page: int,
     page_size: int | None,
     status_code: int,
@@ -153,7 +153,7 @@ def test_users_pagination(
 
 def test_users_search(
     admin_client: Client,
-    hundred_users: list[WdaeUser],  # noqa: ARG001
+    hundred_users: list[WdaeUser],  # ruff: ignore[unused-function-argument]
 ) -> None:
     url = "/api/v3/users?search=user9"
     response = admin_client.get(url)
@@ -173,7 +173,7 @@ def test_users_search(
 )
 def test_users_search_pagination(
     admin_client: Client,
-    hundred_users: list[WdaeUser],  # noqa: ARG001
+    hundred_users: list[WdaeUser],  # ruff: ignore[unused-function-argument]
     page: int,
     status_code: int,
     length: int | None,

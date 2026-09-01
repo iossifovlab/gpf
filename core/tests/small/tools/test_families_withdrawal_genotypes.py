@@ -297,7 +297,8 @@ def test_genotype_accumulating_withdrawals_file(
         ["--no-backup", "--families-file", str(families_file), "two_fam_study"],
         gpf_instance=two_family_gpf,
     )
-    assert set(pq.read_table(ped_path).column("family_id").to_pylist()) == {"f2"}
+    assert set(
+        pq.read_table(ped_path).column("family_id").to_pylist()) == {"f2"}
 
     # Add f2; f1 is already gone but must not cause a failure.
     families_file.write_text("f1\nf2\n")

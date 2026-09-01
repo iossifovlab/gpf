@@ -79,7 +79,7 @@ class RemoteGenotypeData(GenotypeDataStudy):
 
     def get_studies_ids(
         self, *,
-        leaves: bool = True,  # noqa: ARG002
+        leaves: bool = True,  # ruff: ignore[unused-method-argument]
     ) -> list[str]:
         if not self._is_group:
             return [self.study_id]

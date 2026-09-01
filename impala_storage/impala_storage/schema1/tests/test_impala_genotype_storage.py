@@ -16,7 +16,7 @@ def impala_genotype_storage() -> ImpalaGenotypeStorage:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",  # noqa: S108
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -143,7 +143,7 @@ def test_impala_genotype_storate_has_rsync_helpers() -> None:
             "pool_size": 3,
         },
         "hdfs": {
-            "base_dir": "/tmp/genotype_impala",  # noqa: S108
+            "base_dir": "/tmp/genotype_impala",  # ruff: ignore[hardcoded-temp-file]
             "host": "locahost",
             "port": 8020,
         },
@@ -168,7 +168,7 @@ def test_impala_genotype_storate_no_rsync_helpers() -> None:
             "pool_size": 3,
         },
         "hdfs": {
-            "base_dir": "/tmp/genotype_impala",  # noqa: S108
+            "base_dir": "/tmp/genotype_impala",  # ruff: ignore[hardcoded-temp-file]
             "host": "locahost",
             "port": 8020,
         },
@@ -184,7 +184,7 @@ def test_create_impala_genotype_storage() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",  # noqa: S108
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -206,7 +206,7 @@ def test_create_impala_genotype_storage_missing_id() -> None:
     config = {
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",  # noqa: S108
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -230,7 +230,7 @@ def test_create_impala_genotype_storage_missing_type() -> None:
     config = {
         "id": "aaaa",
         "hdfs": {
-            "base_dir": "/tmp/test_data",  # noqa: S108
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -255,7 +255,7 @@ def test_create_impala_genotype_storage_wrong_type() -> None:
         "id": "aaaa",
         "storage_type": "impala2",
         "hdfs": {
-            "base_dir": "/tmp/test_data",  # noqa: S108
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -281,11 +281,11 @@ def test_create_impala_genotype_storage_missing_hdfs() -> None:
     config = {
         "id": "genotype_impala",
         "storage_type": "impala",
-        # "hdfs": {  # noqa: ERA001
-        #     "base_dir": "/tmp/test_data",  # noqa: ERA001
-        #     "host": "localhost",  # noqa: ERA001
-        #     "port": 8020,  # noqa: ERA001
-        #     "replication": 1,  # noqa: ERA001
+        # "hdfs": {  # ruff: ignore[commented-out-code]
+        #     "base_dir": "/tmp/test_data",  # ruff: ignore[commented-out-code]
+        #     "host": "localhost",  # ruff: ignore[commented-out-code]
+        #     "port": 8020,  # ruff: ignore[commented-out-code]
+        #     "replication": 1,  # ruff: ignore[commented-out-code]
         # },
         "impala": {
             "db": "impala_storage_test_db",
@@ -309,7 +309,7 @@ def test_create_impala_genotype_storage_missing_hdfs_base_dir() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            # "base_dir": "/tmp/test_data",  # noqa: ERA001
+            # "base_dir": "/tmp/test_data",  # ruff: ignore[commented-out-code]
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -364,8 +364,8 @@ def test_create_impala_genotype_storage_missing_hdfs_host() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",  # noqa: S108
-            # "host": "localhost",  # noqa: ERA001
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
+            # "host": "localhost",  # ruff: ignore[commented-out-code]
             "port": 8020,
             "replication": 1,
         },
@@ -391,9 +391,9 @@ def test_create_impala_genotype_storage_missing_hdfs_port() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",  # noqa: S108
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
             "host": "localhost",
-            # "port": 8020,  # noqa: ERA001
+            # "port": 8020,  # ruff: ignore[commented-out-code]
             "replication": 1,
         },
         "impala": {
@@ -414,10 +414,10 @@ def test_create_impala_genotype_storage_missing_hdfs_replication() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",  # noqa: S108
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
             "host": "localhost",
             "port": 8020,
-            # "replication": 1,  # noqa: ERA001
+            # "replication": 1,  # ruff: ignore[commented-out-code]
         },
         "impala": {
             "db": "impala_storage_test_db",
@@ -437,18 +437,18 @@ def test_create_impala_genotype_storage_missing_impala() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",  # noqa: S108
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
             "host": "localhost",
             "port": 8020,
             "replication": 1,
         },
-        # "impala": {  # noqa: ERA001
-        #     "db": "impala_storage_test_db",  # noqa: ERA001
+        # "impala": {  # ruff: ignore[commented-out-code]
+        #     "db": "impala_storage_test_db",  # ruff: ignore[commented-out-code]
         #     "hosts": [
         #         "localhost",
         #     ],
-        #     "pool_size": 3,  # noqa: ERA001
-        #     "port": 21050,  # noqa: ERA001
+        #     "pool_size": 3,  # ruff: ignore[commented-out-code]
+        #     "port": 21050,  # ruff: ignore[commented-out-code]
         # },
     }
     with pytest.raises(
@@ -464,13 +464,13 @@ def test_create_impala_genotype_storage_missing_impala_db() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",  # noqa: S108
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
             "host": "localhost",
             "port": 8020,
             "replication": 1,
         },
         "impala": {
-            # "db": "impala_storage_test_db",  # noqa: ERA001
+            # "db": "impala_storage_test_db",  # ruff: ignore[commented-out-code]
             "hosts": [
                 "localhost",
             ],
@@ -491,7 +491,7 @@ def test_create_impala_genotype_storage_missing_impala_hosts() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",  # noqa: S108
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -518,7 +518,7 @@ def test_create_impala_genotype_storage_missing_impala_port() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",  # noqa: S108
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -529,7 +529,7 @@ def test_create_impala_genotype_storage_missing_impala_port() -> None:
                 "localhost",
             ],
             "pool_size": 3,
-            # "port": 21050,  # noqa: ERA001
+            # "port": 21050,  # ruff: ignore[commented-out-code]
         },
     }
     res = ImpalaGenotypeStorage(config)
@@ -541,7 +541,7 @@ def test_create_impala_genotype_storage_missing_impala_pool_size() -> None:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",  # noqa: S108
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -552,7 +552,7 @@ def test_create_impala_genotype_storage_missing_impala_pool_size() -> None:
                 "localhost",
             ],
             "port": 21050,
-            # "pool_size": 3,  # noqa: ERA001
+            # "pool_size": 3,  # ruff: ignore[commented-out-code]
         },
     }
     res = ImpalaGenotypeStorage(config)

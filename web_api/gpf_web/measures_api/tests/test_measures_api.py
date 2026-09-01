@@ -15,7 +15,7 @@ REGRESSIONS_URL = "/api/v3/measures/regressions"
 def test_measures_api_permissions(
     anonymous_client: Client,
     url: str,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = anonymous_client.get(url)
     assert response
@@ -24,7 +24,7 @@ def test_measures_api_permissions(
 
 def test_measures_list_categorical(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get(
         f"{MEASURES_URL}/categorical?datasetId=t4c8_study_1",
@@ -36,7 +36,7 @@ def test_measures_list_categorical(
 
 def test_measures_list_continuous(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get(
         f"{MEASURES_URL}/continuous?datasetId=t4c8_study_1",
@@ -48,7 +48,7 @@ def test_measures_list_continuous(
 
 def test_regressions(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get(f"{REGRESSIONS_URL}?datasetId=t4c8_study_1")
     assert response.status_code == 200
@@ -58,7 +58,7 @@ def test_regressions(
 
 def test_measures_list_wrong_request(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.post("/api/v3/measures/histogram", {
         "datasetId": "t4c8_study_1", "measure": "i1.age",
@@ -73,7 +73,7 @@ def test_measures_list_wrong_request(
 
 def test_histograms_beta(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.post("/api/v3/measures/histogram-beta", {
         "datasetId": "t4c8_study_1", "measure": "i1.age",
@@ -133,7 +133,7 @@ def test_histograms_beta(
 
 def test_role_list(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.post("/api/v3/measures/role-list", {
         "datasetId": "t4c8_study_1",

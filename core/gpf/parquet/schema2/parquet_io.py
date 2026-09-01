@@ -273,7 +273,7 @@ class VariantsParquetWriterDeprecated:
             allele_effects = attributes["allele_effects"]
             assert isinstance(allele_effects, AlleleEffects), attributes
             # pylint: disable=protected-access
-            summary_allele._effects = allele_effects  # noqa: SLF001
+            summary_allele._effects = allele_effects  # ruff: ignore[private-member-access]
             del attributes["allele_effects"]
         public_attributes = {
             key: value for key, value in attributes.items()
@@ -345,7 +345,7 @@ class VariantsParquetWriterDeprecated:
 
     def _write_batched(
         self,
-        full_variants_iterator: Iterable[tuple[SummaryVariant, list[FamilyVariant]]],  # noqa: E501
+        full_variants_iterator: Iterable[tuple[SummaryVariant, list[FamilyVariant]]],  # ruff: ignore[line-too-long]
         annotation_batch_size: int,
     ) -> tuple[int, int]:
         logger.info("Working in batch annotation mode")

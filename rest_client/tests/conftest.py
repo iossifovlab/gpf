@@ -108,7 +108,7 @@ def admin_client(
         basic_session = GPFPasswordSession(
             base_url=conf["url"],
             username="admin@iossifovlab.com",
-            password="secret",  # noqa: S106
+            password="secret",  # ruff: ignore[hardcoded-password-func-arg]
         )
         client = RESTClient(basic_session)
         client.login()
@@ -140,7 +140,7 @@ def user_client(
         basic_session = GPFPasswordSession(
             base_url=conf["url"],
             username="research@iossifovlab.com",
-            password="secret",  # noqa: S106
+            password="secret",  # ruff: ignore[hardcoded-password-func-arg]
         )
         client = RESTClient(basic_session)
         client.login()

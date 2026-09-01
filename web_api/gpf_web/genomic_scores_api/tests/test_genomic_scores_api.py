@@ -17,7 +17,7 @@ def _clear_cached_response() -> None:
 
 def test_get_genomic_scores(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/genomic_scores"
     response = user_client.get(url)
@@ -29,7 +29,7 @@ def test_get_genomic_scores(
 
 def test_get_genomic_scores_cache_control(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/genomic_scores"
     response = user_client.get(url)
@@ -39,7 +39,7 @@ def test_get_genomic_scores_cache_control(
 
 def test_get_genomic_scores_memo_hit(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     url = "/api/v3/genomic_scores"
@@ -67,7 +67,7 @@ def test_get_genomic_scores_memo_hit(
 
 def test_get_genomic_scores_reload_invalidates(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Bumping the instance timestamp re-renders and changes the ETag."""
@@ -113,7 +113,7 @@ def test_get_genomic_scores_reload_invalidates(
 
 
 def test_cached_json_response_concurrent_cold_cache(
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     """Concurrent cold-cache callers all get the byte-identical render."""
     payload = [{"score": "score_one", "value": list(range(100))}]
@@ -147,7 +147,7 @@ def test_cached_json_response_concurrent_cold_cache(
 
 def test_get_genomic_scores_if_none_match_304(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/genomic_scores"
     first = user_client.get(url)
@@ -160,7 +160,7 @@ def test_get_genomic_scores_if_none_match_304(
 
 def test_get_score_descs_all(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/genomic_scores/score_descs"
     response = user_client.get(url)
@@ -172,7 +172,7 @@ def test_get_score_descs_all(
 
 def test_get_score_descs_single(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/genomic_scores/score_descs/score_one"
     response = user_client.get(url)
@@ -184,7 +184,7 @@ def test_get_score_descs_single(
 
 def test_get_score_descs_unknown_404(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/genomic_scores/score_descs/no_such_score"
     response = user_client.get(url)
@@ -193,7 +193,7 @@ def test_get_score_descs_unknown_404(
 
 def test_get_score_descs_memo_hit_keyed_by_score_id(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     render_calls = 0

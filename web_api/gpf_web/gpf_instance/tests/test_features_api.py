@@ -7,8 +7,8 @@ from gpf_instance.gpf_instance import WGPFInstance
 
 def test_features_endpoint_returns_flags(
     anonymous_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
-    reset_flags: None,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
+    reset_flags: None,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """The features endpoint advertises the flag registry."""
     response = anonymous_client.get("/api/v3/instance/features")
@@ -21,8 +21,8 @@ def test_features_endpoint_returns_flags(
 @override_settings(FEATURE_FLAGS={"pheno_browser_download": False})
 def test_features_endpoint_reflects_overrides(
     anonymous_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
-    reset_flags: None,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
+    reset_flags: None,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """A settings override is reflected in the advertised flags."""
     response = anonymous_client.get("/api/v3/instance/features")
@@ -34,8 +34,8 @@ def test_features_endpoint_reflects_overrides(
 @override_settings(FEATURE_FLAGS={})
 def test_features_endpoint_merges_defaults(
     anonymous_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
-    reset_flags: None,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
+    reset_flags: None,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """A known flag keeps its coded default when not named in overrides."""
     response = anonymous_client.get("/api/v3/instance/features")

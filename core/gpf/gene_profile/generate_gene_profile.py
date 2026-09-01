@@ -44,7 +44,7 @@ def generate_gp(
     """Generate GP."""
     # pylint: disable=protected-access, invalid-name, too-many-locals
     gene_scores_db = gpf_instance.gene_scores_db
-    config = gpf_instance._gene_profile_config  # noqa: SLF001
+    config = gpf_instance._gene_profile_config  # ruff: ignore[private-member-access]
     assert config is not None
     scores: dict[str, Any] = {}
 
@@ -184,7 +184,7 @@ def process_region(
     else:
         grr = None
     gpf_instance = GPFInstance.build(gpf_config, grr=grr)
-    gene_profiles_config = gpf_instance._gene_profile_config  # noqa: SLF001
+    gene_profiles_config = gpf_instance._gene_profile_config  # ruff: ignore[private-member-access]
     assert gene_profiles_config is not None
 
     query_genes = list(gene_symbols) if len(gene_symbols) <= 20 else None
@@ -355,7 +355,7 @@ def _check_variant_genomic_scores(
         elif score_min is not None:
             if not any(sv >= score_min for sv in score_values):
                 return False
-        elif score_max is not None:  # noqa: SIM102
+        elif score_max is not None:  # ruff: ignore[collapsible-if]
             if not any(sv <= score_max for sv in score_values):
                 return False
     return do_count
@@ -486,7 +486,7 @@ def main(
         gpf_instance = GPFInstance.build()
 
     # pylint: disable=protected-access, invalid-name
-    gene_profiles_config = gpf_instance._gene_profile_config  # noqa: SLF001
+    gene_profiles_config = gpf_instance._gene_profile_config  # ruff: ignore[private-member-access]
 
     assert gene_profiles_config is not None, "No GP configuration found."
 

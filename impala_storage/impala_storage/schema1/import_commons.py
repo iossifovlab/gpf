@@ -362,7 +362,7 @@ rule parquet:
     benchmark:
         "logs/parquet_benchmark.tsv"
 
-        """)  # noqa
+        """)  # ruff: ignore[line-too-long]
 
 
 class BatchImporter:

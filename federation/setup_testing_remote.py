@@ -1,4 +1,4 @@
-# ruff: noqa: INP001
+# ruff: file-ignore[implicit-namespace-package]
 # Standalone helper script run as the entrypoint of the integration
 # backend container — not a package member, so it has no neighbour
 # __init__.py. Hence the file-level INP001 suppression.

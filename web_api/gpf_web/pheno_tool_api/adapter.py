@@ -74,7 +74,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         query_data["phenoFilterFamilyIds"] = None
         if query_data.get("familyFilters") is not None:
             query_data["phenoFilterFamilyIds"] = list(
-                query_transformer  # noqa: SLF001
+                query_transformer  # ruff: ignore[private-member-access]
                 ._transform_filters_to_ids(
                     query_data["familyFilters"],
                     self.study,
@@ -82,7 +82,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
             )
         if query_data.get("familyPhenoFilters") is not None:
             query_data["phenoFilterFamilyIds"] = list(
-                query_transformer  # noqa: SLF001
+                query_transformer  # ruff: ignore[private-member-access]
                 ._transform_pheno_filters_to_ids(
                     query_data["familyPhenoFilters"],
                     self.study,

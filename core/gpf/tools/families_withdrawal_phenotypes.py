@@ -59,7 +59,7 @@ def _remove_from_pheno_leaf(
     if dry_run:
         conn = study.db.connection
         n_persons = conn.execute(
-            f"SELECT COUNT(*) FROM person"  # noqa: S608
+            f"SELECT COUNT(*) FROM person"  # ruff: ignore[hardcoded-sql-expression]
             f" WHERE family_id IN ({fam_placeholders})",
             family_values,
         ).fetchone()[0]  # type: ignore[index]
@@ -73,7 +73,7 @@ def _remove_from_pheno_leaf(
             # identifiers (not values), so they cannot be placeholders.
             tname = tbl.alias_or_name
             n = conn.execute(
-                f"SELECT COUNT(*) FROM {tname}"  # noqa: S608
+                f"SELECT COUNT(*) FROM {tname}"  # ruff: ignore[hardcoded-sql-expression]
                 f" WHERE person_id IN"
                 f" (SELECT person_id FROM person"
                 f"  WHERE family_id IN ({fam_placeholders}))",
@@ -96,7 +96,7 @@ def _remove_from_pheno_leaf(
         person_ids = [
             row[0]
             for row in conn.execute(
-                f"SELECT person_id FROM person"  # noqa: S608
+                f"SELECT person_id FROM person"  # ruff: ignore[hardcoded-sql-expression]
                 f" WHERE family_id IN ({fam_placeholders})",
                 family_values,
             ).fetchall()
@@ -116,7 +116,7 @@ def _remove_from_pheno_leaf(
             # the person_id WHERE values use placeholders.
             tname = tbl.alias_or_name
             conn.execute(
-                f"DELETE FROM {tname}"  # noqa: S608
+                f"DELETE FROM {tname}"  # ruff: ignore[hardcoded-sql-expression]
                 f" WHERE person_id IN ({person_placeholders})",
                 person_values,
             )
@@ -126,7 +126,7 @@ def _remove_from_pheno_leaf(
 
         conn.execute(
             # f-string only injects "?" placeholders; values are bound.
-            f"DELETE FROM person WHERE family_id IN ({fam_placeholders})",  # noqa: S608
+            f"DELETE FROM person WHERE family_id IN ({fam_placeholders})",  # ruff: ignore[hardcoded-sql-expression]
             family_values,
         )
         logger.info(
@@ -135,7 +135,7 @@ def _remove_from_pheno_leaf(
 
         conn.execute(
             # f-string only injects "?" placeholders; values are bound.
-            f"DELETE FROM family WHERE family_id IN ({fam_placeholders})",  # noqa: S608
+            f"DELETE FROM family WHERE family_id IN ({fam_placeholders})",  # ruff: ignore[hardcoded-sql-expression]
             family_values,
         )
         logger.info("[%s] removed family record(s)", study.pheno_id)

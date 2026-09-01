@@ -24,7 +24,7 @@ def vcf_vc_file(
     ##contig=<ID=chr1>
     #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT f1.mom
     chr1   4   .  C   T   .    .      .    GT     1/1
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment]
     vcf2 = setup_vcf(root_path / "vcf_data" / "vcf_chr2.vcf.gz", """
     ##fileformat=VCFv4.2
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -32,7 +32,7 @@ def vcf_vc_file(
     ##contig=<ID=chr1>
     #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT f1.mom
     chr2   4   .  C   T   .    .      .    GT     1/1
-    """) # noqa
+    """) # ruff: ignore[too-few-spaces-before-inline-comment]
 
     return str(root_path / "vcf_data"), str(vcf1), str(vcf2)
 

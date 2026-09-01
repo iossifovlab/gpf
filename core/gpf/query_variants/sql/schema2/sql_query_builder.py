@@ -1039,7 +1039,7 @@ class SqlQueryBuilder(QueryBuilderBase):
             base_table = "filtered_by_tags"
         if person_ids is not None:
             family_members = parse_one(
-                "select *, unnest(fa.allele_in_members) as aim "  # noqa: S608
+                "select *, unnest(fa.allele_in_members) as aim "  # ruff: ignore[hardcoded-sql-expression]
                 f"from {base_table} as fa",
             )
             family_query = exp.select(

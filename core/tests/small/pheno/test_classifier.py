@@ -35,7 +35,7 @@ def test_is_convertable_to_numeric() -> None:
     assert is_convertible_to_numeric(float("nan")) == Convertible.nan
     assert is_convertible_to_numeric(None) == Convertible.nan
     assert is_convertible_to_numeric("") == Convertible.nan
-    assert is_convertible_to_numeric(True) == Convertible.non_numeric  # noqa: FBT003
+    assert is_convertible_to_numeric(True) == Convertible.non_numeric  # ruff: ignore[boolean-positional-value-in-call]
     assert is_convertible_to_numeric(1234) == Convertible.numeric
     assert is_convertible_to_numeric(1.7) == Convertible.numeric
     assert is_convertible_to_numeric("1.7") == Convertible.numeric
@@ -50,14 +50,14 @@ def test_convert_to_numeric() -> None:
     assert convert_to_numeric("1.7") == 1.7
     assert np.isnan(convert_to_numeric(None))
     assert np.isnan(convert_to_numeric(""))
-    assert np.isnan(convert_to_numeric(True))  # noqa: FBT003
+    assert np.isnan(convert_to_numeric(True))  # ruff: ignore[boolean-positional-value-in-call]
 
 
 def test_convert_to_string() -> None:
     assert convert_to_string(123) == "123"
     assert convert_to_string("test") == "test"
     assert convert_to_string(None) is None
-    assert convert_to_string(True) == "True"  # noqa: FBT003
+    assert convert_to_string(True) == "True"  # ruff: ignore[boolean-positional-value-in-call]
     assert convert_to_string("") is None
 
 

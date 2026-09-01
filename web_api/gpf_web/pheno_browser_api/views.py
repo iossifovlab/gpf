@@ -351,7 +351,7 @@ def create_pheno_browser_helper(
             return pheno_browser_helper
 
     if not isinstance(study, WDAEStudy):
-        raise ValueError(  # noqa: TRY004
+        raise ValueError(  # ruff: ignore[type-check-without-type-error]
             f"Pheno browser helper for {study.study_id} is missing!")
 
     return PhenoBrowserHelper(study)

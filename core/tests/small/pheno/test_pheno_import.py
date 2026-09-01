@@ -50,7 +50,7 @@ def import_data_fixture(
         fam4	fam4.mom	0	0	2	1	mom	1:53.5,50.0	test10
         fam4	fam4.dad	0	0	1	1	dad	1:10.0,50.0	test11
         fam4	fam4.prb	fam4.dad	fam4.mom	2	2	prb	2:31.75,80.0	test12
-        """)  # noqa: E501
+        """)  # ruff: ignore[line-too-long]
     setup_directories(root_path, {
         "instruments": {
             "instr1.csv": textwrap.dedent("""
@@ -222,7 +222,7 @@ def test_collect_instruments(tmp_path: pathlib.Path) -> None:
             "person_id",
         ),
         ImportInstrument(
-            [pathlib.Path(tmp_path, "subdir_2", "subsubdir", "instrument_3.txt")],  # noqa: E501
+            [pathlib.Path(tmp_path, "subdir_2", "subsubdir", "instrument_3.txt")],  # ruff: ignore[line-too-long]
             "instrument_3",
             ",",
             "person_id",
@@ -246,12 +246,12 @@ def test_load_measure_descriptions_files(tmp_path: pathlib.Path) -> None:
     pathlib.Path(tmp_path, "i1_descriptions.tsv").write_text(
        "instrumentName\tmeasureName\tdescription\n"
        "testInstrument1\tmeasure1\tdescription one\n"
-       "testInstrument1\tmeasure2\tdescription two"  # noqa: COM812
+       "testInstrument1\tmeasure2\tdescription two"  # ruff: ignore[missing-trailing-comma]
     )
 
     pathlib.Path(tmp_path, "i2_descriptions.tsv").write_text(
       "instrumentName\tmeasureName\tdescription\n"
-      "testInstrument2\tmeasure1\tdescription three"  # noqa: COM812
+      "testInstrument2\tmeasure1\tdescription three"  # ruff: ignore[missing-trailing-comma]
     )
 
     config = MeasureDescriptionsConfig.model_validate({
@@ -293,12 +293,12 @@ def test_load_measure_descriptions_mixed(tmp_path: pathlib.Path) -> None:
         "instrumentName\tmeasureName\tdescription\n"
         "testInstrument1\tmeasure1\tdescription one\n"
         "testInstrument1\tmeasure2\tdescription two\n"
-        "testInstrument2\tmeasure1\tdescription three"  # noqa: COM812
+        "testInstrument2\tmeasure1\tdescription three"  # ruff: ignore[missing-trailing-comma]
     )
 
     pathlib.Path(tmp_path, "i2_descriptions.tsv").write_text(
       "instrumentName\tmeasureName\tdescription\n"
-      "testInstrument2\tmeasure2\tdescription four"  # noqa: COM812
+      "testInstrument2\tmeasure2\tdescription four"  # ruff: ignore[missing-trailing-comma]
     )
 
     config = MeasureDescriptionsConfig.model_validate({
@@ -328,7 +328,7 @@ def test_load_measure_descriptions_file_with_overrides(
         "instrumentName,m_name,m_desc\n"
         "testInstrument1,measure1,description one\n"
         "testInstrument1,measure2,description two\n"
-        "testInstrument2,measure1,description three"  # noqa: COM812
+        "testInstrument2,measure1,description three"  # ruff: ignore[missing-trailing-comma]
     )
 
     config = MeasureDescriptionsConfig.model_validate({

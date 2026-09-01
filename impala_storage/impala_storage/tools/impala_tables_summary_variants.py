@@ -52,13 +52,13 @@ def variants_parition_bins(
 ) -> list[str]:
     """Return partition bins."""
     # pylint: disable=protected-access
-    impala = study_backend._impala_helpers  # noqa: SLF001
+    impala = study_backend._impala_helpers  # ruff: ignore[private-member-access]
 
     partition_bins: list[str] = []
     with closing(impala.connection()) as connection, \
             closing(connection.cursor()) as cursor:
         query = (
-            f"SELECT DISTINCT({partition}) FROM "  # noqa: S608
+            f"SELECT DISTINCT({partition}) FROM "  # ruff: ignore[hardcoded-sql-expression]
              f"{study_backend.db}.{study_backend.variants_table}"
         )
         logger.info("collecting patitions: %s", query)
@@ -130,7 +130,7 @@ def drop_summary_table(
 ) -> None:
     """Drop summary table."""
     # pylint: disable=protected-access
-    impala = impala_variants._impala_helpers  # noqa: SLF001
+    impala = impala_variants._impala_helpers  # ruff: ignore[private-member-access]
     with closing(impala.connection()) as connection, \
             closing(connection.cursor()) as cursor:
         query = (
@@ -154,7 +154,7 @@ def rename_summary_table(
 ) -> None:
     """Rename summary table."""
     # pylint: disable=protected-access
-    impala = impala_variants._impala_helpers  # noqa: SLF001
+    impala = impala_variants._impala_helpers  # ruff: ignore[private-member-access]
     qry = (
         f"ALTER TABLE {summary_table_name_temp(study_id, impala_variants)} "
          f"RENAME TO {summary_table_name(study_id, impala_variants)}"
@@ -189,7 +189,7 @@ def create_summary_table(
         partition_statement = f"PARTITIONED BY ({partition_statement}) "
 
     # pylint: disable=protected-access
-    impala = impala_variants._impala_helpers  # noqa: SLF001
+    impala = impala_variants._impala_helpers  # ruff: ignore[private-member-access]
     with closing(impala.connection()) as connection, \
             closing(connection.cursor()) as cursor:
         qry = (
@@ -341,7 +341,7 @@ def insert_into_summary_table(
     queries = []
     for region_statement in region_statements:
         qry = (
-            f"INSERT INTO {summary_table} ( "  # noqa: S608
+            f"INSERT INTO {summary_table} ( "  # ruff: ignore[hardcoded-sql-expression]
              f"{grouping_statement}, "
              f"{insert_other_statement}, "
              f"{insert_family_summary_fields}) "
@@ -426,14 +426,14 @@ def main(
         logger.info("variant table partitions: %s", partition_bins)
 
         # pylint: disable=protected-access
-        impala = study_backend._impala_helpers  # noqa: SLF001
+        impala = study_backend._impala_helpers  # ruff: ignore[private-member-access]
         started = time.time()
 
         region_bin_helpers = RegionBinsHelper(
             study_backend.table_properties,
             gpf_instance.reference_genome,
         )
-        region_bin_helpers._build_region_bins()  # noqa: SLF001
+        region_bin_helpers._build_region_bins()  # ruff: ignore[private-member-access]
 
         logger.info(
             "region bins calculated: %s", region_bin_helpers.region_bins)

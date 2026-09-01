@@ -20,7 +20,7 @@ from rest_framework import status
 ])
 def test_enrichment_api_permissions(
     anonymous_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
     url: str,
     method: str,
     body: dict[str, str | list[str]] | None,
@@ -38,7 +38,7 @@ def test_enrichment_api_permissions(
 
 def test_enrichment_models(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/enrichment/models/t4c8_study_1")
 
@@ -52,7 +52,7 @@ def test_enrichment_models(
     background = result["background"]
     assert background[0]["id"] == "coding_len_background"
     assert background[0]["name"] == "t4c8CodingLenBackground"
-    assert background[0]["desc"] == "T4C8 gene coding length enrichment background model"  # noqa: E501
+    assert background[0]["desc"] == "T4C8 gene coding length enrichment background model"  # ruff: ignore[line-too-long]
 
     assert len(result["counting"]) == 2
     counting = result["counting"]
@@ -69,7 +69,7 @@ def test_enrichment_models(
 
 def test_enrichment_models_missing_study(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/enrichment/models/f1")
     assert response
@@ -78,7 +78,7 @@ def test_enrichment_models_missing_study(
 
 def test_enrichment_test_missing_dataset_id(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/enrichment/test"
     query = {
@@ -96,7 +96,7 @@ def test_enrichment_test_missing_dataset_id(
 
 def test_enrichment_test_missing_study(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/enrichment/test"
     query = {
@@ -115,7 +115,7 @@ def test_enrichment_test_missing_study(
 
 def test_enrichment_test_missing_gene_symbols(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/enrichment/test"
     query = {
@@ -133,7 +133,7 @@ def test_enrichment_test_missing_gene_symbols(
 
 def test_enrichment_test_with_gene_symbols(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/enrichment/test"
     query = {
@@ -160,7 +160,7 @@ def test_enrichment_test_with_gene_symbols(
 
 def test_enrichment_test_with_gene_score(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/enrichment/test"
     query = {
@@ -188,7 +188,7 @@ def test_enrichment_test_with_gene_score(
 
 def test_enrichment_test_with_gene_score_with_zero_range(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/enrichment/test"
     query = {
@@ -216,7 +216,7 @@ def test_enrichment_test_with_gene_score_with_zero_range(
 
 def test_enrichment_test_with_gene_set(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/enrichment/test"
     query = {

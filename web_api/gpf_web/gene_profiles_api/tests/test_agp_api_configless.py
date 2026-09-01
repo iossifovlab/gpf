@@ -6,7 +6,7 @@ ROUTE_PREFIX = "/api/v3/gene_profiles"
 
 
 def test_configuration(
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
     admin_client: Client,
 ) -> None:
     response = admin_client.get(f"{ROUTE_PREFIX}/single-view/configuration")

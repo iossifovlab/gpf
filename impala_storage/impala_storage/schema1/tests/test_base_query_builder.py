@@ -24,7 +24,7 @@ def impala_storage() -> ImpalaGenotypeStorage:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",  # noqa: S108
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
             "host": "localhost",
             "port": 8020,
             "replication": 1,

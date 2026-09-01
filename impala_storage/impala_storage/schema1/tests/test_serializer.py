@@ -74,7 +74,7 @@ def extra_attrs_impala(
 
 @pytest.fixture(scope="session")
 def impala_storage_registry(
-        extra_attrs_impala: ImpalaVariants,  # noqa: ARG001
+        extra_attrs_impala: ImpalaVariants,  # ruff: ignore[unused-function-argument]
         gpf_instance_2013: GPFInstance,
 ) -> GenotypeStorageRegistry:
     return cast(GenotypeStorageRegistry, gpf_instance_2013.genotype_storages)
@@ -82,7 +82,7 @@ def impala_storage_registry(
 
 def test_all_properties_in_blob(
     vcf_variants_loaders: Callable,
-    impala_genotype_storage: ImpalaGenotypeStorage,  # noqa: ARG001
+    impala_genotype_storage: ImpalaGenotypeStorage,  # ruff: ignore[unused-function-argument]
 ) -> None:
     loader = vcf_variants_loaders("backends/quads_f1")[0]
 
@@ -208,7 +208,7 @@ def test_extra_attributes_impala(
 
 def test_build_allele_batch_dict(
     vcf_variants_loaders: Callable,
-    impala_genotype_storage: ImpalaGenotypeStorage,  # noqa: ARG001
+    impala_genotype_storage: ImpalaGenotypeStorage,  # ruff: ignore[unused-function-argument]
 ) -> None:
     loader = vcf_variants_loaders("backends/effects_trio")[-1]
 

@@ -25,7 +25,7 @@ JSON_CONTENT_TYPE = "application/json"
 
 def test_simple_query(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = copy.deepcopy(EXAMPLE_REQUEST)
 
@@ -42,7 +42,7 @@ def test_simple_query(
 
 def test_query(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = copy.deepcopy(EXAMPLE_REQUEST)
 
@@ -97,7 +97,7 @@ def test_query(
 
 def test_simple_query_any_user_with_anonymous(
     anonymous_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = anonymous_client.post(
         QUERY_VARIANTS_URL, json.dumps({"datasetId": "t4c8_study_1"}),
@@ -116,7 +116,7 @@ def test_simple_query_any_user_with_anonymous(
 
 def test_simple_query_download_anonymous(
     anonymous_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         **EXAMPLE_REQUEST,
@@ -131,7 +131,7 @@ def test_simple_query_download_anonymous(
 
 def test_simple_query_summary_variants(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = copy.deepcopy(EXAMPLE_REQUEST)
 
@@ -149,7 +149,7 @@ def test_simple_query_summary_variants(
 
 def test_simple_query_summary_variants_download(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         **EXAMPLE_REQUEST,
@@ -201,7 +201,7 @@ def test_simple_query_summary_variants_download(
 
 def test_query_summary_variants_download(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     query = {
         **EXAMPLE_REQUEST,
@@ -270,7 +270,7 @@ def test_query_summary_variants_download(
 
 def test_missing_dataset(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = copy.deepcopy(EXAMPLE_REQUEST)
     del data["datasetId"]
@@ -283,7 +283,7 @@ def test_missing_dataset(
 
 def test_bad_dataset(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = copy.deepcopy(EXAMPLE_REQUEST)
     data["datasetId"] = "ala bala portokala"
@@ -298,7 +298,7 @@ def test_bad_dataset(
 def test_normal_dataset_rights_query(
     user: User,
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",
@@ -319,7 +319,7 @@ def test_normal_dataset_rights_query(
 def test_mixed_dataset_rights_query(
     user: User,
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",
@@ -340,7 +340,7 @@ def test_mixed_dataset_rights_query(
 def test_mixed_layered_dataset_rights_query(
     user: User,
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",
@@ -362,7 +362,7 @@ def test_mixed_layered_dataset_rights_query(
 def test_mixed_layered_diff_group_dataset_rights_query(
     user: User,
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",
@@ -385,7 +385,7 @@ def test_mixed_layered_diff_group_dataset_rights_query(
 def test_mixed_dataset_rights_download(
     user: User,
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",
@@ -407,7 +407,7 @@ def test_mixed_dataset_rights_download(
 def test_mixed_dataset_rights_third_party_group(
     user: User,
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",
@@ -429,7 +429,7 @@ def test_mixed_dataset_rights_third_party_group(
 def test_mixed_dataset_rights_with_study_filters(
     user: User,
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     data = {
         "datasetId": "t4c8_dataset",

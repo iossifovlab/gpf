@@ -19,7 +19,7 @@ from utils.testing import setup_t4c8_instance
 @pytest.fixture
 def categorical_wgpf_instance(
     tmp_path: pathlib.Path,
-    db: None,  # noqa: ARG001 ; enable the Django test database
+    db: None,  # ruff: ignore[unused-function-argument] ; enable the Django test database
     mocker: pytest_mock.MockFixture,
 ) -> WGPFInstance:
     """A WGPF instance carrying a number and a categorical gene score.
@@ -90,7 +90,7 @@ def categorical_wgpf_instance(
 
 def test_gene_scores_list_view_categorical(
     user_client: Client,
-    categorical_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup instance
+    categorical_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup instance
 ) -> None:
     url = "/api/v3/gene_scores"
     response = user_client.get(url)
@@ -112,7 +112,7 @@ def test_gene_scores_list_view_categorical(
 
 def test_gene_scores_histograms_view_categorical(
     user_client: Client,
-    categorical_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup instance
+    categorical_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup instance
 ) -> None:
     url = "/api/v3/gene_scores/histograms"
     response = user_client.get(url)
@@ -129,7 +129,7 @@ def test_gene_scores_histograms_view_categorical(
 
 def test_gene_scores_list_view(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_scores"
     response = user_client.get(url)
@@ -148,7 +148,7 @@ def test_gene_scores_list_view(
 
 def test_gene_scores_partitions(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_scores/partitions"
     data = {
@@ -201,7 +201,7 @@ def test_gene_scores_partitions(
 def test_gene_scores_partitions_bad_request(
     user_client: Client,
     data: dict[str, str | float | None],
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_scores/partitions"
     response = user_client.post(
@@ -212,7 +212,7 @@ def test_gene_scores_partitions_bad_request(
 
 def test_gene_score_download(
     user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_scores/download/t4c8_score"
 

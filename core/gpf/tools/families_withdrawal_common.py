@@ -105,7 +105,12 @@ def resolve_family_ids(args: argparse.Namespace) -> set[str]:
         try:
             lines = path.read_text().splitlines()
         except OSError as exc:
-            logger.error("cannot read --families-file %s: %s", path, exc)
+            # TRY400 wants logger.exception. This is a bad command-line
+            # argument, reported to a user who typed it and followed by
+            # exit(1) -- `exc` is already in the message, and a traceback
+            # would bury it.
+            logger.error(  # ruff: ignore[error-instead-of-exception]
+                "cannot read --families-file %s: %s", path, exc)
             sys.exit(1)
         for line in lines:
             stripped = line.strip()

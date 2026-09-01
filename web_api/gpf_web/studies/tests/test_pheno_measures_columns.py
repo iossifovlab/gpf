@@ -19,7 +19,7 @@ def test_study_with_phenotype_data(
 
 def test_pheno_measure_genotype_browser_columns(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
 
     data = {

@@ -90,7 +90,7 @@ def create_enrichment_helper(
             return enrichment_helper
 
     if not isinstance(study, WDAEStudy):
-        raise ValueError(  # noqa: TRY004
+        raise ValueError(  # ruff: ignore[type-check-without-type-error]
             f"Enrichment helper for {study.study_id} is missing!")
 
     return EnrichmentHelper(gpf_instance.grr, study)
@@ -109,7 +109,7 @@ def create_enrichment_builder(
             return enrichment_builder
 
     if not isinstance(study, WDAEStudy):
-        raise ValueError(  # noqa: TRY004
+        raise ValueError(  # ruff: ignore[type-check-without-type-error]
             f"Enrichment helper for {study.study_id} is missing!")
     return EnrichmentBuilder(
         EnrichmentHelper(gpf_instance.grr, study),

@@ -14,7 +14,7 @@ from datasets_api.models import Dataset, DatasetHierarchy
 
 
 @pytest.fixture
-def migrate_to(transactional_db: None) -> Callable:  # noqa: ARG001
+def migrate_to(transactional_db: None) -> Callable:  # ruff: ignore[unused-function-argument]
     def _migrate_to(target: list[tuple[str, str]]) -> StateApps:
         executor = MigrationExecutor(connection)
         executor.loader.build_graph()
@@ -23,7 +23,7 @@ def migrate_to(transactional_db: None) -> Callable:  # noqa: ARG001
     return _migrate_to
 
 
-def test_dataset_id_is_unique_at_db_level(db: None) -> None:  # noqa: ARG001
+def test_dataset_id_is_unique_at_db_level(db: None) -> None:  # ruff: ignore[unused-function-argument]
     Dataset.objects.create(dataset_id="study_x")
     with pytest.raises(IntegrityError), transaction.atomic():
         Dataset.objects.create(dataset_id="study_x")
@@ -34,7 +34,7 @@ def test_dataset_id_is_unique_at_db_level(db: None) -> None:  # noqa: ARG001
 # contract — don't replace the DB constraint with a Python lock.
 
 
-def test_recreate_dataset_perm_is_idempotent(db: None) -> None:  # noqa: ARG001
+def test_recreate_dataset_perm_is_idempotent(db: None) -> None:  # ruff: ignore[unused-function-argument]
     Dataset.recreate_dataset_perm("study_x")
     Dataset.recreate_dataset_perm("study_x")
 
@@ -46,7 +46,7 @@ def test_recreate_dataset_perm_is_idempotent(db: None) -> None:  # noqa: ARG001
 
 
 def test_recreate_dataset_perm_after_external_insert(
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
 ) -> None:
     Dataset.objects.create(dataset_id="study_x")
 

@@ -144,7 +144,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
 
     def dataset_rename_hdfs_directory(
         self, old_id: str, new_id: str,
-        dry_run: bool = False,  # noqa: FBT001,FBT002
+        dry_run: bool = False,  # ruff: ignore[boolean-type-hint-positional-argument, boolean-default-value-positional-argument]
     ) -> None:
         """Rename dataset HDFS directory."""
         source_dir, dest_dir = \
@@ -166,7 +166,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
 
     def dataset_remove_hdfs_directory(
         self, dataset_id: str,
-        dry_run: bool = False,  # noqa: FBT001,FBT002
+        dry_run: bool = False,  # ruff: ignore[boolean-type-hint-positional-argument, boolean-default-value-positional-argument]
     ) -> None:
         """Remove dataset HDFS directory."""
         genotype_storage = self.get_genotype_storage(dataset_id)
@@ -189,7 +189,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
 
     def dataset_recreate_impala_tables(
         self, old_id: str, new_id: str,
-        dry_run: bool = False,  # noqa: FBT001,FBT002
+        dry_run: bool = False,  # ruff: ignore[boolean-type-hint-positional-argument, boolean-default-value-positional-argument]
     ) -> tuple[str | None, str | None]:
         """Recreate impala tables for a dataset."""
         genotype_storage = self.get_genotype_storage(old_id)
@@ -214,7 +214,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
         new_hdfs_pedigree = os.path.dirname(new_hdfs_pedigree)
         # pylint: disable=protected-access
         new_pedigree_table = \
-            genotype_storage._construct_pedigree_table(new_id)  # noqa: SLF001
+            genotype_storage._construct_pedigree_table(new_id)  # ruff: ignore[private-member-access]
 
         config = self.find_genotype_data_config(old_id)
         if config is None:
@@ -240,7 +240,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
 
             # pylint: disable=protected-access
             new_variants_table = genotype_storage \
-                ._construct_variants_table(new_id)  # noqa: SLF001
+                ._construct_variants_table(new_id)  # ruff: ignore[private-member-access]
 
             logger.info(
                 "going to recreate variants table %s from %s",
@@ -255,7 +255,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
 
     def dataset_drop_impala_tables(
         self, dataset_id: str,
-        dry_run: bool = False,  # noqa: FBT001,FBT002
+        dry_run: bool = False,  # ruff: ignore[boolean-type-hint-positional-argument, boolean-default-value-positional-argument]
     ) -> None:
         """Drop impala tables for a dataset."""
         assert self.check_dataset_impala_tables(dataset_id)

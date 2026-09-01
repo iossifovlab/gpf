@@ -21,7 +21,7 @@ class Command(ImportUsersBase, BaseCommand):
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument("email", type=str)
 
-    def handle(self, *args: Any, **options: Any) -> None:  # noqa: ARG002
+    def handle(self, *args: Any, **options: Any) -> None:  # ruff: ignore[unused-method-argument]
         # pylint: disable=invalid-name
         UserModel = get_user_model()
         try:

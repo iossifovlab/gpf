@@ -281,7 +281,7 @@ class ImpalaHelpers:
         region_bins: list[str] = []
         with closing(self.connection()) as connection, \
                 closing(connection.cursor()) as cursor:
-            query = f"SELECT DISTINCT(region_bin) FROM {db}.{table}"  # noqa: S608
+            query = f"SELECT DISTINCT(region_bin) FROM {db}.{table}"  # ruff: ignore[hardcoded-sql-expression]
             logger.info("running %s", query)
             cursor.execute(query)
             region_bins.extend(row[0] for row in cursor)

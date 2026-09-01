@@ -249,7 +249,7 @@ class BaseQueryBuilder(ABC):
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ) -> None:
         # pylint: disable=too-many-arguments,too-many-locals,unused-argument
         where_clause = self._build_where_string(
@@ -290,7 +290,7 @@ class BaseQueryBuilder(ABC):
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ) -> str:
         # pylint: disable=too-many-arguments,too-many-branches,unused-argument
         where = []
@@ -828,7 +828,7 @@ class BaseQueryBuilder(ABC):
     def _build_return_reference_and_return_unknown(
         self, *,
         return_reference: bool | None = None,
-        return_unknown: bool | None = None,  # noqa: ARG002
+        return_unknown: bool | None = None,  # ruff: ignore[unused-method-argument]
     ) -> str:
         # pylint: disable=unused-argument
         allele_index_col = self.where_accessors["allele_index"]

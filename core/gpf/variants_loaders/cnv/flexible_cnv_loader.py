@@ -350,7 +350,7 @@ def flexible_cnv_loader(
         return line.strip("\n\r").split(cnv_sep)
 
     if isinstance(filepath_or_buffer, (str, Path)):
-        infile = open(filepath_or_buffer, "rt")  # noqa: SIM115
+        infile = open(filepath_or_buffer, "rt")  # ruff: ignore[open-file-with-context-handler]
     else:
         infile = filepath_or_buffer  # type: ignore
 

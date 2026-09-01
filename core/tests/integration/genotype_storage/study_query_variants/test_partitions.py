@@ -52,7 +52,7 @@ def imported_study(
         bar    11  .  C   G   .    .      .    GT     1/0 0/0 0/0 0/1 1/1 1/1 1/1  # freq 5/8 = 62.5%, missense, g2
         bar    12  .  A   T   .    .      .    GT     0/0 1/0 1/0 0/0 0/1 0/1 0/1  # freq 3/8 = 37.5%, synonymous, g2
         bar    13  .  C   T   .    .      .    GT     0/0 1/0 1/0 1/0 0/1 0/0 0/0  # freq 2/8 = 25.0%, missense, g2
-        """)  # noqa
+        """)  # ruff: ignore[line-too-long]
 
     project_config_update = {
         "partition_description": {

@@ -35,13 +35,13 @@ def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
 
 def variants_region_bins(study_backend: ImpalaVariants) -> list[str]:
     """Collect region bins for a study."""
-    impala = study_backend._impala_helpers  # pylint: disable=protected-access  # noqa: SLF001
+    impala = study_backend._impala_helpers  # pylint: disable=protected-access  # ruff: ignore[private-member-access]
 
     region_bins: list[str] = []
     with closing(impala.connection()) as connection, \
             closing(connection.cursor()) as cursor:
         query = (
-            f"SELECT DISTINCT(region_bin) FROM "  # noqa: S608
+            f"SELECT DISTINCT(region_bin) FROM "  # ruff: ignore[hardcoded-sql-expression]
              f"{study_backend.db}.{study_backend.variants_table}"
         )
         logger.info("running %s", query)
@@ -56,7 +56,7 @@ def variants_compute_stats(
     region_bin: str | None = None,
 ) -> None:
     """Compute family variants tables statisticsfor specified region."""
-    impala = study_backend._impala_helpers  # pylint: disable=protected-access  # noqa: SLF001
+    impala = study_backend._impala_helpers  # pylint: disable=protected-access  # ruff: ignore[private-member-access]
     with closing(impala.connection()) as connection, \
             closing(connection.cursor()) as cursor:
         if region_bin is not None:
@@ -79,7 +79,7 @@ def summary_variants_compute_stats(
     region_bin: str | None = None,
 ) -> None:
     """Compute summary variants table statistics."""
-    impala = study_backend._impala_helpers  # pylint: disable=protected-access  # noqa: SLF001
+    impala = study_backend._impala_helpers  # pylint: disable=protected-access  # ruff: ignore[private-member-access]
     with closing(impala.connection()) as connection, \
             closing(connection.cursor()) as cursor:
         if region_bin is not None:
@@ -101,7 +101,7 @@ def summary_variants_compute_stats(
 
 def pedigree_compute_stats(study_backend: ImpalaVariants) -> None:
     """Compute pedigree table statistics."""
-    impala = study_backend._impala_helpers  # pylint: disable=protected-access  # noqa: SLF001
+    impala = study_backend._impala_helpers  # pylint: disable=protected-access  # ruff: ignore[private-member-access]
     with closing(impala.connection()) as connection, \
             closing(connection.cursor()) as cursor:
         query = (

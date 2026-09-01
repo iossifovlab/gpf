@@ -454,7 +454,7 @@ class Family:
     def get_columns(self) -> list[str]:
         """Collect list of columns for representing a family as data frame."""
         column_names = set(
-            self.members_in_order[0]  # noqa: SLF001
+            self.members_in_order[0]  # ruff: ignore[private-member-access]
                 ._attributes.keys())
         return get_pedigree_column_names(column_names)
 

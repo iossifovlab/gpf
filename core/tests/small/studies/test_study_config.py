@@ -66,7 +66,7 @@ def study_config(tmp_path_factory: pytest.TempPathFactory) -> Box:
         prb_cat.name = "Categorical"
         prb_cat.source = "instrument1.categorical"
         prb_cat.role = "prb"
-    """)  # noqa
+    """)  # ruff: ignore[line-too-long]
     root_dir = tmp_path_factory.mktemp("quads_f1_test_config")
     config_file = root_dir / "quads_f1.conf"
     config_file.write_text(config_contents)

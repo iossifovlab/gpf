@@ -22,7 +22,7 @@ t4c8_study_4,any_dataset;t4c8_study_4
         assert set(temp.read().split()) == set(expected_output.split())
 
 
-def test_datasets_restore(db: None) -> None:  # noqa: ARG001
+def test_datasets_restore(db: None) -> None:  # ruff: ignore[unused-function-argument]
     comp, _ = Dataset.objects.get_or_create(dataset_id="comp")
     comp.groups.add(Group.objects.create(name="any_dataset"))
     comp.groups.add(Group.objects.create(name="comp"))

@@ -3,12 +3,12 @@ import pathlib
 from typing import Any
 
 import pytest
+from gain.annotation.annotatable import Annotatable
 from gain.annotation.annotation_config import (
+    AnnotatorInfo,
     Attribute,
     AttributeConfig,
-    AnnotatorInfo,
 )
-from gain.annotation.annotatable import Annotatable
 from gain.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
@@ -331,7 +331,7 @@ class DummyAnnotator(Annotator):
 
     def annotate(
         self, annotatable: Annotatable | None,
-        context: dict[str, Any],  # noqa: ARG002
+        context: dict[str, Any],  # ruff: ignore[unused-method-argument]
     ) -> dict[str, Any]:
         """Produce annotation attributes for an annotatable."""
         if annotatable is None:

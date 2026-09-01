@@ -135,7 +135,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ) -> QueryRunner | None:
         """Build a query selecting the appropriate summary variants."""
         if self.summary_allele_table is None:
@@ -220,9 +220,9 @@ class SqlSchema2Variants(QueryVariantsBase):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        study_filters: list[str] | None = None,  # noqa: ARG002
+        study_filters: list[str] | None = None,  # ruff: ignore[unused-method-argument]
         tags_query: TagsQuery | None = None,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ) -> QueryRunner | None:
         """Build a query selecting the appropriate family variants."""
         if self.family_variant_table is None \

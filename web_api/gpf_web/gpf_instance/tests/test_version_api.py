@@ -34,7 +34,7 @@ def mock_instance(
 
 
 def test_get_gpf_version(
-    mock_instance: WGPFInstance,  # noqa: ARG001
+    mock_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
     anonymous_client: Client,
 ) -> None:
     """Try to get gpf version."""
@@ -47,7 +47,7 @@ def test_get_gpf_version(
 
 
 def test_update_gpf_main_description_anonymous(
-    mock_instance: WGPFInstance,  # noqa: ARG001
+    mock_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
     anonymous_client: Client,
 ) -> None:
     """Try to get gpf version."""
@@ -58,7 +58,7 @@ def test_update_gpf_main_description_anonymous(
 
 
 def test_gpf_main_description(
-    mock_instance: WGPFInstance,  # noqa: ARG001
+    mock_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
     admin_client: Client,
 ) -> None:
     """Try to get gpf version."""
@@ -77,7 +77,7 @@ def test_gpf_main_description(
 
 
 def test_update_gpf_about_description_anonymous(
-    mock_instance: WGPFInstance,  # noqa: ARG001
+    mock_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
     anonymous_client: Client,
 ) -> None:
     """Try to get gpf version."""
@@ -88,7 +88,7 @@ def test_update_gpf_about_description_anonymous(
 
 
 def test_gpf_about_description(
-    mock_instance: WGPFInstance,  # noqa: ARG001
+    mock_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
     admin_client: Client,
 ) -> None:
     """Try to get gpf version."""

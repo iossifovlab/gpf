@@ -79,7 +79,7 @@ class ImpalaVariants(SqlSchema2Variants):
             query = f"""SELECT value FROM {self.db}.{self.meta_table}
                         WHERE key = 'partition_description'
                         LIMIT 1
-            """  # noqa: S608
+            """  # ruff: ignore[hardcoded-sql-expression]
 
             cursor.execute(query)
             row = cursor.fetchone()
@@ -93,7 +93,7 @@ class ImpalaVariants(SqlSchema2Variants):
             query = f"""SELECT value FROM {self.db}.{self.meta_table}
                         WHERE key = 'variants_blob_serializer'
                         LIMIT 1
-            """  # noqa: S608
+            """  # ruff: ignore[hardcoded-sql-expression]
 
             cursor.execute(query)
             row = cursor.fetchone()
@@ -105,7 +105,7 @@ class ImpalaVariants(SqlSchema2Variants):
         query = f"""SELECT value FROM {self.db}.{self.meta_table}
                WHERE key = 'variants_data_schema'
                LIMIT 1
-            """  # noqa: S608
+            """  # ruff: ignore[hardcoded-sql-expression]
 
         with closing(self.connection()) as conn, \
                 closing(conn.cursor()) as cursor:
@@ -120,7 +120,7 @@ class ImpalaVariants(SqlSchema2Variants):
                 closing(conn.cursor()) as cursor:
             query = f"""
                 SELECT * FROM {self.db}.{self.pedigree_table}
-            """  # noqa: S608
+            """  # ruff: ignore[hardcoded-sql-expression]
             cursor.execute(query)
             ped_df = cast(pd.DataFrame, as_pandas(cursor))
 
@@ -132,7 +132,7 @@ class ImpalaVariants(SqlSchema2Variants):
 
     def _get_connection_factory(self) -> Any:
         # pylint: disable=protected-access
-        return self._impala_helpers._connection_pool  # noqa: SLF001
+        return self._impala_helpers._connection_pool  # ruff: ignore[private-member-access]
 
     def _deserialize_summary_variant(self, record: tuple) -> SummaryVariant:
         return self.deserialize_summary_variant(record[-1])

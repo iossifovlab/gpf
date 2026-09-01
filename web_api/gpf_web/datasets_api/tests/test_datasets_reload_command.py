@@ -26,7 +26,7 @@ def _hierarchy_rows(instance_id: str) -> set[tuple[str, str, bool]]:
 
 def test_datasets_reload_command_calls_reload_datasets(
     custom_wgpf_module: WGPFInstance,
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockFixture,
 ) -> None:
     """Running the command rebuilds the hierarchy via ``reload_datasets``."""
@@ -48,7 +48,7 @@ def test_datasets_reload_command_calls_reload_datasets(
 
 def test_datasets_reload_command_builds_hierarchy(
     custom_wgpf_module: WGPFInstance,
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """Running the command populates ``DatasetHierarchy`` relations."""
     instance_id = custom_wgpf_module.instance_id
@@ -72,7 +72,7 @@ def test_datasets_reload_command_builds_hierarchy(
 
 def test_datasets_reload_command_is_idempotent(
     custom_wgpf_module: WGPFInstance,
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
 ) -> None:
     """Running the command twice yields the same hierarchy (safe to repeat)."""
     instance_id = custom_wgpf_module.instance_id
@@ -91,7 +91,7 @@ def test_datasets_reload_command_is_idempotent(
 
 def test_datasets_reload_command_fails_when_hierarchy_empty(
     custom_wgpf_module: WGPFInstance,
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockFixture,
 ) -> None:
     """Fail loudly when datasets exist but the rebuild leaves no relations."""
@@ -111,7 +111,7 @@ def test_datasets_reload_command_fails_when_hierarchy_empty(
 
 def test_datasets_reload_command_allows_empty_when_no_datasets(
     custom_wgpf_module: WGPFInstance,
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockFixture,
 ) -> None:
     """An instance with no datasets legitimately yields an empty hierarchy."""

@@ -185,12 +185,12 @@ def layout2(
     individual6: Individual,
 ) -> Layout:
     layout = Layout()
-    layout._id_to_position = {  # noqa: SLF001
+    layout._id_to_position = {  # ruff: ignore[private-member-access]
         individual4: IndividualWithCoordinates(individual4, 100.0, 75.0),
         individual5: IndividualWithCoordinates(individual5, 50.0, 50.0),
         individual6: IndividualWithCoordinates(individual6, 50.0, 100.0),
     }
-    layout._individuals_by_rank = [  # noqa: SLF001
+    layout._individuals_by_rank = [  # ruff: ignore[private-member-access]
         [individual5, individual6], [individual4]]
     return layout
 

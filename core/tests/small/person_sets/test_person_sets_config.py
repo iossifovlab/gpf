@@ -113,8 +113,8 @@ def test_parse_person_set_collection_config_broken_sources(
      "No id defined for domain in person set collection: status"),
     ([{"id": "unaffected", "name": "Unaffected", "color": "#ffffff",
        "values": ["unaffected", "aaaa"]}],
-     "Values count ('unaffected', 'aaaa') mismatch for domain in person set "
-     "collection: status"),
+     ("Values count ('unaffected', 'aaaa') mismatch for domain in person set "
+     "collection: status")),
 ])
 def test_parse_person_set_collection_config_broken_domain(
     person_set_collection_config: dict,
@@ -136,8 +136,8 @@ def test_parse_person_set_collection_config_broken_domain(
      "No color defined for default in person set collection: status"),
     ({"id": "unspecified", "name": "Unspecified", "color": "#aaaaaa",
       "values": ["unspecified"]},
-     "Values shoud not be defined for default in "
-     "person set collection: status"),
+     ("Values shoud not be defined for default in "
+     "person set collection: status")),
 ])
 def test_parse_person_set_collection_config_broken_default(
     person_set_collection_config: dict,

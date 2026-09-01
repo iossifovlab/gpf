@@ -34,7 +34,7 @@ class Command(BaseCommand, ExportUsersBase):
             },
         )
 
-    def handle(self, *args: Any, **options: Any) -> None:  # noqa: ARG002
+    def handle(self, *args: Any, **options: Any) -> None:  # ruff: ignore[unused-method-argument]
         users = get_user_model().objects.all()
 
         if options["file"]:

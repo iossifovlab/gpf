@@ -32,7 +32,7 @@ def _handle_partition_description(
                 family.family_id)
             for person in family.persons.values():
                 person.set_attr("family_bin", family_bin)
-        families._ped_df = None  # noqa pylint: disable=protected-access
+        families._ped_df = None  # ruff: ignore[private-member-access] pylint: disable=protected-access
 
     return families
 

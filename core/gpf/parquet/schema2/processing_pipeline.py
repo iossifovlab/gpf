@@ -52,7 +52,7 @@ class AnnotationPipelineVariantsFilterMixin:
             allele_effects = annotation.context["allele_effects"]
             assert isinstance(allele_effects, AlleleEffects)
             # pylint: disable=protected-access
-            summary_allele._effects = allele_effects  # noqa: SLF001
+            summary_allele._effects = allele_effects  # ruff: ignore[private-member-access]
             del annotation.context["allele_effects"]
         public_attributes = {}
         for key, value in annotation.context.items():

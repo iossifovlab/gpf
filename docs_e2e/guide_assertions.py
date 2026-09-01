@@ -15,7 +15,6 @@ subprocess results are duck-typed (anything with ``.returncode``,
 import shlex
 from pathlib import Path
 
-
 _TAIL_LINES = 20
 
 
@@ -950,7 +949,7 @@ def assert_enrichment_test_result(
                     f"Most likely the capped ssc_denovo no longer carries "
                     f"de-novos on the gene set — check the denovo_instance "
                     f"cap window (_DENOVO_CHD8_REGION) still covers CHD8, and "
-                    f"that the import loaded the de-novos."
+                    f"that the import loaded the de-novos.",
                 )
         if expect_lgd_overlapped is not None:
             lgd = _sum_overlapped(result, ("LGDs",))
@@ -968,7 +967,7 @@ def assert_enrichment_test_result(
                     f"{expect_lgd_overlapped}. Either the cap window "
                     f"(_DENOVO_CHD8_REGION) changed, the effect classification "
                     f"changed, or the import/annotation changed. If the new "
-                    f"count is correct, update expect_lgd_overlapped."
+                    f"count is correct, update expect_lgd_overlapped.",
                 )
         return
     actual = (

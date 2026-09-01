@@ -10,10 +10,10 @@ from jinja2 import Template
 class ConfigDumper(yaml.Dumper):
     # pylint: disable=too-many-ancestors
     def increase_indent(
-        self, flow: bool = False,  # noqa: FBT001,FBT002
-        indentless: bool = False,  # noqa: FBT001,FBT002, ARG002
+        self, flow: bool = False,  # ruff: ignore[boolean-type-hint-positional-argument, boolean-default-value-positional-argument]
+        indentless: bool = False,  # ruff: ignore[boolean-type-hint-positional-argument, boolean-default-value-positional-argument, unused-method-argument]
     ) -> None:
-        super().increase_indent(flow, False)  # noqa: FBT003
+        super().increase_indent(flow, False)  # ruff: ignore[boolean-positional-value-in-call]
 
 
 class StudyConfigBuilder:

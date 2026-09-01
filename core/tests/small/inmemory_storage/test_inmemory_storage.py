@@ -12,7 +12,7 @@ def test_validate_config() -> None:
     config = {
         "storage_type": "inmemory",
         "id": "aaaa",
-        "dir": "/tmp/aaaa_filesystem",  # noqa: S108
+        "dir": "/tmp/aaaa_filesystem",  # ruff: ignore[hardcoded-temp-file]
     }
     res = InmemoryGenotypeStorage.validate_and_normalize_config(config)
     assert res is not None
@@ -21,7 +21,7 @@ def test_validate_config() -> None:
 def test_validate_config_missing_id() -> None:
     config = {
         "storage_type": "inmemory",
-        "dir": "/tmp/aaaa_filesystem",  # noqa: S108
+        "dir": "/tmp/aaaa_filesystem",  # ruff: ignore[hardcoded-temp-file]
     }
     with pytest.raises(
             ValueError,
@@ -32,7 +32,7 @@ def test_validate_config_missing_id() -> None:
 def test_validate_config_missing_storage_type() -> None:
     config = {
         "id": "aaaa",
-        "dir": "/tmp/aaaa_filesystem",  # noqa: S108
+        "dir": "/tmp/aaaa_filesystem",  # ruff: ignore[hardcoded-temp-file]
     }
     with pytest.raises(
             ValueError,
@@ -44,7 +44,7 @@ def test_validate_config_wrong_storage_type() -> None:
     config = {
         "id": "aaaa",
         "storage_type": "filesystem2",
-        "dir": "/tmp/aaaa_filesystem",  # noqa: S108
+        "dir": "/tmp/aaaa_filesystem",  # ruff: ignore[hardcoded-temp-file]
     }
     with pytest.raises(
             ValueError,

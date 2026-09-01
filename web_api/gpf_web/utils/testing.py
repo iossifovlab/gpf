@@ -260,7 +260,7 @@ chr1   90  .  G   C,GA .    .      .    GT     0/1  0/2  0/2 0/2 0/1  0/2  0/1 0
 chr1   100 .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/0 0/2  0/0  0/0 0/0
 chr1   119 .  A   G,C  .    .      .    GT     0/0  0/0  0/2 0/2 0/1  2/2  1/1 0/2
 chr1   122 .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/1 0/2  0/2  0/2 0/1
-        """)  # noqa: E501
+        """)  # ruff: ignore[line-too-long]
 
     return vcf_study(
         root_path,
@@ -912,7 +912,7 @@ chr1   54  SYN  T   C   .    .      .    GT     0/0    0/0    0/0  0/0  0/0    0
 chr1   57  SYN  A   C   .    .      .    GT     0/0    0/0    0/1  0/0  0/0    0/0    0/1  0/1  0/0    0/0    0/1
 chr1   117 MIS  T   G   .    .      .    GT     0/0    0/0    0/1  0/0  0/0    0/0    0/0  0/1  0/0    0/0    0/1
 chr1   119 SYN  A   G   .    .      .    GT     0/0    0/0    0/0  0/1  0/0    0/0    0/0  0/0  0/0    0/0    0/0
-        """)  # noqa: E501
+        """)  # ruff: ignore[line-too-long]
 
     return vcf_study(
         root_path,

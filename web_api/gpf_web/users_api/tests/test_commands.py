@@ -19,7 +19,7 @@ class UsersApiCommandsTests(TestCase):
         )
         new_admin_user = User.objects.create_user(  # pyright: ignore
             "shefa@test.abv", name="shf",
-            password="verysecret",  # noqa
+            password="verysecret",  # ruff: ignore[hardcoded-password-func-arg]
         )
         new_group = Group.objects.create(name="testgroup")
         new_user.groups.add(new_group)

@@ -77,7 +77,7 @@ def set_cacheable_hash(hashable_id: str, hashsum: str) -> None:
 def calc_cacheable_hash(content: str | None) -> str:
     if content is None:
         content = ""
-    return hashlib.md5(content.encode("utf-8")).hexdigest()  # noqa: S324
+    return hashlib.md5(content.encode("utf-8")).hexdigest()  # ruff: ignore[hashlib-insecure-hash-function]
 
 
 class WGPFInstance(GPFInstance):

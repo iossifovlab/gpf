@@ -35,7 +35,7 @@ def load_object(url_code: str, client: Any) -> Any:
 
 @pytest.fixture
 def query_load(
-    db: Any, user_client: Any,  # noqa: ARG001
+    db: Any, user_client: Any,  # ruff: ignore[unused-function-argument]
 ) -> Callable[[str], Any]:
 
     return functools.partial(load_object, client=user_client)
@@ -43,7 +43,7 @@ def query_load(
 
 @pytest.fixture
 def query_save(
-    db: Any, user_client: Any,  # noqa: ARG001
+    db: Any, user_client: Any,  # ruff: ignore[unused-function-argument]
 ) -> Callable[[Any, str, str], str | None]:
     return functools.partial(save_object, client=user_client)
 

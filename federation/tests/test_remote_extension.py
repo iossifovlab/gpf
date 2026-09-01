@@ -174,7 +174,7 @@ def test_extension_load_clients(
     assert isinstance(clients["id2"].session, GPFOAuthSession)
     oauth_session = clients["id2"].session
     assert oauth_session.client_id == "client_id2"
-    assert oauth_session.client_secret == "client_secret2"  # noqa: S105
+    assert oauth_session.client_secret == "client_secret2"  # ruff: ignore[hardcoded-password-string]
 
 
 def test_extension_get_tool(
@@ -208,7 +208,7 @@ def test_extension_get_tool_unsupported_tool(
 
 def test_pheno_tool_calc_variants(
     rest_client: RESTClient,
-    t4c8_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> None:
     query = {
         "datasetId": "t4c8_study_1",

@@ -58,7 +58,7 @@ class AnnotationPipelineDecorator(VariantsLoaderDecorator):
                         assert isinstance(allele_effects, AlleleEffects), \
                             attributes
                         # pylint: disable=protected-access
-                        sallele._effects = allele_effects  # noqa: SLF001
+                        sallele._effects = allele_effects  # ruff: ignore[private-member-access]
                         del attributes["allele_effects"]
                     public_attributes = {
                         key: value for key, value in attributes.items()

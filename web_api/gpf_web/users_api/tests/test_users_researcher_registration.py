@@ -123,7 +123,7 @@ def test_register_twice(
 
 def test_registration_all_steps(
     client: Client, researcher_without_password: WdaeUser,
-    tokens: tuple[AccessToken, AccessToken],  # noqa
+    tokens: tuple[AccessToken, AccessToken],  # ruff: ignore[unused-function-argument]
 ) -> None:
     url = "/api/v3/users/register"
     data = {

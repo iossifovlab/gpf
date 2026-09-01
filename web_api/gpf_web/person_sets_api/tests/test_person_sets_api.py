@@ -6,7 +6,7 @@ from rest_framework import status
 
 def test_collection_configs_view(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/person_sets/t4c8_study_1/configs"
     response = admin_client.get(url)
@@ -43,7 +43,7 @@ def test_collection_configs_view(
 
 def test_collection_domain_view(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/person_sets/t4c8_study_1/domain"
     response = admin_client.get(url)
@@ -70,7 +70,7 @@ def test_collection_domain_view(
 
 def test_get_person_sets_collection_stats(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     url = "/api/v3/person_sets/t4c8_study_1/stats/phenotype"
     response = admin_client.get(url)
@@ -89,7 +89,7 @@ def test_get_person_sets_collection_stats(
 
 def test_get_person_sets_collection_stats_nonexistent(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get(
         "/api/v3/person_sets/nonexistentstudy/stats/status",
@@ -103,7 +103,7 @@ def test_get_person_sets_collection_stats_nonexistent(
 
 def test_get_person_sets_collection_stats_no_id(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
 ) -> None:
     response = admin_client.get(
         "/api/v3/person_sets/t4c8_study_1/stats",

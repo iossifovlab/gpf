@@ -42,13 +42,13 @@ chr  position variant   familyData all.nParCalled all.prcntParCalled all.nAltAll
 chr1 1        sub(T->G) TOOMANY    1400           27.03              13           0.49
 chr1 5        sub(T->C) TOOMANY    1460           29.54              1            0.03
 chr1 12       sub(T->G) TOOMANY    300            6.07               588          98.00
-        """),  # noqa
+        """),  # ruff: ignore[line-too-long]
         textwrap.dedent("""
 chr  position variant   familyData
 chr1 1        sub(T->G) f1:0000/2222:0||0||0||0/71||38||36||29/0||0||0||0
 chr1 5        sub(T->C) f1:0110/2112:0||63||67||0/99||56||57||98/0||0||0||0
 chr1 12       sub(A->G) f1:1121/1101:38||4||83||25/16||23||0||16/0||0||0||0;f2:211/011:13||5||5/0||13||17/0||0||0
-        """)  # noqa
+        """)  # ruff: ignore[missing-trailing-comma, line-too-long]
     )
     return summary_data
 

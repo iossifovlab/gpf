@@ -152,7 +152,7 @@ def get_active_conda_environment() -> str | None:
     """Detect activate conda environment."""
     try:
         result = subprocess.run(
-            ["conda", "env", "list"],  # noqa: S607
+            ["conda", "env", "list"],  # ruff: ignore[start-process-with-partial-path]
             text=True, capture_output=True, check=True)
         assert result.returncode == 0, result
 
@@ -166,7 +166,7 @@ def get_active_conda_environment() -> str | None:
             match = regexp.match(line)
             if match:
                 return match.groupdict()["env"]
-    except Exception:  # pylint: disable=broad-except  # noqa: BLE001
+    except Exception:  # pylint: disable=broad-except
         logger.warning("unable to detect conda environment", exc_info=True)
     return None
 

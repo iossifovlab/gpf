@@ -53,8 +53,8 @@ def test_compound_zygosity(
         ),
         (
             "all([prb, sib]) or (dad and not prb)", "homozygous",
-            "all([prb~homozygous, sib~homozygous]) or "
-            "(dad~homozygous and not prb~homozygous)",
+            ("all([prb~homozygous, sib~homozygous]) or "
+            "(dad~homozygous and not prb~homozygous)"),
         ),
     ],
 )

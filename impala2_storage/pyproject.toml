@@ -41,7 +41,7 @@ dev = [
     "pytest-cov",
     "pytest-mock",
     "pytest-xdist",
-    "ruff==0.15.10",
+    "ruff==0.16.5",
 ]
 
 [tool.hatch.version]

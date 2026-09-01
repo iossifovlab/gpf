@@ -24,7 +24,7 @@ def custom_wgpf_module(
 @pytest.fixture
 def custom_wgpf(
     custom_wgpf_module: WGPFInstance,
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockFixture,
 ) -> WGPFInstance:
     reload_datasets(custom_wgpf_module)

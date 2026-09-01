@@ -152,7 +152,7 @@ class GPFConfigParser:
         try:
             ext = os.path.splitext(filename)[1]
             if ext not in cls.filetype_parsers:
-                raise ValueError(  # noqa: TRY301
+                raise ValueError(  # ruff: ignore[raise-within-try]
                     f"unsupported file type: {filename}")
             parser = cls.filetype_parsers[ext]
 

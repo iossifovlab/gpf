@@ -222,7 +222,7 @@ def study_data(
         1      865664 .  G   A   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/1  0/0
         1      901923 .  C   A   .    .      .    GT     0/1  0/0  0/0 0/1  0/0  0/0  0/0
         1      905957 .  C   T   .    .      .    GT     0/0  0/0  0/0 0/0  0/0  0/0  0/1
-        """,  # noqa: E501
+        """,  # ruff: ignore[line-too-long]
     )
     return ped_path, vcf_path
 

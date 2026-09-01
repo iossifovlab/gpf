@@ -10,7 +10,7 @@ from gpf.gpf_instance import GPFInstance
 @pytest.fixture
 def context_fixture(
     t4c8_instance: GPFInstance,
-    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # ruff: ignore[line-too-long]
 ) -> GenomicContext:
     return gpf_instance_genomic_context_fixture(t4c8_instance)
 

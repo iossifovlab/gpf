@@ -137,7 +137,7 @@ class RemoteGeneSetsDb(GeneSetsDb):
             self._local_gsdb.collections_descriptions,
         )
         for gsc in self.gene_set_collections.values():
-            gene_sets_collections_desc.append(  # noqa: PERF401
+            gene_sets_collections_desc.append(  # ruff: ignore[manual-list-comprehension]
                 {
                     "desc": gsc.web_label,
                     "name": gsc.collection_id,

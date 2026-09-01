@@ -9,7 +9,10 @@ import pathlib
 import sys
 from collections.abc import Iterator
 from typing import Any, cast
-from xml.etree.ElementTree import Element, tostring  # noqa: S405
+from xml.etree.ElementTree import (  # ruff: ignore[suspicious-xml-etree-import]
+    Element,
+    tostring,
+)
 
 import numpy as np
 import pandas as pd
@@ -774,7 +777,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
             variants_result = self._execute_variants_test_case(
                 case, params, variants)
 
-            return (count_result, variants_result)  # noqa: TRY300
+            return (count_result, variants_result)  # ruff: ignore[try-consider-else]
         except Exception as ex:  # pylint: disable=broad-except
             logger.exception("unexpected error in %s:", study_id)
             test_result = TestResult(

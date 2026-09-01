@@ -44,14 +44,14 @@ class EnrichmentBackgroundResourceImplementation(
         return res
 
     def create_statistics_build_tasks(
-        self, **kwargs: Any,  # noqa: ARG002
+        self, **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ) -> list[TaskDesc]:
         return []
 
-    def get_info(self, **kwargs: Any) -> str:  # noqa: ARG002
+    def get_info(self, **kwargs: Any) -> str:  # ruff: ignore[unused-method-argument]
         return InfoImplementationMixin.get_info(self)
 
-    def get_statistics_info(self, **kwargs: Any) -> str:  # noqa: ARG002
+    def get_statistics_info(self, **kwargs: Any) -> str:  # ruff: ignore[unused-method-argument]
         return InfoImplementationMixin.get_statistics_info(self)
 
     def calc_info_hash(self) -> bytes:

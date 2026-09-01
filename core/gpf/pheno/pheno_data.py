@@ -717,7 +717,7 @@ class PhenotypeData(CommonStudyMixin, ABC):
         assert collection is not None
         for person_set in collection.person_sets.values():
             if len(person_set.persons) > 0:
-                phenotype += person_set.values  # noqa: PD011
+                phenotype += person_set.values  # ruff: ignore[pandas-use-of-dot-values]
 
         number_of_probands = 0
         number_of_siblings = 0
@@ -928,7 +928,7 @@ class PhenotypeStudy(PhenotypeData):
         )
 
     def get_children_ids(
-        self, *, leaves: bool = True,  # noqa: ARG002
+        self, *, leaves: bool = True,  # ruff: ignore[unused-method-argument]
     ) -> list[str]:
         return [self.pheno_id]
 

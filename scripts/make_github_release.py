@@ -142,7 +142,7 @@ def _api(
 ) -> tuple[int, dict]:
     # URL is always a hardcoded https://api.github.com/... base built
     # below, never user-controlled, so the scheme audit is moot here.
-    req = urllib.request.Request(url, method=method)  # noqa: S310
+    req = urllib.request.Request(url, method=method)  # ruff: ignore[suspicious-url-open-usage]
     req.add_header("Authorization", f"Bearer {token}")
     req.add_header("Accept", "application/vnd.github+json")
     req.add_header("X-GitHub-Api-Version", API_VERSION)
@@ -151,7 +151,7 @@ def _api(
         data = json.dumps(payload).encode()
         req.add_header("Content-Type", "application/json")
     try:
-        with urllib.request.urlopen(req, data) as resp:  # noqa: S310
+        with urllib.request.urlopen(req, data) as resp:  # ruff: ignore[suspicious-url-open-usage]
             return resp.status, json.load(resp)
     except urllib.error.HTTPError as err:
         try:

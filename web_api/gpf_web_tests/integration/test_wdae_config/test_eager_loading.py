@@ -109,7 +109,7 @@ def test_no_eager_loading(
 
 
 def test_example_request(
-    mocker: pytest_mock.MockerFixture,  # noqa: ARG001
+    mocker: pytest_mock.MockerFixture,  # ruff: ignore[unused-function-argument]
     wgpf_fixture: WGPFInstance,
     wdae_django_server: Callable[
         [WGPFInstance, str], AbstractContextManager[LiveServer]],

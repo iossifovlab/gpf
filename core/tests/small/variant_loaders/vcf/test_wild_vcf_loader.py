@@ -63,7 +63,7 @@ def multivcf_missing(
     chr1    4   	.	G	A	.	    .   	EFF=MIS	GT	    0/0 	1/0 	0/1 	0/0 	0/0 	1/0 	0/1 	0/0 	0/0 	1/1 	0/1 	1/0
     chr1    7   	.	G	A	.	    .   	EFF=SYN	GT	    0/1 	0/0 	0/1 	0/0 	0/1 	0/0 	0/0 	0/1 	0/1 	0/0 	0/1 	0/0
     chr1	15      .	C	T	.	    .   	EFF=MIS	GT	    1/0 	1/0 	0/1 	0/0 	1/0 	1/0 	0/1 	0/0 	1/0 	1/1 	0/1 	0/1
-    """)  # noqa
+    """)  # ruff: ignore[line-too-long]
 
     setup_vcf(root_path / "vcf_data" / "in_chr2.vcf.gz", """
     ##fileformat=VCFv4.2
@@ -76,7 +76,7 @@ def multivcf_missing(
     chr1   	17  	.	G	A	.	    .   	EFF=MIS	GT	    0/0 	1/0 	0/1 	0/0 	0/0 	1/0 	0/1 	0/0 	0/0 	1/1 	0/1 	1/0
     chr1    21  	.	G	A	.	    .   	EFF=SYN	GT	    0/1 	0/0 	0/1 	0/0 	0/1 	0/0 	0/0 	0/1 	0/1 	0/0 	0/1 	0/0
     chr1    24  	.	C	T	.	    .   	EFF=MIS	GT	    1/0 	1/0 	0/1 	0/0 	1/0 	1/0 	0/1 	0/0 	1/0 	1/1 	0/1 	0/1
-    """)  # noqa
+    """)  # ruff: ignore[line-too-long]
 
     path_list.append(
         str(root_path / "vcf_data" / "in_chr[vc].vcf.gz"),
@@ -94,7 +94,7 @@ def multivcf_missing(
     chr1   	4   	.	G	A	.	    .   	EFF=MIS 	GT	0/0 	1/0 	0/1 	0/0 	0/0 	1/0 	0/1 	0/0 	0/0 	1/1 	0/1 	1/0
     chr1    7    	.	G	A	.	    .   	EFF=SYN 	GT	0/1 	0/0 	0/1 	0/0 	0/1 	0/0 	0/0 	0/1 	0/1 	0/0 	0/1 	0/0
     chr1	14  	.	C	T	.	    .   	EFF=MIS 	GT	1/0 	1/0 	0/1 	0/0 	1/0 	1/0 	0/1 	0/0 	1/0 	1/1 	0/1 	0/1
-    """)  # noqa
+    """)  # ruff: ignore[line-too-long]
 
     setup_vcf(root_path / "vcf_data" / "in_chr2.vcf.gz", """
     ##fileformat=VCFv4.2
@@ -107,7 +107,7 @@ def multivcf_missing(
     chr1    21   	.	G	A	.	    .   	EFF=MIS	GT	    0/0	    1/0	    0/1	    0/0	    0/0 	1/0	    0/1 	0/0 	0/0 	1/1 	0/1 	1/0
     chr1    45   	.	G	A	.	    .   	EFF=SYN	GT	    0/1	    0/0	    0/1 	0/0	    0/1	    0/0	    0/0 	0/1 	0/1 	0/0 	0/1 	0/0
     chr1    65  	.	C	T	.	    .   	EFF=MIS	GT	    1/0 	1/0	    0/1 	0/0	    1/0	    1/0	    0/1 	0/0 	1/0 	1/1 	0/1 	0/1
-    """)  # noqa
+    """)  # ruff: ignore[line-too-long]
 
     path_list.append(
         str(root_path / "vcf_data" / "in_chr[vc].vcf.gz"),

@@ -80,7 +80,7 @@ def impala_genotype_storage(
         "hdfs": {
             "host": hdfs_host,
             "port": 8020,
-            "base_dir": "/tmp/test_data",  # noqa: S108
+            "base_dir": "/tmp/test_data",  # ruff: ignore[hardcoded-temp-file]
         },
     }
     registry = GenotypeStorageRegistry()
@@ -99,7 +99,7 @@ def vcf_variants_loaders(
 
     def builder(  # pylint: disable=W0102
         path: str,
-        params: dict[str, Any] = {  # noqa: B006
+        params: dict[str, Any] = {  # ruff: ignore[mutable-argument-default]
             "vcf_include_reference_genotypes": True,
             "vcf_include_unknown_family_genotypes": True,
             "vcf_include_unknown_person_genotypes": True,
@@ -218,7 +218,7 @@ def grr_test_repo(fixture_dirname: Callable[[str], str]) -> Any:
 
 @pytest.fixture(scope="session")
 def gpf_instance(
-    default_dae_config: tuple[Box, str],  # noqa: ARG001
+    default_dae_config: tuple[Box, str],  # ruff: ignore[unused-function-argument]
     fixture_dirname: Callable[[str], str],
     grr_test_repo: Any,
 ) -> Callable[[str], Any]:
@@ -285,8 +285,7 @@ def gpf_instance_2013(
 def temp_filename() -> Generator[str, None, None]:
     dirname = tempfile.mkdtemp(suffix="_eff", prefix="variants_")
 
-    output = os.path.join(dirname, "temp_filename.tmp")
-    yield output
+    yield os.path.join(dirname, "temp_filename.tmp")
 
     shutil.rmtree(dirname)
 

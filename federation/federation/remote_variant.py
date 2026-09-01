@@ -172,9 +172,9 @@ class RemoteFamilyVariant(FamilyVariant):
             RemoteFamilyAllele(self.attributes_list, idx, family, self.columns)
             for idx in range(allele_count)
         ]
-        genotype = remote_alleles[0]._find_attribute(  # noqa: SLF001
+        genotype = remote_alleles[0]._find_attribute(  # ruff: ignore[private-member-access]
             "genotype")
-        best_state = remote_alleles[0]._find_attribute(  # noqa: SLF001
+        best_state = remote_alleles[0]._find_attribute(  # ruff: ignore[private-member-access]
             "best_st")
         self.summary_variant = RemoteVariant(
             copy(self.attributes_list), self.columns,

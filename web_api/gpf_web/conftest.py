@@ -1,4 +1,4 @@
-# noqa: INP001
+# ruff: ignore[implicit-namespace-package]
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import logging
@@ -60,8 +60,8 @@ def reset_flags() -> Iterator[None]:
 
 @pytest.fixture
 def hundred_users(
-    db: None,  # noqa: ARG001
-    user: WdaeUser,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
+    user: WdaeUser,  # ruff: ignore[unused-function-argument]
 ) -> Sequence[WdaeUser]:
     user_model = get_user_model()
     users_data = [
@@ -78,7 +78,7 @@ def hundred_users(
 
 @pytest.fixture
 def user_without_password(
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
 ) -> WdaeUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
@@ -95,7 +95,7 @@ def user_without_password(
 
 @pytest.fixture
 def admin(
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
 ) -> WdaeUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
@@ -125,7 +125,7 @@ def oauth_app(admin: AbstractUser) -> Application:
         authorization_grant_type="authorization-code",
         redirect_uris="http://localhost:4200/datasets",
         client_id="admin",
-        client_secret="secret",  # noqa: S106
+        client_secret="secret",  # ruff: ignore[hardcoded-password-func-arg]
     )
     new_application.save()
     return cast(Application, new_application)
@@ -140,14 +140,14 @@ def tokens(
         user=user,
         scope="read write",
         expires=timezone.now() + timedelta(seconds=300),
-        token="user-token",  # noqa: S106
+        token="user-token",  # ruff: ignore[hardcoded-password-func-arg]
         application=oauth_app,
     )
     admin_access_token = access_token(
         user=admin,
         scope="read write",
         expires=timezone.now() + timedelta(seconds=300),
-        token="admin-token",  # noqa: S106
+        token="admin-token",  # ruff: ignore[hardcoded-password-func-arg]
         application=oauth_app,
     )
     user_access_token.save()
@@ -160,7 +160,7 @@ def tokens(
 
 @pytest.fixture
 def datasets(
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
 ) -> None:
     reload_datasets(get_wgpf_instance())
 
@@ -211,15 +211,15 @@ def enrichment_grr() -> GenomicResourceRepo:
 
 @pytest.fixture
 def sample_dataset(
-    db: None,  # noqa: ARG001
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument]
 ) -> Dataset:
     return Dataset.objects.get(dataset_id="t4c8_dataset")
 
 
 @pytest.fixture
 def hundred_groups(
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
     sample_dataset: Dataset,
     user: WdaeUser,
 ) -> list[Group]:
@@ -242,7 +242,7 @@ def hundred_groups(
 
 @pytest.fixture
 def user(
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
 ) -> WdaeUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
@@ -262,16 +262,16 @@ def user(
 
 @pytest.fixture
 def admin_client(
-    admin: AbstractUser,  # noqa: ARG001
-    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
+    admin: AbstractUser,  # ruff: ignore[unused-function-argument]
+    tokens: tuple[AccessToken, AccessToken],  # ruff: ignore[unused-function-argument]
 ) -> Client:
     return Client(HTTP_AUTHORIZATION="Bearer admin-token")
 
 
 @pytest.fixture
 def user_client(
-    user: AbstractUser,  # noqa: ARG001
-    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
+    user: AbstractUser,  # ruff: ignore[unused-function-argument]
+    tokens: tuple[AccessToken, AccessToken],  # ruff: ignore[unused-function-argument]
 ) -> Client:
     return Client(HTTP_AUTHORIZATION="Bearer user-token")
 
@@ -279,7 +279,7 @@ def user_client(
 @pytest.fixture
 def anonymous_client(
     client: Client,
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
 ) -> Client:
     client.logout()
     return client
@@ -346,7 +346,7 @@ def session_t4c8_wgpf_instance(
 @pytest.fixture
 def t4c8_wgpf_instance(
     session_t4c8_wgpf_instance: WGPFInstance,
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockFixture,
 ) -> WGPFInstance:
 
@@ -412,7 +412,7 @@ def t4c8_response_transformer(
 @pytest.fixture
 def t4c8_wgpf(
     tmp_path: pathlib.Path,
-    db: None,  # noqa: ARG001
+    db: None,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockFixture,
 ) -> WGPFInstance:
     wgpf_instance = setup_wgpf_instance(tmp_path)

@@ -23,7 +23,7 @@ def bq_backend(imported_study: GenotypeDataStudy) -> BigQueryVariants:
 ])
 def test_family_queries(
     imported_study: GenotypeDataStudy,
-    index: int,  # noqa: ARG001
+    index: int,  # ruff: ignore[unused-function-argument]
     query: dict[str, Any],
     ecount: int,
 ) -> None:
@@ -41,7 +41,7 @@ def test_family_queries(
 ])
 def test_summary_queries(
     imported_study: GenotypeDataStudy,
-    index: int,  # noqa: ARG001
+    index: int,  # ruff: ignore[unused-function-argument]
     query: dict[str, Any],
     ecount: int,
 ) -> None:

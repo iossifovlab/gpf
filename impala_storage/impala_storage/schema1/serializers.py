@@ -720,7 +720,7 @@ class AlleleParquetSerializer:
             stream.seek(0)
             output = stream.read()
             stream.close()
-            return output  # noqa: TRY300
+            return output  # ruff: ignore[try-consider-else]
         except Exception:  # pylint: disable=broad-except
             logger.exception(
                 "problem storing extra attributes for variant %s: %s",

@@ -100,7 +100,7 @@ def _create_table(
         query = f"""
             CREATE TABLE {table_name} AS
             SELECT * FROM parquet_scan('{parquet_path}')
-        """  # noqa: S608
+        """  # ruff: ignore[hardcoded-sql-expression]
         cursor.sql(query)
 
 
@@ -123,7 +123,7 @@ def _create_table_partitioned(
             CREATE TABLE {table_name} AS
             SELECT * FROM
             parquet_scan('{dataset_path}', hive_partitioning = 1)
-        """  # noqa: S608
+        """  # ruff: ignore[hardcoded-sql-expression]
         logger.info("query: %s", query)
         cursor.sql(query)
 

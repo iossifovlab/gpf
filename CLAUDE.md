@@ -219,6 +219,32 @@ uv run mypy gpf_web --exclude web_api/docs/ \
 Config: `ruff.toml` (line-length: 80, target: py310),
 `mypy.ini` (strict, Django plugin via django-stubs).
 
+**Suppress ruff with `# ruff: ignore[rule-name]`, not
+`# noqa`.** Ruff 0.16 deprecated both spellings this repo
+used to rely on — `# noqa: ARG002` comments and rule *codes*
+in `ruff.toml` selectors — and reports them as
+`noqa-comments` / `rule-codes-in-selectors`. The whole tree
+was converted in one pass, so a new `# noqa` is now the odd
+one out and CI will flag it. The rule *name* goes in the
+brackets (`unused-method-argument`, not `ARG002`); the old
+code is kept in a trailing comment beside each `ruff.toml`
+entry so grepping for a code quoted in an old commit or
+issue still lands on the right row.
+
+Two things to know about the new spelling. Ruff parses the
+literal text `# noqa` wherever it appears in a comment, so
+prose *mentioning* a directive emits an "Invalid `# noqa`
+directive" warning — write "the E402 directive", not the
+directive itself. And a trailing suppression can be dropped
+by ruff's own fixer when it reformats the statement under it
+across multiple lines, so re-read the diff after a `--fix`
+run.
+
+Ruff 0.16 also dropped rule codes from every *text* output
+format, which is why CI writes `--output-format=json` and
+`scripts/convert_ruff_output.py` renders the flake8 syntax
+Warnings NG parses — see the `Jenkinsfile`.
+
 ### Pre-commit Hook
 
 ```bash
@@ -537,7 +563,7 @@ repository.
 - **lark 1.2** — parsing (GRR search grammar)
 - **fsspec / s3fs** — filesystem abstraction + S3 access
 - **Sentry SDK** — error tracking in production
-- Dev: **ruff 0.14**, **mypy 1.15**, **pytest**,
+- Dev: **ruff 0.16**, **mypy 1.15**, **pytest**,
   **pytest-xdist**, **pytestarch**
 
 ## Django Settings
