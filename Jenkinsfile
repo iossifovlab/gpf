@@ -857,10 +857,49 @@ pipeline {
 
                 stage('Deploy docs') {
                     when {
+                        // beforeOptions: decide the gate before taking
+                        // the lock, so branch and PR builds, and master
+                        // builds that don't touch docs, never contend
+                        // for it (they skip the stage anyway).
+                        beforeOptions true
                         allOf {
                             branch 'master'
                             changeset 'docs/**'
                         }
+                    }
+                    options {
+                        // Serialise the deploy across concurrent master
+                        // builds (#1015, ported from gain#1188). Two
+                        // master pushes that both touch docs/** and
+                        // overlap in time both reach this stage; when
+                        // the play was rm → mkdir → unarchive on one
+                        // shared directory, one build's delete could
+                        // land between the other's mkdir and unarchive
+                        // and fail it with "dest must be an existing
+                        // dir". The play now unpacks into a per-deploy
+                        // directory and flips a symlink (gain#1191), so
+                        // two concurrent runs both succeed; keep the
+                        // lock anyway: it is what stops them interleaving
+                        // the one-time migration step in the play, and
+                        // dropping it would make an older build
+                        // publishing over a newer one (gain#1190) easier
+                        // to hit, not harder. Ephemeral resource, named
+                        // for gpf so it never contends with gain's:
+                        // created on first use, nothing to configure on
+                        // the controller.
+                        lock(resource: 'gpf-docs-deploy')
+                    }
+                    environment {
+                        // Names the release directory the play unpacks
+                        // into and flips the published symlink onto, so
+                        // what is live on the docs host is traceable to
+                        // the build that put it there (gain#1191).
+                        // Derived here rather than in the shell below:
+                        // `sh` is /bin/sh, where ${VAR:0:8} is not
+                        // available, and this matches how the prod
+                        // images stage builds its GIT_SHORT.
+                        DOCS_STAMP = "${env.BUILD_NUMBER}-" +
+                            "${env.GIT_COMMIT?.take(8) ?: 'unknown'}"
                     }
                     // Master-only ansible push to iossifovlab.com, only
                     // when docs/** changed. Skipped on every branch
@@ -885,6 +924,7 @@ pipeline {
                                     -v $PWD:/workspace \
                                     -v $SSH_KEY:/deploy.key:ro \
                                     -e SSH_USER \
+                                    -e DOCS_STAMP \
                                     -w /workspace \
                                     gpf-web-api-ci:${BUILD_NUMBER} \
                                     sh -c '
