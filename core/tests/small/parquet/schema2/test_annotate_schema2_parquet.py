@@ -8,7 +8,7 @@ from glob import glob
 
 import pytest
 import pytest_mock
-from gain.annotation.score_annotator import PositionScoreAnnotator
+from gain.annotation.position_score_annotator import PositionScoreAnnotator
 from gain.genomic_resources.genomic_context import (
     clear_registered_contexts,
 )

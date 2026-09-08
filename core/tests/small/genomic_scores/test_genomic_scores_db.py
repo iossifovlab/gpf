@@ -5,7 +5,9 @@ import textwrap
 from typing import cast
 
 import pytest
-from gain.annotation.score_annotator import GenomicScoreAnnotatorBase
+from gain.annotation.genomic_score_annotator_base import (
+    GenomicScoreAnnotatorBase,
+)
 from gain.genomic_resources.histogram import (
     CategoricalHistogram,
     NullHistogram,
