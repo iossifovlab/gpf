@@ -3,6 +3,11 @@
 # Run from the gpf repo root after `docs/build_docs.sh` has produced
 # the tarball:
 #     bash docs/deploy/docs_deploy.sh
+#
+# Set DOCS_STAMP to name the release directory the play publishes; see
+# `docs_stamp` in docs_deploy.yaml, which reads it from the environment.
+# CI sets it to "<build number>-<short sha>"; without it the release is
+# named after the clock.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"

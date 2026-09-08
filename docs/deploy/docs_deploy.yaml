@@ -1,5 +1,6 @@
 - name: check GPF docs host
   hosts: all
+  gather_facts: false
   tasks:
 
   - name: debug
@@ -7,25 +8,152 @@
       msg: "gpf docs directory: {{ base_path }}/gpfdocs"
 
 
+# Ported from gain's docs/deploy/docs_deploy.yaml (gain#1191, then the
+# stamp pin from gain#1190) for #1015; gain's copy was itself imported from
+# here. Keep the two diffable: the intended difference is gain -> gpf.
 - name: deploy gpfdocs
   hosts: all
+  gather_facts: false
+
+  vars:
+    # How many release trees to keep, counting the one being published.
+    # Keep this >= 2: at 1, a deploy racing this one could prune the tree
+    # the other is about to publish, leaving `html` dangling.
+    docs_keep: 3
+
   tasks:
 
-  - name: copy gpfdocs-html.tar.gz
-    copy:
+  # The site is swapped in by renaming a symlink -- never by emptying the
+  # directory Apache serves. iossifovlab.com publishes the docs through a
+  # fixed alias:
+  #
+  #     Alias /gpfdocs /var/www/iossifovlab.com/gpf_documentation/gpfdocs/html
+  #
+  # so `<base_path>/gpfdocs/html` has to resolve at every instant. This
+  # play used to remove that directory and unpack a fresh copy in its
+  # place, which made every request during the unpack a 404 -- on every
+  # deploy, even one running alone (#1015, gain#1191). Apache has
+  # `Options FollowSymLinks` both for /var/www/ and in the vhost's own
+  # <Directory> block, so serving the site through a symlink needs no
+  # change to the Apache config.
+
+  # Names the release directory this deploy publishes, so what is live on
+  # the docs host is traceable to the build that put it there. CI exports
+  # DOCS_STAMP as "<build number>-<short sha>"; a hand-run deploy falls
+  # back to the clock and needs no arguments. `-e docs_stamp=...` still
+  # wins over both, as extra vars do.
+  #
+  # Pinned with set_fact rather than declared under `vars`: a play var is
+  # re-templated at every reference, and the fallback shells out to `date`,
+  # so each task would see its own second -- the release directory would
+  # be created under one name and the unpack would look for the next
+  # ("must be an existing dir"). CI's DOCS_STAMP never changes between
+  # tasks, which is why only hand-run deploys hit it (gain#1190).
+  - name: name the release this deploy publishes
+    set_fact:
+      docs_stamp: >-
+        {{ lookup('env', 'DOCS_STAMP')
+           or lookup('pipe', 'date -u +%Y%m%dT%H%M%SZ') }}
+
+  # docs_stamp is interpolated into paths under base_path and is what the
+  # prune below globs for, so a stray `/` or `*` would reach outside the
+  # release namespace. The contract is cheap enough to check rather than
+  # just document.
+  - name: check the release stamp is a usable directory suffix
+    assert:
+      that: docs_stamp is match('^[A-Za-z0-9._-]+$')
+      fail_msg: >-
+        docs_stamp must be one path segment of letters, digits, dot,
+        underscore or dash; got "{{ docs_stamp }}"
+      quiet: true
+
+  # Creates `gpfdocs` too, if the host has never been deployed to. Mode is
+  # explicit because --strip-components=1 drops the archive's own `html/`
+  # member, and with it the mode the served directory used to inherit from
+  # the tarball; it would otherwise come from the docs host's umask, and a
+  # restrictive umask there would 403 the whole site invisibly.
+  - name: create the release directory for this deploy
+    file:
+      path: "{{ base_path }}/gpfdocs/html-{{ docs_stamp }}"
+      state: directory
+      mode: "0755"
+
+  # Local `src`, so unarchive stages the tarball through its own
+  # per-invocation remote tmpdir and removes it on every exit path. Copying
+  # it into base_path under a name of our own (as this play used to) would
+  # mean two deploys could collide on that path, and a failure between the
+  # copy and the unpack would strand the tarball where the prune below
+  # never looks.
+  #
+  # build_docs.sh packs the site with `tar -C docs/build/ html/`, so every
+  # member carries an `html/` prefix. Strip it, so the release directory
+  # holds the site itself rather than a nested html/.
+  - name: unarchive gpfdocs-html.tar.gz into the release directory
+    unarchive:
       src: ../gpfdocs-html.tar.gz
-      dest: "{{ base_path }}/gpfdocs-html.tar.gz"
+      dest: "{{ base_path }}/gpfdocs/html-{{ docs_stamp }}"
+      extra_opts:
+        - --strip-components=1
 
-  - name: clean user docs directory
-    file: path={{ base_path }}/gpfdocs state=absent
+  - name: check what the published path is now
+    stat:
+      path: "{{ base_path }}/gpfdocs/html"
+      follow: false
+    register: gpfdocs_published
 
-  - name: ensure user docs directory exists
-    file: path={{ base_path }}/gpfdocs state=directory
+  # Converts the pre-symlink layout, where `html` was a real directory. It
+  # cannot be left to `force: true` on the link task: the file module
+  # refuses outright to turn a non-empty directory into a symlink, and
+  # while `path` is still a directory it resolves a relative `src` against
+  # `path` itself -- so the link task would look for `.../html/html-<stamp>`
+  # and fail.
+  #
+  # `follow: false` makes stat report a symlink as islnk and not isdir, so
+  # isdir alone distinguishes the old layout from the new one.
+  #
+  # This is the one moment in the play when the published path does not
+  # resolve, and it lasts a single task transition. It fires on the first
+  # deploy after #1015 and then only on a host that somehow has the old
+  # layout again -- a restore from a pre-1015 backup, say. It is not
+  # self-disabling, so it stays. With the stage lock held that is the whole
+  # story; without it, a second deploy could read `html` as a directory
+  # here and then delete the symlink the first one published.
+  #
+  # Renaming the old tree aside instead of deleting it was measured (on
+  # gain#1191) and is not worth it: the gap is dominated by the transition
+  # to the next task, not by the delete.
+  - name: retire the pre-symlink docs directory
+    file:
+      path: "{{ base_path }}/gpfdocs/html"
+      state: absent
+    when: gpfdocs_published.stat.isdir | default(false)
 
-  - name: unarchive gpfdocs-html.tar.gz
-    unarchive: |
-      src={{ base_path }}/gpfdocs-html.tar.gz dest={{ base_path }}/gpfdocs
-      remote_src=yes
+  # The atomic swap. The file module publishes a link by creating it under
+  # a temporary name in the same directory and rename()-ing that over the
+  # target, so a reader sees either the whole previous release or the
+  # whole new one.
+  - name: publish the release
+    file:
+      path: "{{ base_path }}/gpfdocs/html"
+      src: "html-{{ docs_stamp }}"
+      state: link
 
-  - name: clean gpfdocs-html.tar.gz
-    file: path={{ base_path }}/gpfdocs-html.tar.gz state=absent
+  - name: find the release directories
+    find:
+      paths: "{{ base_path }}/gpfdocs"
+      patterns: "html-*"
+      file_type: directory
+    register: gpfdocs_releases
+
+  # Keep the newest docs_keep releases and delete the tail, so the docs
+  # host does not accumulate one full site per deploy. The release just
+  # published is the newest by mtime, so it is never in the tail.
+  - name: prune superseded releases
+    file:
+      path: "{{ item }}"
+      state: absent
+    loop: >-
+      {{ (gpfdocs_releases.files | sort(attribute='mtime', reverse=true)
+          | map(attribute='path') | list)[docs_keep | int:] }}
+    loop_control:
+      label: "{{ item | basename }}"
