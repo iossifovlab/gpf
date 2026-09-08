@@ -5,7 +5,9 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from gain.annotation.annotation_pipeline import AnnotationPipeline
-from gain.annotation.score_annotator import GenomicScoreAnnotatorBase
+from gain.annotation.genomic_score_annotator_base import (
+    GenomicScoreAnnotatorBase,
+)
 from gain.genomic_resources.genomic_scores import (
     build_score_from_resource,
 )
