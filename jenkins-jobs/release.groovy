@@ -50,9 +50,12 @@ pipelineJob('gpf-release') {
             'OPTIONAL — pin the bundled gain wheel to this ' +
             'CalVer-tagged gain release (e.g. 2026.5.12). Must ' +
             'match ^\\d{4}\\.\\d+\\.\\d+$ if set. Fetched from ' +
-            'https://wheels.seqpipe.org/gain/. Leave empty for ' +
+            'https://wheels.seqpipe.org/gain/. Also pins ' +
+            'gain-core ==<version> in the gpf-core and gpf-web ' +
+            'conda packages (gpf#1019). Leave empty for ' +
             'the default behaviour: copy the gain wheel that ' +
-            'upstream gpf-master CI tested with. Sharp tool — ' +
+            'upstream gpf-master CI tested with, and leave ' +
+            'gain-core unpinned in the conda packages. Sharp tool — ' +
             'the release is NOT re-tested after the swap; the ' +
             'operator certifies API compatibility. Only settable ' +
             'via manual Jenkins UI trigger; the tag-push ' +
