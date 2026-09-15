@@ -42,7 +42,12 @@ requirements:
     - duckdb >=1.5,<2
     - filelock >=3.19
     - fsspec >=2026.2
-    - gain-core
+    # Pinned to the gain release the gpf release was cut against when
+    # gpf-release passes GAIN_CORE_SPEC (e.g. "==2026.9.2", derived from
+    # its GAIN_PIN_VERSION param). Unset — master CI, local builds — it
+    # renders as a bare `gain-core`. NB: `env.get(...) | default(...)`
+    # raises on a missing variable; only the `default=` kwarg form works.
+    - gain-core ${{ env.get("GAIN_CORE_SPEC", default="") }}
     - intervaltree
     - jinja2 >=3.1
     - lark >=1.2

@@ -115,9 +115,12 @@ pipeline {
             description: 'OPTIONAL — pin the bundled gain wheel to ' +
                 'this CalVer-tagged gain release (e.g. 2026.5.12). ' +
                 'Must match ^\\d{4}\\.\\d+\\.\\d+$ if set. Fetched ' +
-                'from https://wheels.seqpipe.org/gain/. Leave empty ' +
+                'from https://wheels.seqpipe.org/gain/. Also pins ' +
+                'gain-core ==<version> in the gpf-core and gpf-web ' +
+                'conda packages (gpf#1019). Leave empty ' +
                 'for the default behaviour: copy the gain wheel that ' +
-                'upstream gpf-master CI tested with. Sharp tool — ' +
+                'upstream gpf-master CI tested with, and leave ' +
+                'gain-core unpinned in the conda packages. Sharp tool — ' +
                 'the release is NOT re-tested after the swap; the ' +
                 'operator certifies API compatibility. Only ' +
                 'settable via manual Jenkins UI trigger; the ' +
@@ -443,6 +446,31 @@ pipeline {
                                  "GAIN_PIN_VERSION." >&2
                             exit 1
                         fi
+
+                        # The same version must exist as a gain-core
+                        # conda package: the gpf-core / gpf-web
+                        # recipes pin `gain-core ==GAIN_PIN_VERSION`
+                        # (gpf#1019), and a pin nobody can resolve
+                        # would publish uninstallable packages. Same
+                        # polarity as the wheel probe — a missing
+                        # package is FATAL, and (as for the wheel)
+                        # FORCE_REPUBLISH does not bypass it.
+                        if ! docker run --rm "${CONDA_BUILDER}" \
+                            anaconda show \
+                                "${ANACONDA_USER}/gain-core/${GAIN_PIN_VERSION}" \
+                                >/dev/null 2>&1; then
+                            echo "ERROR: gain-core ${GAIN_PIN_VERSION}" \
+                                 "not found on Anaconda.org/${ANACONDA_USER}." \
+                                 "The conda packages would pin a" \
+                                 "gain-core nobody can install." \
+                                 "Check https://anaconda.org/${ANACONDA_USER}/gain-core" \
+                                 "and re-trigger with a valid" \
+                                 "GAIN_PIN_VERSION." >&2
+                            exit 1
+                        fi
+                        echo "Gain conda probe: gain-core" \
+                             "${GAIN_PIN_VERSION} present on" \
+                             "Anaconda.org/${ANACONDA_USER}"
                     fi
                 '''
             }
@@ -697,6 +725,21 @@ pipeline {
                         | sed 's#-py3-none-any.whl$##')
                     echo "VCS_VERSION=$VCS_VERSION"
 
+                    # gain-core pin for the gpf-core / gpf-web conda
+                    # recipes (gpf#1019): an exact match on the gain
+                    # release the operator pinned via GAIN_PIN_VERSION
+                    # (pre-flight already proved it exists on
+                    # Anaconda.org). Empty when the param is unset —
+                    # the bundled gain is then a gain-master .dev
+                    # wheel with no conda counterpart, so the recipes
+                    # render a bare `gain-core`, exactly as the
+                    # master multibranch build does.
+                    GAIN_CORE_SPEC=""
+                    if [ -n "${GAIN_PIN_VERSION}" ]; then
+                        GAIN_CORE_SPEC="==${GAIN_PIN_VERSION}"
+                    fi
+                    echo "GAIN_CORE_SPEC=${GAIN_CORE_SPEC:-(unset: gain-core unpinned)}"
+
                     # Expand the SPA tarball into dist/web_ui/gpfjs/
                     # — the gpf-web conda recipe consumes that
                     # directory as a `path:` source. See the master
@@ -726,6 +769,7 @@ pipeline {
                             -v $PWD:/workspace \
                             -w /workspace \
                             -e VCS_VERSION="$VCS_VERSION" \
+                            -e GAIN_CORE_SPEC="$GAIN_CORE_SPEC" \
                             "${CONDA_BUILDER}" \
                             rattler-build build \
                                 --recipe $proj/conda-recipe/recipe.yaml \
@@ -1050,8 +1094,10 @@ EOF
             steps {
                 script {
                     def gainNote = params.GAIN_PIN_VERSION ?
-                        "gain pinned to ${env.GAIN_BUNDLED_VERSION}" :
-                        "gain ${env.GAIN_BUNDLED_VERSION} (auto)"
+                        "gain pinned to ${env.GAIN_BUNDLED_VERSION}, " +
+                            "conda gain-core ==${env.GAIN_BUNDLED_VERSION}" :
+                        "gain ${env.GAIN_BUNDLED_VERSION} (auto, " +
+                            "conda gain-core unpinned)"
                     // Empty when the GitHub release stage failed (it's
                     // non-fatal), so the announcement only points at a
                     // release page that actually exists.
