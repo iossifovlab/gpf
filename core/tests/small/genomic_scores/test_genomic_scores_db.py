@@ -73,6 +73,10 @@ def scores_repo() -> GenomicResourceProtocolRepo:
                   labels: ~
             """),
             "statistics": {
+                # The image a statistics build draws beside the histogram:
+                # the attribute help addresses it only when the resource's
+                # manifest lists it (iossifovlab/gain#1533).
+                "histogram_phastCons100.png": "drawn",
                 "histogram_phastCons100.json": textwrap.dedent("""{
                     "bars": [
                         470164,
@@ -234,7 +238,12 @@ def test_build_attribute_help(
     assert "position_score" in help_text
     assert '<div class="score-description">' in help_text
     assert "Genomic resource:" in help_text
-    assert "histogram" in help_text.lower()
+    # The image the fixture's manifest lists is embedded by its address
+    assert (
+        "![HISTOGRAM]("
+        f"{annotation_gpf.grr.get_resource('phastCons').get_url()}"
+        "/statistics/histogram_phastCons100.png)"
+    ) in help_text
     assert "details" in help_text.lower()
     assert "**source**:" in help_text
     assert "**resource_type**:" in help_text
