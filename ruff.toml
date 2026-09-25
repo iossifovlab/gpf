@@ -108,6 +108,9 @@ preview = true
 # A standalone helper script run by hand against the built web UI, not a
 # package member -- nothing imports it.
 "web_ui/ppindex.py" = ["implicit-namespace-package"]  # INP001
+# The rest_client integration backend's DJANGO_SETTINGS_MODULE, imported
+# from PYTHONPATH by run_gpf.sh -- not a package member.
+"rest_client/scripts/backend/integration_settings.py" = ["implicit-namespace-package"]  # INP001
 
 [lint.isort]
 # Make first-party detection deterministic across local
