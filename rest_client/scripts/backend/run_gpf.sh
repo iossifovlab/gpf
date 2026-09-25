@@ -13,6 +13,9 @@ python /workspace/rest_client/setup_testing_remote.py
 
 export GRR_DEFINITION_FILE=/workspace/rest_client/tmp/grr_definition.yaml
 export DAE_DB_DIR=/workspace/rest_client/tmp/gpf_instance
+# WAL SQLite for the throwaway DB -- see integration_settings.py (#1033).
+export PYTHONPATH=/workspace/rest_client/scripts/backend
+export DJANGO_SETTINGS_MODULE=integration_settings
 
 wdaemanage migrate --noinput
 wdaemanage user_create admin@iossifovlab.com -p secret \
