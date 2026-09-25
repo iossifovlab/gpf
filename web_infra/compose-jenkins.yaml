@@ -219,6 +219,18 @@ services:
     build:
       context: ../web_e2e
       dockerfile: Dockerfile.playwright
+    # Run as the agent's uid/gid, like instance-import (gpf#1030).
+    # Playwright writes its JUnit report, traces and videos into the
+    # bind-mounted reports dir below; as root (the image default --
+    # it has no USER directive) that left root-owned directories in
+    # the workspace which the `jenkins` user cannot delete, so the
+    # next wipe of the workspace failed. The image only needs to be
+    # readable by an arbitrary uid: /app and the browsers under
+    # /ms-playwright are, and Playwright's Chromium runs unsandboxed
+    # by default, so no root is needed to launch it. HOME=/tmp
+    # because npx writes its cache under $HOME and the image's
+    # /root is not writable by that uid.
+    user: "${AGENT_UID:-0}:${AGENT_GID:-0}"
     volumes:
       - ../web_e2e/reports:/app/reports
     depends_on:
@@ -236,6 +248,7 @@ services:
     environment:
       CI: "1"
       JENKINS: "1"
+      HOME: /tmp
       # tb-nxl: matches the value passed to instance-import so
       # Playwright's worker count never exceeds the provisioned pool.
       # #933: default 4 → 8, enabled by the #931 gthread backend (see

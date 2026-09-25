@@ -176,9 +176,43 @@ pipeline {
                 // wipe inside an alpine container as root so
                 // root-owned leftovers from a previous build
                 // don't trip the host-side rm.
+                //
+                // Reclaim in the same container, permanently
+                // (gpf#1030, the gain#1552 contract). Builds before
+                // the Run-pytest hand-back left root-owned
+                // .pytest_cache and docs_e2e bytecode in the
+                // checkout; the rm above does not reach them, and
+                // the jenkins user cannot delete their contents,
+                // so the next wipe of this workspace — the git
+                // plugin's, when the slot is handed to another
+                // build, or Jenkins' reaper — failed. Count the
+                // entries that would have blocked such a wipe
+                // (directories not owned by the agent and not
+                // world-writable) BEFORE the rm, then hand
+                // everything left back to the agent, printing each
+                // path. The count must be 0 on every build after
+                // the first one on a workspace; a non-zero count
+                // means a container is writing as root again.
+                // `chown -h` reowns a symlink itself. .git is
+                // pruned: the checkout writes it as the agent.
                 sh '''
-                    docker run --rm -v "$PWD:/wd" -w /wd alpine \
-                        rm -rf dist reports
+                    AGENT="$(id -u):$(id -g)"
+                    export AGENT
+                    docker run --rm -v "$PWD:/wd" -e AGENT -w /wd alpine \
+                        sh -c '
+                            set -eu
+                            uid="${AGENT%:*}"
+                            blocking=$(find /wd -path /wd/.git -prune \
+                                -o ! -user "$uid" -type d ! -perm -o+w -print \
+                                | wc -l)
+                            rm -rf dist reports
+                            find /wd -path /wd/.git -prune \
+                                -o ! -user "$uid" -print \
+                                -exec chown -h "$AGENT" {} + \
+                                > /tmp/reclaimed
+                            cat /tmp/reclaimed
+                            echo "Prepare workspace: reclaimed $(wc -l < /tmp/reclaimed) workspace entries for uid $uid; $blocking directories would have blocked a workspace wipe"
+                        '
                     mkdir -p reports/docs_e2e dist
                 '''
             }
@@ -288,24 +322,54 @@ pipeline {
                     // unbound there.
                     lock(resource: "docs-e2e-on-${env.NODE_NAME}") {
                     try {
-                        String filter = params.STAGE_FILTER?.trim()
-                        String pytest_k =
-                            filter ? "-k '${filter}'" : ""
-                        sh """
+                        // The driver runs as root (gpf#1030): it
+                        // writes the node-local gpf-grr-cache
+                        // volume, which the prewarm seeded as root,
+                        // and the conda prefixes the guide creates.
+                        // It also writes into the bind-mounted
+                        // checkout — the JUnit report, pytest's
+                        // .pytest_cache, docs_e2e bytecode — and a
+                        // root-owned directory there is one the
+                        // jenkins user cannot delete, so the next
+                        // wipe of this workspace fails. So the
+                        // container hands the whole checkout back
+                        // to the agent before it exits, whether or
+                        // not pytest passed, and then exits with
+                        // pytest's own status.
+                        //
+                        // STAGE_FILTER reaches pytest through the
+                        // container environment rather than being
+                        // spliced into this script: a quote in the
+                        // -k expression would otherwise close the
+                        // `sh -c` string and run the rest of it on
+                        // the agent host.
+                        sh '''
                             mkdir -p reports/docs_e2e
 
-                            docker run --rm \\
-                                -v "\$PWD:/workspace" \\
-                                -v "\$GRR_CACHE_VOLUME:/grr-cache" \\
-                                -e DOCS_E2E_CHANNEL=/workspace/dist/conda \\
-                                -e DOCS_E2E_GRR_CACHE=/grr-cache \\
-                                -w /workspace \\
-                                "\$DRIVER_IMAGE" \\
-                                mamba run -n driver \\
-                                    pytest -v -s ${pytest_k} \\
-                                        --junitxml=/workspace/reports/docs_e2e/pytest.xml \\
-                                        docs_e2e/
-                        """
+                            docker run --rm \
+                                -v "$PWD:/workspace" \
+                                -v "$GRR_CACHE_VOLUME:/grr-cache" \
+                                -e DOCS_E2E_CHANNEL=/workspace/dist/conda \
+                                -e DOCS_E2E_GRR_CACHE=/grr-cache \
+                                -e STAGE_FILTER \
+                                -e AGENT="$(id -u):$(id -g)" \
+                                -w /workspace \
+                                "$DRIVER_IMAGE" \
+                                sh -c '
+                                    set --
+                                    if [ -n "${STAGE_FILTER:-}" ]; then
+                                        set -- -k "$STAGE_FILTER"
+                                    fi
+                                    rc=0
+                                    mamba run -n driver \
+                                        pytest -v -s "$@" \
+                                            --junitxml=/workspace/reports/docs_e2e/pytest.xml \
+                                            docs_e2e/ \
+                                        || rc=$?
+                                    chown -R -h "$AGENT" /workspace
+                                    exit "$rc"
+                                '
+                        '''
                     } finally {
                         // archiveArtifacts in the post block
                         // picks the JUnit + any captured logs.
@@ -335,6 +399,24 @@ pipeline {
                     fingerprint: false,
                 )
             }
+            // Workspace-ownership invariant (gpf#1030, the gain#1552
+            // contract): nothing under the workspace but .git may be
+            // owned by another uid when the build ends. In `always`,
+            // after the report is published, so it runs whether or
+            // not the suite passed — but it fails THIS build, naming
+            // the paths, instead of leaving an undeletable tree for
+            // a later wipe to trip over. find reports an unreadable
+            // root-owned directory on stderr and still prints it, so
+            // `|| true` keeps the listing.
+            sh '''
+                foreign="$(find "$PWD" -path "$PWD/.git" -prune \
+                    -o ! -user "$(id -u)" -print || true)"
+                if [ -n "$foreign" ]; then
+                    echo "Workspace entries left owned by another uid (gpf#1030):" >&2
+                    echo "$foreign" >&2
+                    exit 1
+                fi
+            '''
         }
         // `always` above must run before these so the test-result action
         // zulipAlert() reads is already attached to the build.

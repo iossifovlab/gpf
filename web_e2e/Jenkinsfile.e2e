@@ -212,10 +212,11 @@ pipeline {
             returnStdout: true,
         ).trim()
 
-        // instance-import and the split-mode backend run as the
-        // agent's uid/gid instead of root, so the instance dir they
-        // rewrite in the workspace stays owned by `jenkins` and
-        // remains prunable by the next build. Root-owned artefacts in
+        // instance-import, the split-mode backend and the Playwright
+        // e2e-tests runner run as the agent's uid/gid instead of
+        // root, so what they write in the workspace (the instance
+        // dir, the reports) stays owned by `jenkins` and remains
+        // prunable by the next build. Root-owned artefacts in
         // a workspace are a bug class this stack has already been
         // bitten by. This is independent of the GRR, which is now
         // mounted read-only. (The combined-mode image still needs
@@ -251,52 +252,70 @@ pipeline {
 
         stage('Prepare workspace') {
             steps {
-                // Playwright writes traces / videos to
-                // web_e2e/reports as root (the e2e-tests container
-                // has no USER directive and needs none), so the host
-                // Jenkins user can't `rm` them on the next build. Run
-                // the cleanup inside an alpine container as root to
-                // sidestep that. Wiping wdae-logs each build keeps
-                // the captured artefact attributable to this build
-                // only.
+                // Every container that writes into the workspace runs
+                // as the agent (gpf#1030, the gain#1552 contract):
+                // instance-import, the split-mode backend and the
+                // Playwright e2e-tests runner. The one exception is
+                // the combined-mode image, which must be root (Apache
+                // on :80 under supervisord); the Run-e2e stage hands
+                // what it wrote back after `down`. A root-owned
+                // directory in the workspace is not a local nuisance:
+                // the jenkins user cannot delete its contents, so the
+                // NEXT wipe of this workspace fails — this job's own
+                // rm, the git plugin's initial-clone wipe when the
+                // slot is handed to another build, or Jenkins'
+                // workspace reaper — weeks after the build that
+                // wrote it.
                 //
-                // The chown in the same container reclaims the import
-                // residue under web_e2e/gpf_e2e_instance (OUTPUT/,
-                // genotype_storage/, ...) written by earlier root-run
-                // imports (a combined-mode run touches /data as root) —
-                // a now-non-root instance-import could not rm -rf a
-                // root-owned directory tree, since unlinking its
-                // contents needs write permission on the directories
-                // themselves. It is metadata-only, so it costs inodes,
-                // not bytes. The node-local GRR is bind-mounted
-                // read-only and lives outside the workspace, so it is
-                // not touched here.
+                // Reclaim first, permanently, as root in an alpine
+                // container (the host user cannot do it). It counts
+                // the entries that would have blocked a workspace
+                // wipe — directories not owned by the agent and not
+                // world-writable — BEFORE the rm, so inherited
+                // residue is reported rather than silently deleted,
+                // then wipes this build's scratch trees and hands
+                // everything left back to the agent, printing each
+                // path. The count must be 0 on every build after the
+                // first one on a workspace; a non-zero count is the
+                // regression signal for any container that starts
+                // writing as root again. `chown -h` reowns a symlink
+                // itself rather than its target. .git is pruned: the
+                // checkout writes it as the agent. The node-local
+                // GRR is bind-mounted read-only and lives outside the
+                // workspace, so it is not touched here.
                 //
                 // Then mkdir runs on the host so the new reports and
                 // wdae-logs dirs are Jenkins-owned: the post-stage
                 // host-side `cp` writes into reports/, and dockerd
                 // creates a *missing* bind source as root:root — a
-                // dir the non-root instance-import / backend could
-                // not write into.
+                // dir the non-root containers could not write into.
                 //
-                // AGENT_UID / AGENT_GID are re-derived from the shell
-                // rather than trusted from the environment{} block —
-                // see the `Compose env` stage for why. Here it also
-                // matters for correctness of the chown: a
-                // `chown -R ":"` (empty uid:gid) is an error.
+                // The uid/gid are re-derived from the shell rather
+                // than trusted from the environment{} block — see the
+                // `Compose env` stage for why. Here it also matters
+                // for correctness of the chown: a `chown ":"` (empty
+                // uid:gid) is an error.
                 sh '''
-                    AGENT_UID="$(id -u)"
-                    AGENT_GID="$(id -g)"
-                    export AGENT_UID AGENT_GID
+                    AGENT="$(id -u):$(id -g)"
+                    export AGENT
 
                     docker run --rm \
                         -v "$PWD:/wd" \
-                        -e AGENT_UID -e AGENT_GID \
+                        -e AGENT \
                         -w /wd alpine sh -c '
                             set -eu
+                            uid="${AGENT%:*}"
+                            blocking=$(find /wd -path /wd/.git -prune \
+                                -o ! -user "$uid" -type d ! -perm -o+w -print \
+                                | wc -l)
                             rm -rf dist reports web_e2e/reports \
                                    web_infra/wdae-logs
-                            chown -R "$AGENT_UID:$AGENT_GID" /wd
+                            find /wd -path /wd/.git -prune \
+                                -o ! -user "$uid" -print \
+                                -exec chown -h "$AGENT" {} + \
+                                > /tmp/reclaimed
+                            cat /tmp/reclaimed
+                            echo "Prepare workspace: reclaimed $(wc -l < /tmp/reclaimed) workspace entries for uid $uid; $blocking directories would have blocked a workspace wipe"
                         '
 
                     mkdir -p reports/web_e2e web_infra/wdae-logs
@@ -842,6 +861,20 @@ EOF
                         // wrote to web_infra/wdae-logs into the
                         // artefact tree. Both `|| true` so a capture
                         // hiccup can't tank a green build.
+                        //
+                        // Combined mode's `frontend` is the one
+                        // container that writes into the workspace
+                        // as root (gpf#1030): it rewrites the
+                        // instance under web_e2e/gpf_e2e_instance
+                        // and the Django logs under
+                        // web_infra/wdae-logs. Once the stack is
+                        // down, a root alpine container hands those
+                        // two trees back to the agent, so the
+                        // end-of-build ownership check stays exact
+                        // and the next wipe can delete them. The
+                        // wdae-logs copy runs after the hand-back:
+                        // a log the root container wrote 0600 is
+                        // unreadable to the host `cp` until then.
                         sh '''
                             set -a; . ./web_infra/.env; set +a
                             if [ "$STACK_MODE" = "combined" ]; then
@@ -867,15 +900,24 @@ EOF
                                     -f $COMPOSE_OVERLAY \
                                     logs --no-color "$svc" || true
                             done
-                            cp -r web_infra/wdae-logs \
-                                  reports/web_e2e/ \
-                                  2>/dev/null || true
                             docker compose \
                                 --env-file web_infra/.env \
                                 -p "$COMPOSE_PROJECT" \
                                 -f web_infra/compose-jenkins.yaml \
                                 -f $COMPOSE_OVERLAY \
                                 down -v --remove-orphans || true
+                            if [ "$STACK_MODE" = "combined" ]; then
+                                docker run --rm \
+                                    -v "$PWD:/wd" \
+                                    -w /wd alpine \
+                                    chown -R -h "$(id -u):$(id -g)" \
+                                        web_e2e/gpf_e2e_instance \
+                                        web_infra/wdae-logs \
+                                    || true
+                            fi
+                            cp -r web_infra/wdae-logs \
+                                  reports/web_e2e/ \
+                                  2>/dev/null || true
                         '''
                     }
                     }
@@ -900,6 +942,25 @@ EOF
                     fingerprint: false,
                 )
             }
+            // Workspace-ownership invariant (gpf#1030, the gain#1552
+            // contract): nothing under the workspace but .git may be
+            // owned by another uid when the build ends. Here in
+            // `always`, after the reports are published, so it runs
+            // whether or not the suite passed and cannot mask the
+            // test verdict — but it fails THIS build, naming the
+            // paths, instead of leaving an undeletable tree for a
+            // `Checkout SCM` weeks later in some other build. find
+            // reports an unreadable root-owned directory on stderr
+            // and still prints it, so `|| true` keeps the listing.
+            sh '''
+                foreign="$(find "$PWD" -path "$PWD/.git" -prune \
+                    -o ! -user "$(id -u)" -print || true)"
+                if [ -n "$foreign" ]; then
+                    echo "Workspace entries left owned by another uid (gpf#1030):" >&2
+                    echo "$foreign" >&2
+                    exit 1
+                fi
+            '''
         }
         // `always` above must run before these so the test-result action
         // zulipAlert() reads is already attached to the build.
