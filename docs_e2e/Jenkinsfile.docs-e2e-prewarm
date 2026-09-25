@@ -156,9 +156,34 @@ pipeline {
 
         stage('Prepare workspace') {
             steps {
+                // Wipe as root in alpine, then reclaim in the same
+                // container, permanently (gpf#1030, the gain#1552
+                // contract): count the entries that would block a
+                // workspace wipe — directories not owned by the
+                // agent and not world-writable — before the rm, and
+                // hand everything left back to the agent, printing
+                // each path. The count must be 0 on every build
+                // after the first one on a workspace. `chown -h`
+                // reowns a symlink itself; .git is pruned, the
+                // checkout writes it as the agent.
                 sh '''
-                    docker run --rm -v "$PWD:/wd" -w /wd alpine \
-                        rm -rf dist gs
+                    AGENT="$(id -u):$(id -g)"
+                    export AGENT
+                    docker run --rm -v "$PWD:/wd" -e AGENT -w /wd alpine \
+                        sh -c '
+                            set -eu
+                            uid="${AGENT%:*}"
+                            blocking=$(find /wd -path /wd/.git -prune \
+                                -o ! -user "$uid" -type d ! -perm -o+w -print \
+                                | wc -l)
+                            rm -rf dist gs
+                            find /wd -path /wd/.git -prune \
+                                -o ! -user "$uid" -print \
+                                -exec chown -h "$AGENT" {} + \
+                                > /tmp/reclaimed
+                            cat /tmp/reclaimed
+                            echo "Prepare workspace: reclaimed $(wc -l < /tmp/reclaimed) workspace entries for uid $uid; $blocking directories would have blocked a workspace wipe"
+                        '
                     mkdir -p dist
                 '''
             }
@@ -331,12 +356,21 @@ PREWARM
                     # not 90 minutes into the GRR download.
                     bash -n .prewarm-inner.sh
 
+                    # The seeding container is root (it writes the
+                    # root-owned gpf-grr-cache volume and /root), and
+                    # it runs grr_cache_repo inside the bind-mounted
+                    # gs/ clone. It hands the whole checkout back to
+                    # the agent before exiting, pass or fail, and
+                    # exits with the seeding script's own status
+                    # (gpf#1030): a root-owned directory left in the
+                    # workspace is one the jenkins user cannot delete.
                     docker run --rm \
                         -v "$PWD:/workspace" \
                         -v "$GRR_CACHE_VOLUME:/grr-cache" \
+                        -e AGENT="$(id -u):$(id -g)" \
                         -w /workspace \
                         "$DRIVER_IMAGE" \
-                        bash -lc 'bash /workspace/.prewarm-inner.sh'
+                        bash -lc 'rc=0; bash /workspace/.prewarm-inner.sh || rc=$?; chown -R -h "$AGENT" /workspace; exit "$rc"'
                 '''
             }
         }
@@ -344,10 +378,26 @@ PREWARM
 
     post {
         always {
+            // After the scratch clone is removed, assert the
+            // workspace-ownership invariant (gpf#1030, the gain#1552
+            // contract): nothing under the workspace but .git may be
+            // owned by another uid when the build ends. It fails
+            // THIS build, naming the paths, instead of leaving an
+            // undeletable tree for a later wipe to trip over. find
+            // reports an unreadable root-owned directory on stderr
+            // and still prints it, so `|| true` keeps the listing.
             sh '''
                 docker rmi "$DRIVER_IMAGE" || true
                 docker run --rm -v "$PWD:/wd" -w /wd alpine \
                     rm -rf gs .prewarm-inner.sh || true
+
+                foreign="$(find "$PWD" -path "$PWD/.git" -prune \
+                    -o ! -user "$(id -u)" -print || true)"
+                if [ -n "$foreign" ]; then
+                    echo "Workspace entries left owned by another uid (gpf#1030):" >&2
+                    echo "$foreign" >&2
+                    exit 1
+                fi
             '''
         }
         // Kept despite the failure-only rule (seqpipe/infra#105): this is a
