@@ -281,6 +281,7 @@ Pre-move history lives in `iossifovlab/gpf_documentation`.
 Some tests require external services. Start them with:
 
 ```bash
+docker login registry.seqpipe.org   # once; the MinIO images live there (LAN / VPN only)
 docker compose up -d
 ```
 

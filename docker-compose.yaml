@@ -10,15 +10,18 @@ services:
     # matches what we ship.
     # See: github.com/minio/minio/issues/18372 + /18389
     #
-    # gpf#1021 (port of gain#1476): pulled from quay.io, not Docker
-    # Hub. The `minio/minio` and `minio/mc` repositories vanished from
-    # Docker Hub (404 on the repository itself, verified 2026-09-15),
-    # so any agent without a cached copy fails `compose up` with "pull
-    # access denied ... repository does not exist" — and the fleet's
-    # daily `docker image prune` evicts that cache. quay.io publishes
-    # the same tag with the same manifest digest (sha256:14cea493…),
-    # so the bytes the tests run against are unchanged.
-    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    # gpf#1027 (port of gain#1706): served from our own registry.
+    # MinIO withdrew the `minio/minio` and `minio/mc` images from
+    # Docker Hub (2026-09-11, gpf#1021) and then from quay.io
+    # (2026-09-24); the community edition is archived, so there is no
+    # upstream left to point at. This is the last community release
+    # as pooh's cache held it, re-pushed unchanged (upstream index
+    # digest sha256:14cea493…) as an amd64 + arm64 index, pinned by
+    # that index's digest. The registry needs a login even to pull:
+    # CI takes it from the `registry.seqpipe.org` Jenkins credential;
+    # on a workstation run `docker login registry.seqpipe.org` once
+    # (LAN / VPN only).
+    image: registry.seqpipe.org/minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:fef3b9cf8ce1bcb83cd30b9a41273c8585855c0a269fa97cf297c6615745b969
     expose:
       - "9000"
       - "9001"
@@ -39,8 +42,10 @@ services:
       retries: 5
 
   minio-client:
-    # quay.io for the same reason as `minio` above (gpf#1021).
-    image: quay.io/minio/mc:latest
+    # Our registry, for the same reason as `minio` above (gpf#1027).
+    # Pinned to the release the old `mc:latest` resolved to (upstream
+    # index digest sha256:a7fe349e…) — `latest` no longer exists anywhere.
+    image: registry.seqpipe.org/minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:b13adbe0366ec9311957246a2303d69f561f224e58a6eed6687e25db27791bc5
     entrypoint: >
       /bin/sh -c "
       /usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin;
