@@ -1,6 +1,30 @@
 Release Notes
 =============
  
+* 2026.9.0
+    * ``GET /api/v3/gene_scores`` lists a gene score with a categorical
+      or null histogram instead of failing with a 500 (:issue:`982`).
+    * The ``gpf-web`` production image's supervisord opens its control
+      socket, so ``supervisorctl`` can restart gunicorn independently of
+      Apache (:issue:`981`).
+    * The ``np_score`` annotator name is no longer accepted; the e2e
+      instance and fixtures declare ``allele_score`` (:issue:`1004`).
+    * The score annotators import from gain's per-kind modules and
+      ``Attribute`` is built without an aggregator instance, as gain
+      2026.9.0 requires (:issue:`1012`, :issue:`1013`).
+    * ``environment.yml`` mirrors the pyproject dependency constraints
+      instead of exact pins, and ``requirements.txt`` is removed.
+    * Django 5.2.16 (CVE-2026-7666), djangorestframework 3.18.1,
+      sqlparse 0.6.0 and the web_ui and web_e2e lock files clear every
+      open Dependabot advisory.
+    * The docs deploy is serialized across concurrent master builds and
+      publishes by flipping a symlink, so the published docs no longer
+      404 mid-deploy (:issue:`1015`).
+    * **Fixed:** `the bug issues closed in this release
+      <https://github.com/iossifovlab/gpf/issues?q=is%3Aissue+label%3Abu
+      g+is%3Aclosed+reason%3Acompleted+closed%3A2026-07-09T08%3A19%3A46Z
+      ..2026-09-08T13%3A11%3A32Z>`__.
+
 * 2026.7.0
     * Added two family-withdrawal tools, families_withdrawal_genotypes
       and families_withdrawal_phenotypes, for removing consent-withdrawn

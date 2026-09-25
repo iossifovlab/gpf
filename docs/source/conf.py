@@ -18,6 +18,7 @@ extensions = [
     "sphinx.ext.doctest",
     "sphinx.ext.todo",
     "sphinx.ext.coverage",
+    "sphinx.ext.extlinks",
     "sphinx.ext.imgmath",
     "sphinx.ext.viewcode",
     "sphinx.ext.autosectionlabel",
@@ -42,3 +43,7 @@ html_static_path = ['_static']
 
 
 autosectionlabel_prefix_document = True
+
+extlinks = {
+    "issue": ("https://github.com/iossifovlab/gpf/issues/%s", "#%s"),
+}
