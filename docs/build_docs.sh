@@ -18,7 +18,6 @@
 # `gpf-docs-deploy` Jenkins-managed SSH credential.
 
 set -euo pipefail
-# PROBE #1031 (revert me): docs/** change so Build docs runs.
 
 # Repo root regardless of where the script is invoked from.
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
