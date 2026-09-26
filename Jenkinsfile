@@ -946,6 +946,8 @@ pipeline {
                                         --find-links ./dist/gain
                                     bash docs/build_docs.sh
                                 '
+                            # PROBE #1031 (revert me): plant a root-owned dir
+                            docker run --rm -v "$PWD:/w" alpine mkdir -p /w/probe-1031-root-owned/inner
                             cp docs/gpfdocs-html.tar.gz dist/docs/
                         '''
                     }
