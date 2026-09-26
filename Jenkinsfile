@@ -60,15 +60,24 @@ def runProject(Map args) {
     // `uv build`. .git is excluded from the Docker build context via
     // .dockerignore, which keeps the test image small and cacheable;
     // it's only needed at distribution-build time.
+    //
+    // The container stays root (the image's /workspace, where mypy,
+    // pytest and uv write their caches, is root-owned), so it hands
+    // what it wrote into the bind mounts back to the agent on ANY exit
+    // — the end-of-run ownership assertion in the top-level post
+    // fails the build otherwise (#1031).
     sh label: "Run ${name} CI", script: """
         mkdir -p reports/${name} dist/${name}
         docker run --rm \\
+            -e DOCKER_USER="\$(id -u):\$(id -g)" \\
             -v \$PWD/reports/${name}:/reports \\
             -v \$PWD/dist/${name}:/dist \\
             -v \$PWD/.git:/workspace/.git:ro \\
             ${dockerRunExtra} \\
             ${imageTag} \\
                 sh -c '
+                give_back() { chown -R "\$DOCKER_USER" /reports /dist; }
+                trap give_back EXIT
                 # ruff / mypy / pylint are non-gating: --exit-zero or `|| true`
                 # ensures their non-zero exit codes never propagate. Their
                 # findings end up in /reports as text and are picked up by
@@ -267,8 +276,49 @@ pipeline {
                 }
 
                 stage('Prepare workspace') {
+                    // Reclaim first, every build (#1031, the contract
+                    // from iossifovlab/gain#1552 / gain#1566). The
+                    // jenkins user cannot empty a directory owned by
+                    // root unless it is world-writable, so root-owned
+                    // trees left in the checkout kill a later wipe of
+                    // this workspace — `Checkout SCM` of whatever build
+                    // lands in the slot, or Jenkins reaping a deleted
+                    // branch. Build docs used to leave ~8 200 such
+                    // directories (.venv, docs/build, autodoc
+                    // __pycache__, gpf-getting-started) on every master
+                    // workspace it ran in. A short root container hands
+                    // everything the agent does not own back to it and
+                    // PRINTS each path, then prints how many of them
+                    // were directories that would have blocked a wipe:
+                    // not owned by the agent and not world-writable.
+                    // That count must be 0 on every build after the
+                    // first — non-zero is the regression signal for any
+                    // stage that starts leaving undeletable trees
+                    // again. Permanent, not transitional; costs seconds.
+                    // Busybox find: numeric uid, octal -perm. `chown -h`
+                    // so a .venv symlink is reowned, not followed. .git
+                    // is mounted read-only and pruned.
                     steps {
-                        sh 'rm -rf reports dist && mkdir -p reports dist'
+                        sh '''
+                            docker run --rm \
+                                -e DOCKER_USER="$(id -u):$(id -g)" \
+                                -v "$PWD:/workspace" \
+                                -v "$PWD/.git:/workspace/.git:ro" \
+                                alpine sh -c '
+                                    set -eu
+                                    uid="${DOCKER_USER%:*}"
+                                    undeletable=$(find /workspace -path /workspace/.git -prune \
+                                        -o ! -user "$uid" -type d ! -perm -0002 -print \
+                                        | wc -l)
+                                    find /workspace -path /workspace/.git -prune \
+                                        -o ! -user "$uid" -print \
+                                        -exec chown -h "$DOCKER_USER" {} + \
+                                        > /tmp/reclaimed
+                                    cat /tmp/reclaimed
+                                    echo "Reclaim workspace: reclaimed $(wc -l < /tmp/reclaimed) entries for uid $uid, of which $undeletable directories would have blocked a workspace wipe"
+                                '
+                            rm -rf reports dist && mkdir -p reports dist
+                        '''
                     }
                 }
 
@@ -664,11 +714,18 @@ pipeline {
                                     // paying for lint + jest first.
                                     sh label: 'Run web_ui CI', script: """
                                         mkdir -p reports/web_ui dist/web_ui
+                                        # Root container: gives what it
+                                        # wrote into the mounts back to
+                                        # the agent on any exit (#1031),
+                                        # as runProject() does.
                                         docker run --rm \\
+                                            -e DOCKER_USER="\$(id -u):\$(id -g)" \\
                                             -v \$PWD/reports/web_ui:/reports \\
                                             -v \$PWD/dist/web_ui:/dist \\
                                             ${imageTag} \\
                                             sh -c '
+                                                give_back() { chown -R "\$DOCKER_USER" /reports /dist; }
+                                                trap give_back EXIT
                                                 set +e
                                                 # 1) conda-flavoured SPA build +
                                                 #    tarball. Fail fast if angular
@@ -848,12 +905,31 @@ pipeline {
                     // docker build is a near-instant cache hit; we
                     // still re-issue it so the stage is self-contained
                     // and runnable in either mode.
+                    //
+                    // The docs container runs as the Jenkins user, like
+                    // Conda packages (#1031): the checkout is
+                    // bind-mounted over /workspace, which shadows the
+                    // image's own .venv, so `uv sync` builds a fresh
+                    // venv INSIDE the checkout, and build_docs.sh
+                    // writes docs/build, docs/.tmp, the apidoc trees,
+                    // gpf-getting-started and autodoc's __pycache__
+                    // there too. As root (the image default) that was
+                    // ~8 200 directories the jenkins user cannot
+                    // delete, on every workspace this stage ran in.
+                    // HOME=/tmp because uv's cache and git's dotfiles
+                    // land under $HOME, and the image's /root is not
+                    // writable by an arbitrary UID. Prepare workspace
+                    // has already reclaimed any root-owned residue an
+                    // earlier build left, so the agent-UID `uv sync`
+                    // and build_docs.sh's `rm -rf`s can reach it.
                     steps {
                         sh '''
                             docker build -f web_api/Dockerfile \
                                 -t gpf-web-api-ci:${BUILD_NUMBER} .
                             mkdir -p dist/docs
                             docker run --rm \
+                                --user "$(id -u):$(id -g)" \
+                                -e HOME=/tmp \
                                 -v $PWD:/workspace \
                                 -v $PWD/.git:/workspace/.git:ro \
                                 -w /workspace \
@@ -1640,6 +1716,23 @@ print('gpf-web prefix settings OK')"
                     fingerprint: true,
                 )
             }
+            // Ownership assertion (#1031). Every container that touches
+            // the checkout has exited by now; nothing under it (bar
+            // .git) may be owned by another UID. Fails loudly in the
+            // build that left it, naming the paths, rather than in a
+            // `Checkout SCM` weeks later in whatever build lands in this
+            // slot. Here — after the reports and artefacts above are
+            // published — so a red test stage still reports its verdict
+            // and cannot hide the assertion.
+            sh '''
+                foreign="$(find "$PWD" -path "$PWD/.git" -prune \
+                    -o ! -user "$(id -u)" -print)"
+                if [ -n "$foreign" ]; then
+                    echo "Workspace entries left owned by another uid (#1031):" >&2
+                    echo "$foreign" >&2
+                    exit 1
+                fi
+            '''
         }
         // `always` above must run before these so the test-result action
         // zulipAlert() reads is already attached to the build.
