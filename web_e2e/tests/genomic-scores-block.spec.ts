@@ -212,7 +212,7 @@ test.describe('Genomic scores tests', () => {
 
     await genomicScores.searchBox.focus();
     await page.keyboard.type('Pathogenic/Likely_pathogenic');
-    await genomicScores.valueOptionByText('Pathogenic/Likely_pathogenic (27651)').click();
+    await genomicScores.valueOptionByText('Pathogenic/Likely_pathogenic (27670)').click();
 
     await genotypeBrowser.runTablePreview();
     await expect(genotypeBrowser.variantsCountSpan).toHaveText('1 variant selected', { timeout: 120000 });
@@ -444,11 +444,11 @@ test.describe('Genomic scores tests', () => {
 
     await genomicScores.searchBox.focus();
     await page.keyboard.type('Pathogenic');
-    await genomicScores.valueOptionByText('Pathogenic (158261)').click();
+    await genomicScores.valueOptionByText('Pathogenic (158403)').click();
 
     await genomicScores.searchBox.focus();
     await page.keyboard.type('Uncertain_significance');
-    await genomicScores.valueOptionByText('Uncertain_significance (1363638)').click();
+    await genomicScores.valueOptionByText('Uncertain_significance (1364764)').click();
 
     await genotypeBrowser.runTablePreview();
     await expect(genotypeBrowser.variantsCountSpan).toHaveText('7 variants selected', { timeout: 120000 });
