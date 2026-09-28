@@ -46,7 +46,21 @@ RUN apt-get update \
 # conda-index has a runtime dep on the `conda` Python module —
 # easier to host it in the base env where conda already lives
 # than to pull conda into the driver env.
+#
+# libcurl>=8.12 (gpf#1040): the base image ships libcurl 8.11.1, whose
+# threaded resolver double-closes its eventfd (curl/curl#15725, fixed
+# in 8.12.0 by curl/curl@ff5091a). When the recycled fd is a netlink
+# socket, glibc aborts mamba with "Unexpected error 9 on netlink
+# descriptor N." (exit -6) — gpf-docs-e2e #413 lost the gpf-federation
+# install to it. Every mamba call in the suite runs base's libmamba,
+# so upgrading base's libcurl covers them all.
+#
+# The two companion pins keep the upgrade from dragging the image
+# along: unpinned, the solver jumps to mamba 2.x (the base image's
+# `mamba clean` then exits 127), and libxml2 >= 2.14 drops the
+# `libxml2.so.2` soname libmambapy 1.5 links against.
 RUN mamba install -y -n base -c conda-forge conda-index \
+        "libcurl>=8.12" "mamba=1.5" "libxml2<2.14" \
     && mamba clean -afy
 
 # Driver env. python-version 3.12 matches gpf-monorepo's
