@@ -463,21 +463,15 @@ pipeline {
                             environment {
                                 COMPOSE_PROJECT = "gpf-ci-${env.BUILD_NUMBER}"
                                 COMPOSE_NETWORK = "gpf-ci-${env.BUILD_NUMBER}_default"
-                                // #1027: the minio fixtures are pulled from
-                                // registry.seqpipe.org, which needs a login
-                                // even to pull. Same secret-text pair the
-                                // push stage binds.
-                                REGISTRY_USER = credentials('user.registry.seqpipe.org')
-                                REGISTRY_PASS = credentials('passwd.registry.seqpipe.org')
                             }
                             steps {
                                 script {
                                     try {
                                         // Bring up apache (HTTP fixture on :80
-                                        // inside the network) and minio (S3
+                                        // inside the network) and s3 (S3
                                         // fixture on :9000). Core tests reach
                                         // them by service name via the compose
-                                        // network. minio-client is a one-shot
+                                        // network. s3-setup is a one-shot
                                         // bucket setup job — run it inline
                                         // instead of via `up --wait`, which
                                         // races with short-lived services.
@@ -493,41 +487,32 @@ pipeline {
                                         // would race on them. Mirrors gain's
                                         // Jenkinsfile, which has used -f
                                         // since the override file existed.
+                                        // gpf#1029: the s3 fixture image is
+                                        // public on Docker Hub, so the
+                                        // registry.seqpipe.org login #1027
+                                        // needed for the MinIO pulls is gone.
                                         sh '''
-                                            # #1027: log in to registry.seqpipe.org
-                                            # for the minio pulls, under a
-                                            # build-local DOCKER_CONFIG as the push
-                                            # stage does: the agent's shared
-                                            # ~/.docker/config.json is never
-                                            # touched, and the trap logs out and
-                                            # removes the directory on any exit.
-                                            # Scoped to this sh: nothing after it
-                                            # pulls from the registry.
-                                            export DOCKER_CONFIG="$WORKSPACE/.docker-cfg-fixtures-$COMPOSE_PROJECT"
-                                            mkdir -p "$DOCKER_CONFIG"
-                                            trap 'docker logout registry.seqpipe.org >/dev/null 2>&1 || true; rm -rf "$DOCKER_CONFIG"' EXIT
-                                            printf '%s' "$REGISTRY_PASS" | docker login \
-                                                -u "$REGISTRY_USER" --password-stdin registry.seqpipe.org
                                             mkdir -p core/tests/.test_grr
                                             docker compose -f docker-compose.yaml \
                                                 -p "$COMPOSE_PROJECT" \
-                                                up -d --wait apache minio
+                                                up -d --wait apache s3
                                             docker compose -f docker-compose.yaml \
                                                 -p "$COMPOSE_PROJECT" \
-                                                run --rm minio-client
+                                                run --rm s3-setup
                                         '''
 
-                                        // tb-eqh: wait-for-minio sidecar.
-                                        // `up -d --wait` only verifies minio's
+                                        // tb-eqh: wait-for-s3 sidecar.
+                                        // `up -d --wait` only verifies s3's
                                         // own healthcheck (curl on localhost
-                                        // inside the minio container). That
+                                        // inside the s3 container). That
                                         // does NOT prove a sibling container
-                                        // can resolve `minio` via Docker's
+                                        // can resolve `s3` via Docker's
                                         // embedded DNS yet. The flake we hit
                                         // is exactly that: test runner starts,
                                         // first boto3 call returns empty
                                         // addr_infos because resolv.conf
-                                        // lookup of `minio` returned nothing.
+                                        // lookup of `minio` (the fixture's name
+                                        // then) returned nothing.
                                         // A throwaway curl container attached
                                         // to $COMPOSE_NETWORK exercises the
                                         // exact same DNS+TCP+HTTP path the
@@ -540,7 +525,7 @@ pipeline {
                                             docker run --rm --network "$COMPOSE_NETWORK" \
                                                 curlimages/curl:latest \
                                                 --retry 10 --retry-delay 2 --retry-all-errors \
-                                                -fsS http://minio:9000/minio/health/live
+                                                -fsS http://s3:9000/health/live
                                         '''
 
                                         runProject(
@@ -553,12 +538,12 @@ pipeline {
                                             dockerRunExtra:
                                                 '--network "$COMPOSE_NETWORK" ' +
                                                 '-e HTTP_HOST=apache:80 ' +
-                                                '-e MINIO_HOST=minio ' +
+                                                '-e S3_HOST=s3:9000 ' +
                                                 '-v $PWD/core/tests/.test_grr:/workspace/core/tests/.test_grr',
                                         )
                                     } finally {
                                         // tb-eqh: on core stage exit (success
-                                        // or failure), dump network + minio
+                                        // or failure), dump network + s3
                                         // state into reports/core/ so a
                                         // post-mortem of the next flake hit
                                         // has bird's-eye evidence to pair
@@ -578,19 +563,19 @@ pipeline {
                                                 echo "=== docker ps -a (compose project $COMPOSE_PROJECT) ==="
                                                 docker ps -a --filter "label=com.docker.compose.project=$COMPOSE_PROJECT" 2>&1 || true
                                                 echo
-                                                echo "=== docker logs ${COMPOSE_PROJECT}-minio-1 (tail 200) ==="
-                                                docker logs "${COMPOSE_PROJECT}-minio-1" --tail 200 2>&1 || true
+                                                echo "=== docker logs ${COMPOSE_PROJECT}-s3-1 (tail 200) ==="
+                                                docker logs "${COMPOSE_PROJECT}-s3-1" --tail 200 2>&1 || true
                                                 echo
                                                 echo "=== sidecar DNS probe (busybox on $COMPOSE_NETWORK) ==="
                                                 docker run --rm --network "$COMPOSE_NETWORK" busybox sh -c '
                                                     echo "--- /etc/resolv.conf ---"
                                                     cat /etc/resolv.conf
-                                                    echo "--- nslookup minio ---"
-                                                    nslookup minio 2>&1 || true
-                                                    echo "--- getent hosts minio ---"
-                                                    getent hosts minio 2>&1 || true
-                                                    echo "--- ping -c 1 minio ---"
-                                                    ping -c 1 minio 2>&1 || true
+                                                    echo "--- nslookup s3 ---"
+                                                    nslookup s3 2>&1 || true
+                                                    echo "--- getent hosts s3 ---"
+                                                    getent hosts s3 2>&1 || true
+                                                    echo "--- ping -c 1 s3 ---"
+                                                    ping -c 1 s3 2>&1 || true
                                                 ' 2>&1 || true
                                             ) > reports/core/network-diagnostic.txt 2>&1 || true
 
@@ -605,7 +590,7 @@ pipeline {
                                     // tb-eqh: the finally{} block in this
                                     // stage writes a bird's-eye network
                                     // diagnostic (docker network inspect,
-                                    // ps -a, minio logs, sibling DNS probe)
+                                    // ps -a, s3 logs, sibling DNS probe)
                                     // to reports/core/network-diagnostic.txt
                                     // — but publishReports() only handles
                                     // XML reports, so the text file was not

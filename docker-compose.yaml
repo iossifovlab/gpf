@@ -1,58 +1,57 @@
+# The S3 fixture server: RustFS, a maintained, Apache-2.0, S3-compatible
+# server -- the same image and setup as gain's fixture (gain#1708,
+# gpf#1029). It replaces the archived MinIO community edition, whose
+# images we had to re-host on registry.seqpipe.org (gpf#1027). Public on
+# Docker Hub, so pulling needs no login. Pinned by the multi-arch
+# (amd64 + arm64) index digest of the 1.0.0 release, so every agent and
+# workstation runs the same bytes. Why RustFS over SeaweedFS is recorded
+# on gain#1708 and in gain's docker-compose.yaml.
+x-s3-image: &s3-image rustfs/rustfs:1.0.0@sha256:8cc9801755448b71a786705ce76692c77e14936cccd87cf2fc31842e58f4d1ff
+
 services:
 
-  minio:
-    # tb-eqh: pinned to a known-good release. Late-2023 MinIO removed
-    # curl from the image (switched to ubi-micro), and `:latest` would
-    # silently break the curl-based healthcheck on any agent that
-    # pulled fresh. Different agents (eyoree/pooh/piglet) cached
-    # different `:latest` resolutions over time — likely a contributor
-    # to the 27-test S3 flake. Pin so the image we test against
-    # matches what we ship.
-    # See: github.com/minio/minio/issues/18372 + /18389
-    #
-    # gpf#1027 (port of gain#1706): served from our own registry.
-    # MinIO withdrew the `minio/minio` and `minio/mc` images from
-    # Docker Hub (2026-09-11, gpf#1021) and then from quay.io
-    # (2026-09-24); the community edition is archived, so there is no
-    # upstream left to point at. This is the last community release
-    # as pooh's cache held it, re-pushed unchanged (upstream index
-    # digest sha256:14cea493…) as an amd64 + arm64 index, pinned by
-    # that index's digest. The registry needs a login even to pull:
-    # CI takes it from the `registry.seqpipe.org` Jenkins credential;
-    # on a workstation run `docker login registry.seqpipe.org` once
-    # (LAN / VPN only).
-    image: registry.seqpipe.org/minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:fef3b9cf8ce1bcb83cd30b9a41273c8585855c0a269fa97cf297c6615745b969
+  s3:
+    image: *s3-image
     expose:
       - "9000"
       - "9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
+      # The credentials every s3 test helper (gain's and gpf's conftest)
+      # defaults to.
+      RUSTFS_ACCESS_KEY: minioadmin
+      RUSTFS_SECRET_KEY: minioadmin
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      # A test fixture has no business calling home.
+      RUSTFS_CHECK_UPDATES: "false"
     healthcheck:
-      # tb-eqh: switched from `curl http://localhost:9000/minio/health/live`
-      # to `mc ready local` — official MinIO pattern. The minio image
-      # has `mc` at /usr/bin/mc and the `local` alias preconfigured
-      # to http://localhost:9000. `mc ready` polls the cluster-readiness
-      # endpoint and exits 0 when ready; under docker's timeout=5s
-      # it gets killed and reported unhealthy if not.
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 10s
+      # curl ships in the image; /health/live answers 200 once the
+      # server takes requests.
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null",
+             "http://localhost:9000/health/live"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
-  minio-client:
-    # Our registry, for the same reason as `minio` above (gpf#1027).
-    # Pinned to the release the old `mc:latest` resolved to (upstream
-    # index digest sha256:a7fe349e…) — `latest` no longer exists anywhere.
-    image: registry.seqpipe.org/minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:b13adbe0366ec9311957246a2303d69f561f224e58a6eed6687e25db27791bc5
-    entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin;
-      /usr/bin/mc mb local/test-bucket;
-      "
+  s3-setup:
+    # One-shot: creates `test-bucket`, then exits. It reuses the server
+    # image for its curl, whose --aws-sigv4 signs the S3 CreateBucket
+    # request -- so no second image and no vendor client. Creating a
+    # bucket that already exists answers 200, so re-running is harmless;
+    # -f makes any other answer (a wrong secret is 403) fail the run.
+    image: *s3-image
+    entrypoint:
+      - curl
+      - -fsS
+      - --aws-sigv4
+      - aws:amz:us-east-1:s3
+      - --user
+      - minioadmin:minioadmin
+      - -X
+      - PUT
+      - http://s3:9000/test-bucket
     depends_on:
-      minio:
+      s3:
         condition: service_healthy
 
   apache:

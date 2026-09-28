@@ -281,14 +281,16 @@ Pre-move history lives in `iossifovlab/gpf_documentation`.
 Some tests require external services. Start them with:
 
 ```bash
-docker login registry.seqpipe.org   # once; the MinIO images live there (LAN / VPN only)
 docker compose up -d
 ```
 
 Services defined in `docker-compose.yaml`:
-- **MinIO** (ports 9000/9001) — S3-compatible object
-  storage for GCP/S3 storage tests; credentials
-  `minioadmin/minioadmin`, bucket `test-bucket`
+- **s3** (RustFS, the same pinned image as gain's fixture;
+  host ports 29000/29001, `S3_HOST` default
+  `localhost:29000`) — S3-compatible object storage for the
+  `--enable-s3-testing` tests; credentials
+  `minioadmin/minioadmin`, bucket `test-bucket`, created by
+  the one-shot `s3-setup` service
 - **Apache httpd** (port 28080) — HTTP fixture server for
   `grr_http` tests; serves
   `core/tests/.test_grr/`

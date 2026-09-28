@@ -28,32 +28,33 @@ from gpf.gpf_instance_plugin.gpf_instance_context_plugin import (
 
 # tb-eqh: dumped at most once per pytest session, on the first
 # fixture-setup or test-call failure whose traceback mentions
-# EndpointConnectionError. See _maybe_dump_minio_diagnostics below.
-_MINIO_DIAGNOSTICS_DUMPED = False
+# EndpointConnectionError. See _dump_s3_diagnostics below.
+_S3_DIAGNOSTICS_DUMPED = False
 
 
-def _dump_minio_diagnostics(reason: str) -> None:
+def _dump_s3_diagnostics(reason: str) -> None:
     """Dump in-container DNS + connectivity state to stderr.
 
-    tb-eqh worm's-eye view: the fixture failed against
-    http://${MINIO_HOST}:9000 with EndpointConnectionError. Capture
+    tb-eqh worm's-eye view: the fixture failed against the s3 test
+    server named by ``S3_HOST`` with EndpointConnectionError. Capture
     the resolver + hosts-table state from inside this test container
     at the moment of failure so we can pair it with the Jenkinsfile
     finally{} sidecar dump for triangulation. Best-effort: never
     raise back into pytest's reporting path.
     """
-    global _MINIO_DIAGNOSTICS_DUMPED
-    if _MINIO_DIAGNOSTICS_DUMPED:
+    global _S3_DIAGNOSTICS_DUMPED
+    if _S3_DIAGNOSTICS_DUMPED:
         return
-    _MINIO_DIAGNOSTICS_DUMPED = True
+    _S3_DIAGNOSTICS_DUMPED = True
 
-    minio_host = os.environ.get("MINIO_HOST", "<unset>")
+    s3_host = os.environ.get("S3_HOST", "<unset>")
     print(
-        f"\n=== tb-eqh minio diagnostics ({reason}, "
-        f"MINIO_HOST={minio_host!r}) ===",
+        f"\n=== tb-eqh s3 diagnostics ({reason}, "
+        f"S3_HOST={s3_host!r}) ===",
         file=sys.stderr, flush=True,
     )
-    probe_host = minio_host if minio_host != "<unset>" else "minio"
+    # getent wants a bare host name, and S3_HOST may carry a port.
+    probe_host = s3_host.split(":")[0] if s3_host != "<unset>" else "s3"
     for cmd in (
         ["cat", "/etc/resolv.conf"],
         ["getent", "hosts", probe_host],
@@ -78,7 +79,7 @@ def _dump_minio_diagnostics(reason: str) -> None:
                 f"--- $ {' '.join(cmd)} ERROR: {exc!r} ---",
                 file=sys.stderr,
             )
-    print("=== end tb-eqh minio diagnostics ===\n",
+    print("=== end tb-eqh s3 diagnostics ===\n",
           file=sys.stderr, flush=True)
 
 
@@ -100,12 +101,12 @@ def pytest_runtest_makereport(
     outcome = yield
     if call.excinfo is None:
         return
-    if _MINIO_DIAGNOSTICS_DUMPED:
+    if _S3_DIAGNOSTICS_DUMPED:
         return
     exc_repr = repr(call.excinfo.value)
     if "EndpointConnectionError" not in exc_repr:
         return
-    _dump_minio_diagnostics(reason=f"{call.when} phase, {exc_repr[:80]}")
+    _dump_s3_diagnostics(reason=f"{call.when} phase, {exc_repr[:80]}")
     return outcome
 
 
@@ -113,7 +114,7 @@ def _default_genotype_storage_configs(
     root_path: pathlib.Path,
 ) -> dict[str, dict[str, Any]]:
 
-    # tb-eqh phase-5: parse MINIO_HOST via gain's helper so the env-var
+    # tb-eqh phase-5: parse S3_HOST via gain's helper so the env-var
     # contract has a single source of truth. Accepts both `host` and
     # `host:port`; default `localhost:29000` matches the override-file
     # port mapping. Returns a fully-qualified URL.
