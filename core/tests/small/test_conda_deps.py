@@ -8,6 +8,7 @@ the rendering rules on a throwaway workspace.
 import importlib.util
 import pathlib
 import re
+import subprocess
 import sys
 from collections.abc import Iterable, Mapping
 from types import ModuleType
@@ -503,3 +504,218 @@ def test_dev_pip_only_entry_stays_out_of_the_runtime_file(
         "  - pip:\n"
         "    # pytestarch: not on conda\n"
         "    - pytestarch\n")
+
+
+@pytest.mark.parametrize("package", list(MEMBERS))
+def test_recipe_run_list_matches_the_pyproject(
+    conda_env: ModuleType, package: str,
+) -> None:
+    for path in (
+        REPO_ROOT / package / "conda-recipe" / "recipe.yaml",
+        REPO_ROOT / package / "pyproject.toml",
+    ):
+        if not path.exists():
+            pytest.fail(f"{path} is missing; the CI image must copy it")
+
+    conda_env.check_recipe_run(REPO_ROOT, package)
+
+
+def _package(
+    root: pathlib.Path,
+    deps: Iterable[str],
+    run: Iterable[str],
+    requires_python: str = ">=3.12",
+) -> pathlib.Path:
+    """Write a workspace whose ``core`` has ``deps`` and a ``run`` recipe.
+
+    The Jinja expressions keep the reader honest about real recipes,
+    which are YAML only until rattler-build renders them.
+    """
+    _workspace(root, requires_python=requires_python, core=list(deps))
+    (root / "core" / "conda-recipe").mkdir(parents=True, exist_ok=True)
+    (root / "core" / "conda-recipe" / "recipe.yaml").write_text(
+        'context:\n'
+        '  version: ${{ env.get("VCS_VERSION") | default("0.0.0") }}\n'
+        'package:\n'
+        '  name: ${{ name }}\n'
+        'requirements:\n'
+        '  host:\n'
+        '    - python >=3.12\n'
+        '    - pip\n'
+        '  run:\n'
+        + "".join(f"    - {entry}\n" for entry in run))
+    return root
+
+
+def _check(conda_env: ModuleType, root: pathlib.Path) -> None:
+    conda_env.check_recipe_run(root, "core", conda_names={
+        "dask": "dask-core", "duckdb": "python-duckdb"})
+
+
+def test_recipe_matching_the_mapped_pyproject_passes(
+    conda_env: ModuleType, tmp_path: pathlib.Path,
+) -> None:
+    root = _package(
+        tmp_path,
+        deps=["pyBigWig>=0.3", "dask>=2026.1", "duckdb>=1.5,<2", "psutil"],
+        run=[
+            "python >=3.12", "dask-core >=2026.1", "psutil",
+            "pybigwig >=0.3", "python-duckdb >=1.5, <2",
+        ],
+    )
+
+    _check(conda_env, root)
+
+
+def test_dependency_missing_from_the_recipe_is_named(
+    conda_env: ModuleType, tmp_path: pathlib.Path,
+) -> None:
+    root = _package(
+        tmp_path,
+        deps=["numpy>=2.2", "toolz>=0.12"],
+        run=["python >=3.12", "numpy >=2.2"],
+    )
+
+    with pytest.raises(ValueError, match="only in the recipe: none") as info:
+        _check(conda_env, root)
+
+    assert "core/conda-recipe/recipe.yaml" in str(info.value)
+    assert "only in the pyproject: toolz>=0.12" in str(info.value)
+
+
+@pytest.mark.parametrize(("deps", "run", "only_in_recipe"), [
+    pytest.param(
+        ["requests>=2.32"], ["requests >=2.31"], "requests>=2.31",
+        id="non-member-specifier-changed"),
+    pytest.param(
+        ["dask>=2026.1"], ["dask >=2026.1"], "dask>=2026.1",
+        id="pypi-name-not-conda-name"),
+    pytest.param(
+        ["numpy>=2.2"], ["numpy >=2.2", "numpy >=2.2"], "numpy>=2.2",
+        id="row-listed-twice"),
+    pytest.param(
+        [], ["toolz"], "toolz", id="row-with-no-pyproject-dependency"),
+])
+def test_recipe_row_differing_from_the_pyproject_fails(
+    conda_env: ModuleType, tmp_path: pathlib.Path,
+    deps: list[str], run: list[str], only_in_recipe: str,
+) -> None:
+    root = _package(tmp_path, deps=deps, run=["python >=3.12", *run])
+
+    with pytest.raises(
+            ValueError,
+            match=re.escape(f"only in the recipe: {only_in_recipe};")):
+        _check(conda_env, root)
+
+
+def test_recipe_python_follows_requires_python(
+    conda_env: ModuleType, tmp_path: pathlib.Path,
+) -> None:
+    root = _package(
+        tmp_path, deps=["numpy"], run=["python >=3.12", "numpy"],
+        requires_python=">=3.13",
+    )
+
+    with pytest.raises(
+            ValueError,
+            match=re.escape("only in the pyproject: python>=3.13")):
+        _check(conda_env, root)
+
+
+def test_recipe_row_order_is_not_compared(
+    conda_env: ModuleType, tmp_path: pathlib.Path,
+) -> None:
+    root = _package(
+        tmp_path,
+        deps=["toolz>=0.12", "numpy>=2.2"],
+        run=["numpy >=2.2", "python >=3.12", "toolz >=0.12"],
+    )
+
+    _check(conda_env, root)
+
+
+@pytest.mark.parametrize("row", [
+    'gain-core ${{ env.get("GAIN_CORE_SPEC", default="") }}',
+    "gain-core ==2026.9.2",
+    "gain-core",
+    "gpf-web ==${{ version }}",
+    "gpf-web",
+])
+def test_member_and_gain_core_rows_compare_by_name_only(
+    conda_env: ModuleType, tmp_path: pathlib.Path, row: str,
+) -> None:
+    name = row.split()[0]
+    root = _package(
+        tmp_path, deps=[name, "numpy"],
+        run=["python >=3.12", "numpy", row],
+    )
+
+    _check(conda_env, root)
+
+
+@pytest.mark.parametrize(("deps", "run", "message"), [
+    pytest.param(
+        ["gpf-web", "numpy"], ["numpy"],
+        "only in the pyproject: gpf-web", id="member-row-missing"),
+    pytest.param(
+        ["gpf-web", "numpy"],
+        ["numpy", "gpf-web ==${{ version }}", "gpf-web ==${{ version }}"],
+        "only in the recipe: gpf-web;", id="member-row-twice"),
+    pytest.param(
+        ["numpy"], ["numpy", "gain-core"],
+        "only in the recipe: gain-core;", id="gain-core-not-declared"),
+])
+def test_member_and_gain_core_rows_must_match_the_pyproject(
+    conda_env: ModuleType, tmp_path: pathlib.Path,
+    deps: list[str], run: list[str], message: str,
+) -> None:
+    root = _package(tmp_path, deps=deps, run=["python >=3.12", *run])
+
+    with pytest.raises(ValueError, match=re.escape(message)):
+        _check(conda_env, root)
+
+
+@pytest.mark.parametrize("entry", [
+    "{if: unix, then: numpy}",
+    "3.12",
+])
+def test_recipe_run_entry_that_is_not_a_string_raises(
+    conda_env: ModuleType, tmp_path: pathlib.Path, entry: str,
+) -> None:
+    root = _package(
+        tmp_path, deps=["numpy"], run=["python >=3.12", "numpy", entry])
+
+    with pytest.raises(
+            TypeError, match=re.escape("core/conda-recipe/recipe.yaml")):
+        _check(conda_env, root)
+
+
+def test_recipe_without_a_run_list_raises(
+    conda_env: ModuleType, tmp_path: pathlib.Path,
+) -> None:
+    root = _package(tmp_path, deps=["numpy"], run=[])
+
+    with pytest.raises(
+            ValueError, match=re.escape("no requirements.run list")):
+        _check(conda_env, root)
+
+
+def test_script_does_not_import_yaml_until_a_recipe_is_read() -> None:
+    # Rendering the environment files needs only the stdlib and
+    # packaging, so `python scripts/conda_env.py` runs without PyYAML;
+    # only the recipe reader needs it.
+    probe = (
+        "import importlib.util, sys\n"
+        f"spec = importlib.util.spec_from_file_location("
+        f"'conda_env', {str(SCRIPT)!r})\n"
+        "module = importlib.util.module_from_spec(spec)\n"
+        "sys.modules[spec.name] = module\n"
+        "spec.loader.exec_module(module)\n"
+        "module.render_all()\n"
+        "print('yaml' in sys.modules)\n")
+
+    result = subprocess.run(
+        [sys.executable, "-c", probe],
+        capture_output=True, text=True, check=True)
+
+    assert result.stdout == "False\n"
