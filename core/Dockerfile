@@ -54,10 +54,14 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --package gpf-core --group dev --upgrade-package gain-core --find-links ./dist/gain
 
 # tests/small/test_conda_deps.py holds the committed environment files to
-# a fresh render of the pyprojects copied above; it hard-fails when any
-# of them is missing.
+# a fresh render of the pyprojects copied above, and each conda recipe's
+# run list to its pyproject (core's recipe arrives with core/ above); it
+# hard-fails when any of them is missing.
 COPY environment.yml dev-environment.yml ./
 COPY scripts/conda_env.py ./scripts/
+COPY web_api/conda-recipe/recipe.yaml ./web_api/conda-recipe/
+COPY federation/conda-recipe/recipe.yaml ./federation/conda-recipe/
+COPY rest_client/conda-recipe/recipe.yaml ./rest_client/conda-recipe/
 
 ENV PATH="/workspace/.venv/bin:$PATH"
 WORKDIR /workspace/core

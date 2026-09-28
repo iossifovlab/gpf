@@ -9,16 +9,24 @@ with the version clauses copied as written.
 
 ``core/tests/small/test_conda_deps.py`` runs the same comparison in CI.
 
+The rattler-build recipes stay hand-written, and ``check_recipe_run``
+holds each recipe's ``requirements.run`` to its pyproject's
+dependencies under the same name mapping; the test runs that too.
+
 Copied from iossifovlab/gain ``scripts/conda_env.py`` at 404d222a8 and
-adapted (gpf#1045): gpf has no annotator plugins, omits ``gain-core``,
-and refuses dead ``CONDA_NAMES`` entries as well as dead ``PIP_ONLY``
-ones. Nothing keeps the two copies in step; carry fixes across by hand.
+adapted (gpf#1045, gpf#1047): gpf has no annotator plugins, omits
+``gain-core``, refuses dead ``CONDA_NAMES`` entries as well as dead
+``PIP_ONLY`` ones, and compares recipe rows for workspace members and
+``gain-core`` by name only. Nothing keeps the two copies in step; carry
+fixes across by hand.
 """
 from __future__ import annotations
 
 import argparse
 import pathlib
+import re
 import sys
+from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
@@ -297,6 +305,105 @@ def render_all(
             conda_names)
         for output in outputs
     }
+
+
+#: The package name at the head of a whitespace-stripped recipe run row.
+_ROW_NAME = re.compile(r"[A-Za-z0-9._-]+")
+
+
+def read_recipe_run(path: pathlib.Path) -> list[str]:
+    """Return a recipe's ``requirements.run`` entries, whitespace removed.
+
+    PyYAML is imported here rather than at the top so that rendering the
+    environment files keeps needing only the stdlib and packaging.
+    """
+    import yaml  # pylint: disable=import-outside-toplevel
+
+    with path.open() as infile:
+        recipe = yaml.safe_load(infile)
+    run = (recipe.get("requirements") or {}).get("run")
+    if run is None:
+        raise ValueError(f"{path}: no requirements.run list")
+    if not isinstance(run, list):
+        raise TypeError(f"{path}: requirements.run is not a list")
+    entries = []
+    for entry in run:
+        # A selector (`- if: ... then: ...`) or a bare number is a form
+        # the comparison does not model.
+        if not isinstance(entry, str):
+            raise TypeError(
+                f"{path}: run entry {entry!r} is not a plain string, "
+                f"which scripts/conda_env.py does not model")
+        entries.append("".join(entry.split()))
+    return entries
+
+
+def name_only_packages(root: pathlib.Path) -> frozenset[str]:
+    """Return the packages whose recipe rows are compared by name only.
+
+    Those are the workspace members and the ``OMITTED`` packages: their
+    recipe rows carry a rattler-build version expression, such as
+    ``==${{ version }}`` or the ``GAIN_CORE_SPEC`` the release pipeline
+    sets, which is release machinery a pyproject cannot express.
+    """
+    return workspace_members(root) | frozenset(OMITTED)
+
+
+def expected_recipe_run(
+    root: pathlib.Path,
+    package: str,
+    conda_names: Mapping[str, str] = CONDA_NAMES,
+) -> list[str]:
+    """Return the run list ``<package>``'s pyproject implies.
+
+    That is ``python`` with the ``requires-python`` clauses, then every
+    ``[project.dependencies]`` entry under its conda name; a name-only
+    package (see ``name_only_packages``) is listed without its clauses.
+    Optional extras never reach a recipe.
+    """
+    name_only = name_only_packages(root)
+    section = load_section(root, Feed(f"{package}/pyproject.toml"))
+    return [
+        "python" + ",".join(section.requires_python),
+        *(conda_name(name, conda_names)
+          + ("" if name in name_only else ",".join(clauses))
+          for name, clauses in section.requirements),
+    ]
+
+
+def check_recipe_run(
+    root: pathlib.Path,
+    package: str,
+    conda_names: Mapping[str, str] = CONDA_NAMES,
+) -> None:
+    """Raise if ``<package>``'s recipe run list differs from its pyproject.
+
+    Rows are compared as a multiset: their order is free, a repeated row
+    is a difference. A name-only package's row is compared by its name
+    alone; every other row must match its mapped pyproject entry exactly.
+    """
+    name_only = name_only_packages(root)
+    recipe = f"{package}/conda-recipe/recipe.yaml"
+
+    def comparable(row: str) -> str:
+        match = _ROW_NAME.match(row)
+        name = canonicalize_name(match.group()) if match else row
+        return name if name in name_only else row
+
+    actual = Counter(
+        comparable(row) for row in read_recipe_run(root / recipe))
+    expected = Counter(expected_recipe_run(root, package, conda_names))
+    if actual == expected:
+        return
+
+    def listed(entries: Counter[str]) -> str:
+        return ", ".join(sorted(entries.elements())) or "none"
+
+    raise ValueError(
+        f"{recipe}: requirements.run differs from {package}/pyproject.toml "
+        f"[project.dependencies]; only in the recipe: "
+        f"{listed(actual - expected)}; only in the pyproject: "
+        f"{listed(expected - actual)}")
 
 
 def main(
