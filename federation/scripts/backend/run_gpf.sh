@@ -13,6 +13,9 @@ python /workspace/federation/setup_testing_remote.py
 
 export GRR_DEFINITION_FILE=/workspace/federation/tmp/grr_definition.yaml
 export DAE_DB_DIR=/workspace/federation/tmp/gpf_instance
+# WAL SQLite for the throwaway DB -- see integration_settings.py (#1035).
+export PYTHONPATH=/workspace/federation/scripts/backend
+export DJANGO_SETTINGS_MODULE=integration_settings
 
 wdaemanage migrate --noinput
 wdaemanage user_create admin@iossifovlab.com -p secret -g any_dataset:admin

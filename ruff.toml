@@ -111,6 +111,8 @@ preview = true
 # The rest_client integration backend's DJANGO_SETTINGS_MODULE, imported
 # from PYTHONPATH by run_gpf.sh -- not a package member.
 "rest_client/scripts/backend/integration_settings.py" = ["implicit-namespace-package"]  # INP001
+# Same for the federation integration backend.
+"federation/scripts/backend/integration_settings.py" = ["implicit-namespace-package"]  # INP001
 
 [lint.isort]
 # Make first-party detection deterministic across local
