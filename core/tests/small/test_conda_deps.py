@@ -47,7 +47,7 @@ def test_committed_environment_file_is_current(
     conda_env: ModuleType,
 ) -> None:
     rendered = conda_env.render_all()
-    assert set(rendered) == {"environment.yml"}
+    assert set(rendered) == {"environment.yml", "dev-environment.yml"}
 
     for filename, text in rendered.items():
         committed = REPO_ROOT / filename
@@ -57,6 +57,51 @@ def test_committed_environment_file_is_current(
             f"{committed} is stale; {REGENERATE}")
 
 
+def _package_names(rendered: str) -> list[str]:
+    """Return the package names a rendered file lists, pip block included."""
+    return [
+        re.split(r"[<>=!~]", line.strip().removeprefix("- "), maxsplit=1)[0]
+        for line in _dependencies(rendered)
+        if line.strip().startswith("- ") and line.strip() != "- pip:"
+    ]
+
+
+def _pip_names(rendered: str) -> set[str]:
+    """Return the package names under a rendered file's ``pip:`` block."""
+    _, found, pip_block = rendered.partition("  - pip:\n")
+    if not found:
+        return set()
+    return set(_package_names("dependencies:\n" + pip_block))
+
+
+# Hand-written tools the old dev-environment.yml carried with no pyproject
+# home; #1025 decision 7 dropped them.
+DROPPED_STRAYS = {
+    "dask-kubernetes", "flake8", "invoke", "gitpython", "monkeytype",
+    "parquet-tools", "curl", "nodejs", "esbonio", "doc8", "rstcheck",
+    "types-setuptools", "types-python-dateutil",
+}
+
+
+def test_dev_environment_lists_each_package_once_and_no_stray(
+    conda_env: ModuleType,
+) -> None:
+    names = _package_names(conda_env.render_all()["dev-environment.yml"])
+
+    assert len(names) == len(set(names))
+    assert not set(names) & DROPPED_STRAYS
+
+
+def test_pip_blocks_hold_exactly_the_pip_only_set(
+    conda_env: ModuleType,
+) -> None:
+    rendered = conda_env.render_all()
+
+    assert _pip_names(rendered["dev-environment.yml"]) == set(
+        conda_env.PIP_ONLY)
+    assert _pip_names(rendered["environment.yml"]) == set()
+
+
 def test_table_entries_carry_a_reason(conda_env: ModuleType) -> None:
     for table in (conda_env.PIP_ONLY, conda_env.OMITTED):
         assert [
@@ -64,33 +109,49 @@ def test_table_entries_carry_a_reason(conda_env: ModuleType) -> None:
         ] == []
 
 
+def _listed(items: Iterable[str]) -> str:
+    return "[\n" + "".join(f"    {item!r},\n" for item in items) + "]\n"
+
+
 def _pyproject(
     name: str,
     deps: Iterable[str],
+    group: str,
+    group_deps: Iterable[str],
     requires_python: str = ">=3.12",
 ) -> str:
-    listed = "".join(f"    {dep!r},\n" for dep in deps)
+    """Return a pyproject with dependencies and one dependency group."""
     return (
         f'[project]\nname = "{name}"\n'
         f'requires-python = "{requires_python}"\n'
-        f"dependencies = [\n{listed}]\n")
+        f"dependencies = {_listed(deps)}"
+        f"[dependency-groups]\n{group} = {_listed(group_deps)}")
 
 
 def _workspace(
     root: pathlib.Path,
     *,
     requires_python: str = ">=3.12",
+    dev: Mapping[str, list[str]] | None = None,
+    docs: Iterable[str] = (),
     **deps: list[str],
 ) -> pathlib.Path:
-    """Write a gpf-shaped workspace; ``deps`` are keyed by member dir."""
+    """Write a gpf-shaped workspace.
+
+    ``deps`` (runtime) and ``dev`` (the dev group) are keyed by member
+    directory; ``docs`` is the root pyproject's docs group.
+    """
+    dev = dev or {}
     sources = "".join(
         f"{name} = {{ workspace = true }}\n" for name in MEMBERS.values())
     (root / "pyproject.toml").write_text(
-        _pyproject("gpf-monorepo", []) + "[tool.uv.sources]\n" + sources)
+        _pyproject("gpf-monorepo", [], "docs", docs)
+        + "[tool.uv.sources]\n" + sources)
     for directory, name in MEMBERS.items():
         (root / directory).mkdir(parents=True, exist_ok=True)
-        (root / directory / "pyproject.toml").write_text(
-            _pyproject(name, deps.get(directory, []), requires_python))
+        (root / directory / "pyproject.toml").write_text(_pyproject(
+            name, deps.get(directory, []), "dev", dev.get(directory, []),
+            requires_python))
     return root
 
 
@@ -101,9 +162,22 @@ def _render(
     pip_only: Mapping[str, str] | None = None,
     conda_names: Mapping[str, str] | None = None,
 ) -> str:
+    return _render_file(
+        conda_env, root, "environment.yml",
+        pip_only=pip_only, conda_names=conda_names)
+
+
+def _render_file(
+    conda_env: ModuleType,
+    root: pathlib.Path,
+    filename: str,
+    *,
+    pip_only: Mapping[str, str] | None = None,
+    conda_names: Mapping[str, str] | None = None,
+) -> str:
     rendered = conda_env.render_all(
         root, pip_only=pip_only or {}, conda_names=conda_names or {})
-    return str(rendered["environment.yml"])
+    return str(rendered[filename])
 
 
 def _dependencies(rendered: str) -> list[str]:
@@ -287,29 +361,57 @@ def _declaring_everything(conda_env: ModuleType) -> list[str]:
     return [*conda_env.CONDA_NAMES, *conda_env.PIP_ONLY]
 
 
-@pytest.mark.parametrize("rest_client", [
-    ["gunicorn>=22", "requests>=2.32"],  # added
-    ["gunicorn>=23"],                    # changed
-    [],                                  # removed
+RUNTIME = ["gunicorn>=22"]
+DEV = ["pytest>=9"]
+
+
+@pytest.mark.parametrize(("edit", "stale"), [
+    pytest.param(
+        (["gunicorn>=22", "requests>=2.32"], DEV, []), "environment.yml",
+        id="runtime-added"),
+    pytest.param(
+        (["gunicorn>=23"], DEV, []), "environment.yml",
+        id="runtime-changed"),
+    pytest.param(([], DEV, []), "environment.yml", id="runtime-removed"),
+    pytest.param(
+        (RUNTIME, ["pytest>=9", "ruff==0.16.5"], []), "dev-environment.yml",
+        id="dev-added"),
+    pytest.param(
+        (RUNTIME, ["pytest>=10"], []), "dev-environment.yml",
+        id="dev-changed"),
+    pytest.param(
+        (RUNTIME, [], []), "dev-environment.yml", id="dev-removed"),
+    pytest.param(
+        (RUNTIME, DEV, ["sphinx"]), "dev-environment.yml", id="docs-added"),
 ])
 def test_check_reports_drift_without_rewriting(
     conda_env: ModuleType, tmp_path: pathlib.Path,
-    rest_client: list[str],
+    capsys: pytest.CaptureFixture[str],
+    edit: tuple[list[str], list[str], list[str]], stale: str,
 ) -> None:
+    runtime, dev, docs = edit
     everything = _declaring_everything(conda_env)
     root = _workspace(
-        tmp_path, core=everything, rest_client=["gunicorn>=22"])
+        tmp_path, core=everything, rest_client=RUNTIME,
+        dev={"rest_client": DEV})
     assert conda_env.main([], root=root) == 0
     assert conda_env.main(["--check"], root=root) == 0
+    capsys.readouterr()
 
-    _workspace(tmp_path, core=everything, rest_client=rest_client)
-    before = (root / "environment.yml").read_text()
+    _workspace(
+        tmp_path, core=everything, rest_client=runtime,
+        dev={"rest_client": dev}, docs=docs)
+    before = (root / stale).read_text()
 
     assert conda_env.main(["--check"], root=root) == 1
-    assert (root / "environment.yml").read_text() == before
+    assert (root / stale).read_text() == before
+    assert [
+        line.split(" is stale")[0].rsplit("/", 1)[-1]
+        for line in capsys.readouterr().err.splitlines()
+    ] == [stale]
 
 
-def test_check_reports_a_missing_file(
+def test_check_reports_missing_files(
     conda_env: ModuleType, tmp_path: pathlib.Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -317,8 +419,10 @@ def test_check_reports_a_missing_file(
 
     assert conda_env.main(["--check"], root=root) == 1
 
-    assert "environment.yml is stale" in capsys.readouterr().err
-    assert not (root / "environment.yml").exists()
+    err = capsys.readouterr().err
+    for filename in ("environment.yml", "dev-environment.yml"):
+        assert f"{filename} is stale" in err
+        assert not (root / filename).exists()
 
 
 def test_rendered_file_parses_as_a_conda_environment(
@@ -337,3 +441,65 @@ def test_rendered_file_parses_as_a_conda_environment(
             {"pip": ["ijson>=3.2"]},
         ],
     }
+
+
+def _dev_section(member: str) -> str:
+    return (
+        f"  # {MEMBERS[member]} ({member}/pyproject.toml "
+        f"[dependency-groups.dev])")
+
+
+def test_dev_environment_renders_the_dev_and_docs_groups(
+    conda_env: ModuleType, tmp_path: pathlib.Path,
+) -> None:
+    root = _workspace(
+        tmp_path,
+        core=["numpy>=2"],
+        web_api=["django>=5.2"],
+        dev={
+            "core": ["pytest>=9", "ruff==0.16.5", "docker"],
+            "web_api": ["pytest", "gpf-core", "django-stubs==5.2.2"],
+            "federation": ["gain-core", "types-requests"],
+            "rest_client": ["pytest", "types-requests"],
+        },
+        docs=["sphinx", "ipython"],
+    )
+
+    rendered = _render_file(
+        conda_env, root, "dev-environment.yml",
+        conda_names={"docker": "docker-py"})
+
+    assert _dependencies(rendered) == [
+        "  - python>=3.12",
+        _dev_section("core"),
+        "  - docker-py",
+        "  - pytest>=9",
+        "  - ruff==0.16.5",
+        _dev_section("web_api"),
+        "  - django-stubs==5.2.2",
+        _dev_section("federation"),
+        "  - types-requests",
+        _dev_section("rest_client"),
+        "  # gpf-monorepo (pyproject.toml [dependency-groups.docs])",
+        "  - ipython",
+        "  - sphinx",
+    ]
+    # Installed on top of environment.yml: no runtime package here.
+    assert "numpy" not in rendered
+    assert "django>" not in rendered
+
+
+def test_dev_pip_only_entry_stays_out_of_the_runtime_file(
+    conda_env: ModuleType, tmp_path: pathlib.Path,
+) -> None:
+    root = _workspace(
+        tmp_path, core=["numpy"], dev={"core": ["pytestarch"]})
+
+    rendered = conda_env.render_all(
+        root, pip_only={"pytestarch": "not on conda"}, conda_names={})
+
+    assert "pip" not in rendered["environment.yml"]
+    assert rendered["dev-environment.yml"].endswith(
+        "  - pip:\n"
+        "    # pytestarch: not on conda\n"
+        "    - pytestarch\n")

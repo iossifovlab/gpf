@@ -1,11 +1,11 @@
-"""Render gpf's conda environment file from the workspace pyprojects.
+"""Render gpf's conda environment files from the workspace pyprojects.
 
-The file is generated, not hand-written: it lists the dependencies of the
-pyproject tables that feed it, mapped to conda names, with the version
-clauses copied as written.
+The files are generated, not hand-written: each one lists the
+dependencies of the pyproject tables that feed it, mapped to conda names,
+with the version clauses copied as written.
 
-    python scripts/conda_env.py           # rewrite the file
-    python scripts/conda_env.py --check   # exit 1 if the file is stale
+    python scripts/conda_env.py           # rewrite every file
+    python scripts/conda_env.py --check   # exit 1 if any file is stale
 
 ``core/tests/small/test_conda_deps.py`` runs the same comparison in CI.
 
@@ -51,7 +51,12 @@ CONDA_NAMES: Mapping[str, str] = MappingProxyType({
 #: Canonical PyPI name -> why it is installed by pip rather than conda.
 #: An output renders the entries its own feeds declare under a ``pip:``
 #: sub-list, with ``pip`` itself added as a conda dependency.
-PIP_ONLY: Mapping[str, str] = MappingProxyType({})
+PIP_ONLY: Mapping[str, str] = MappingProxyType({
+    "pylint-junit": "not packaged on any conda channel",
+    "pytestarch": "not packaged on any conda channel",
+    "sphinx-autorun": "not packaged on any conda channel",
+    "types-requests-oauthlib": "not packaged on any conda channel",
+})
 
 #: Canonical PyPI name -> how to get it, for dependencies left out of the
 #: files although they are not workspace members. The header names each
@@ -79,14 +84,21 @@ class Output:
     feeds: tuple[Feed, ...]
 
 
+_MEMBERS = ("core", "web_api", "federation", "rest_client")
+_DEV = ("dependency-groups", "dev")
+
 OUTPUTS = (
     Output(
         "environment.yml", "gpf",
+        tuple(Feed(f"{member}/pyproject.toml") for member in _MEMBERS),
+    ),
+    # Installed on top of environment.yml into the same env, so it
+    # carries only the tools: no runtime feeds.
+    Output(
+        "dev-environment.yml", "gpf",
         (
-            Feed("core/pyproject.toml"),
-            Feed("web_api/pyproject.toml"),
-            Feed("federation/pyproject.toml"),
-            Feed("rest_client/pyproject.toml"),
+            *(Feed(f"{member}/pyproject.toml", _DEV) for member in _MEMBERS),
+            Feed("pyproject.toml", ("dependency-groups", "docs")),
         ),
     ),
 )

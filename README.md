@@ -223,12 +223,14 @@ pip install -e federation
 pip install -e rest_client
 ```
 
-`environment.yml` is generated from the workspace pyprojects
-by `scripts/conda_env.py` and leaves `gain-core` out — the
+`environment.yml` (runtime dependencies) and
+`dev-environment.yml` (the dev and docs dependency groups)
+are generated from the workspace pyprojects by
+`scripts/conda_env.py`. They leave `gain-core` out — the
 `pip install -e ../gain/core` step above provides it. After
 changing any pyproject dependency, run
 `python scripts/conda_env.py` and commit the result; a core
-test fails CI when the committed file is stale.
+test fails CI when a committed file is stale.
 
 CI does not consume conda. Conda users can follow the
 uv command shapes from inside an activated `gpf` env —

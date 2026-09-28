@@ -53,10 +53,10 @@ COPY core/ ./core/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --package gpf-core --group dev --upgrade-package gain-core --find-links ./dist/gain
 
-# tests/small/test_conda_deps.py holds the committed environment.yml to
-# a fresh render of the member pyprojects copied above; it hard-fails
-# when either file is missing.
-COPY environment.yml ./
+# tests/small/test_conda_deps.py holds the committed environment files to
+# a fresh render of the pyprojects copied above; it hard-fails when any
+# of them is missing.
+COPY environment.yml dev-environment.yml ./
 COPY scripts/conda_env.py ./scripts/
 
 ENV PATH="/workspace/.venv/bin:$PATH"
