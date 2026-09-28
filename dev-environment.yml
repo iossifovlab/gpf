@@ -9,7 +9,6 @@ channels:
   - bioconda
   - iossifovlab
 dependencies:
-  - dask-kubernetes=2025.7
   - coverage
   - pytest
   - pytest-cov
