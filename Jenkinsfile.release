@@ -192,7 +192,13 @@ pipeline {
         WHEELS_USER     = 'seqpipe'
         WHEELS_PATH     = '/data/wheels/gpf'
         ANACONDA_USER   = 'iossifovlab'
-        CONDA_BUILDER   = "gpf-conda-builder-ci:${env.BUILD_NUMBER}"
+        // `gpf-conda-builder-release`, not `gpf-conda-builder-ci`: the
+        // latter is the root Jenkinsfile's conda-builder image. This job
+        // deliberately does not disableConcurrentBuilds() and is fired
+        // from that same pipeline, so sharing the name meant two jobs on
+        // independent build counters building and `docker rmi`-ing one
+        // tag (#1049).
+        CONDA_BUILDER   = "gpf-conda-builder-release:${env.BUILD_NUMBER}"
         // Lift params.TAG_NAME / params.GAIN_PIN_VERSION into env
         // so shell heredocs / `sh '''...'''` blocks can keep using
         // ${TAG_NAME} / ${GAIN_PIN_VERSION} unchanged. Declarative
