@@ -79,10 +79,12 @@ uv lock --upgrade                        # refresh whole lock
 uv lock --upgrade-package <dep>          # refresh one
 ```
 
-The conda `environment.yml` is generated from the member
-pyprojects: after any dependency change, run
+The conda `environment.yml` and `dev-environment.yml` are
+generated from the workspace pyprojects: after any
+dependency change (runtime, `dev` or `docs` group), run
 `python scripts/conda_env.py` and commit the result.
-`core/tests/small/test_conda_deps.py` fails when it is stale.
+`core/tests/small/test_conda_deps.py` fails when either is
+stale.
 
 After `git pull`, re-run `uv sync --find-links
 ./dist/gain`. After `git pull` in `../gain/`, rebuild the
