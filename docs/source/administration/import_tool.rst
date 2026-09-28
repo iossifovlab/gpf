@@ -199,46 +199,17 @@ Running on a SGE cluster
 
 .. code-block:: bash
 
-    import_tools import_config.yaml run --sge -j 100
+    import_tools import_config.yaml run -N sge -j 100
 
 This command will run import tools on a SGE cluster using 100 parallel workers.
+The cluster is selected by name with ``-N``/``--dask-cluster-name``; the names
+(``sge_small``, ``sge``, ``sge_large``, ...) come from GAIn's named dask cluster
+configuration. To use a cluster definition of your own instead, pass it in a
+YAML file with ``-c``/``--dask-cluster-config-file`` in place of ``-N``.
+
 This assumes a preconfigured, working SGE cluster. The *import_config.yaml* file
 should be placed on a shared file system that can be accessed by all nodes in
 the cluster.
-
-
-Running on a Kubernetes cluster
--------------------------------
-
-Running on kubernetes is a little bit more involved because typically nodes in
-the cluster don't share a common file system and the machine where we run
-*import_tools* is usually not part of the cluster. So the import process needs
-a common storage that can be access both by the nodes in the cluster and the
-machine where import tools is run from. The easiest way to achieve this is by
-using S3.
-
-The best setup is to place the import configuration on S3 together will the
-input data. Accessing S3 (and other AWS services) usually happends through an
-access and secret keys. Assuming these keys are already configured in the
-corresponding environment variables we can run import tools like that:
-
-.. code-block:: bash
-
-    import_tools s3://bucket/import_config.yaml run --kubernetes --envvars AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY --image-pull-secrets seqpipe-registry-cred -j 20
-
-The environment variables specified by --envvars will be propagated to the
-worker pods so that the workers can access S3. The --image-pull-secrets specifies
-a kubernetes secret that should contain the credentials used for accessing the
-seqpipe docker registry from which the images for the worker pods will be pulled
-from. And -j specifies that 20 workers should be started.
-
-If using a non-AWS S3 such as a ceph storage, the endpoint url can be specified
-using the *S3_ENDPOINT_URL* environment variable:
-
-
-.. code-block:: bash
-
-    S3_ENDPOINT_URL=http://s3.my-server.com:7480 import_tools s3://bucket/import_config.yaml run --kubernetes --envvars AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY --image-pull-secrets seqpipe-registry-cred -j 20
 
 
 
