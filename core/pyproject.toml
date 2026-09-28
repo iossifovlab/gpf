@@ -128,6 +128,7 @@ samocha_enrichment_background = "gpf.enrichment_tool.resource_implementations.en
 dev = [
     "coverage",
     "mypy==1.15.0",
+    "packaging",
     "pandas-stubs",
     "pyarrow-stubs",
     "pylint",

@@ -1161,6 +1161,7 @@ dependencies = [
 dev = [
     { name = "coverage" },
     { name = "mypy" },
+    { name = "packaging" },
     { name = "pandas-stubs" },
     { name = "pyarrow-stubs" },
     { name = "pylint" },
@@ -1222,6 +1223,7 @@ requires-dist = [
 dev = [
     { name = "coverage" },
     { name = "mypy", specifier = "==1.15.0" },
+    { name = "packaging" },
     { name = "pandas-stubs" },
     { name = "pyarrow-stubs" },
     { name = "pylint" },
