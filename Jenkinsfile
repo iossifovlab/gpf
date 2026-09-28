@@ -29,7 +29,7 @@ def runProject(Map args) {
     String dockerRunExtra = args.dockerRunExtra ?: ''          // extra flags for `docker run` (network, -v, -e, ...)
     String distName       = name.replace('_', '-')
     String distPkg        = args.distPkg ?: "gpf-${distName}"  // PyPI-style name, e.g. "gpf-rest-client"
-    String imageTag       = "gpf-${distName}-ci:${env.BUILD_NUMBER}"
+    String imageTag       = "gpf-${distName}-ci:${env.CI_TAG}"
 
     String pytestBlock = skipPytest ? '''
                 # pytest is skipped for this stage — see runProject() call
@@ -212,9 +212,69 @@ def zulipAlert(String status, String emoji) {
         "${status}${suffix}"
 }
 
+// Branch-derived component of this build's Docker / Compose namespace.
+//
+// BUILD_NUMBER is unique within a *job*, not across the Docker daemon
+// that every job on an agent shares. This is a multibranch pipeline, so
+// every branch job and every PR job (PR-<n>-head, PR-<n>-merge) carries
+// its own counter starting at 1 — scoping by build number alone means
+// two branches building concurrently share every image tag and compose
+// project name, and tear each other's down (#1049; ported from
+// iossifovlab/gain#478).
+//
+// The token has to satisfy the intersection of two rule sets:
+//   - Docker: repository names are lowercase; tags allow [A-Za-z0-9_.-],
+//     must not lead with '.' or '-', and cap at 128 characters.
+//   - Compose: project names must match [a-z0-9][a-z0-9_-]* — note this
+//     EXCLUDES '.', which a Docker tag would happily accept, and
+//     requires an alphanumeric first character.
+// Folding to [a-z0-9_-] with an alphanumeric lead satisfies both, so a
+// single token can name images and compose projects alike. Truncation
+// keeps the longest realistic branch name well inside the tag limit.
+@NonCPS
+String ciScope(String branch) {
+    String raw = branch ?: 'nobranch'
+    String scope = raw.toLowerCase()
+    scope = scope.replaceAll('[^a-z0-9_-]+', '-')  // '/' and '.' both fold
+    scope = scope.replaceAll('^[_-]+', '')         // compose: alphanumeric lead
+    if (scope.length() > 32) {
+        scope = scope.substring(0, 32)
+    }
+    scope = scope.replaceAll('[_-]+$', '')         // no trailing separator
+    // Folding and truncation are both lossy: `fix/460-x` and `fix-460-x`
+    // collapse to one string, and two branches sharing a 32-character
+    // prefix truncate to one — and our branch names run long enough for
+    // that to be reachable (`fix/1035-federation-sqlite-wal` is 30).
+    // A silent collision here would reproduce the exact failure this
+    // scoping exists to prevent, so pin the token to the *raw* name with
+    // a hash suffix. String.hashCode() is specified by the Java language
+    // spec, so it is stable across JVMs and controller restarts.
+    //
+    // Rendered with an operator and an instance toString() rather than
+    // Integer.toHexString()/Math.abs()/String.format(): the Groovy
+    // sandbox rejects *static* calls until an administrator approves the
+    // signature, and @NonCPS does not exempt a method from script
+    // security. Masking off the sign bit keeps the token free of a
+    // leading '-', which Compose project names forbid.
+    String suffix = (raw.hashCode() & 0x7fffffff).toString()
+    return scope ? "${scope}-${suffix}" : "h${suffix}"
+}
+
 pipeline {
     // builder = general build agents; deploy targets don't carry it
     agent { label 'builder' }
+
+    environment {
+        // The one token every build-local Docker image tag and compose
+        // project name in this file is scoped by. Unique per (branch,
+        // build): the branch component isolates concurrent branches,
+        // the build number still distinguishes reruns of the same
+        // branch. Anything here scoped by BUILD_NUMBER alone
+        // reintroduces #1049 — including, critically, the rmi loop in
+        // post.cleanup, which is why this is pipeline-level env rather
+        // than a Groovy local (post blocks need it too).
+        CI_TAG = "${ciScope(env.BRANCH_NAME)}-${env.BUILD_NUMBER}"
+    }
 
     options {
         timeout(time: 1, unit: 'HOURS')
@@ -413,7 +473,7 @@ pipeline {
                     steps {
                         sh '''
                             docker build -f conda-builder/Dockerfile \
-                                -t gpf-conda-builder-ci:${BUILD_NUMBER} conda-builder
+                                -t gpf-conda-builder-ci:${CI_TAG} conda-builder
                         '''
                     }
                 }
@@ -461,8 +521,8 @@ pipeline {
                     parallel {
                         stage('core') {
                             environment {
-                                COMPOSE_PROJECT = "gpf-ci-${env.BUILD_NUMBER}"
-                                COMPOSE_NETWORK = "gpf-ci-${env.BUILD_NUMBER}_default"
+                                COMPOSE_PROJECT = "gpf-ci-${env.CI_TAG}"
+                                COMPOSE_NETWORK = "gpf-ci-${env.CI_TAG}_default"
                             }
                             steps {
                                 script {
@@ -669,7 +729,7 @@ pipeline {
                             steps {
                                 script {
                                     String imageTag =
-                                        "gpf-web-ui-ci:${env.BUILD_NUMBER}"
+                                        "gpf-web-ui-ci:${env.CI_TAG}"
                                     sh label: 'Build web_ui image', script: """
                                         docker build -f web_ui/Dockerfile \
                                             -t ${imageTag} .
@@ -910,7 +970,7 @@ pipeline {
                     steps {
                         sh '''
                             docker build -f web_api/Dockerfile \
-                                -t gpf-web-api-ci:${BUILD_NUMBER} .
+                                -t gpf-web-api-ci:${CI_TAG} .
                             mkdir -p dist/docs
                             docker run --rm \
                                 --user "$(id -u):$(id -g)" \
@@ -918,7 +978,7 @@ pipeline {
                                 -v $PWD:/workspace \
                                 -v $PWD/.git:/workspace/.git:ro \
                                 -w /workspace \
-                                gpf-web-api-ci:${BUILD_NUMBER} \
+                                gpf-web-api-ci:${CI_TAG} \
                                 sh -c '
                                     set -eu
                                     # The `docs` group is defined on the
@@ -1007,7 +1067,7 @@ pipeline {
                                     -e SSH_USER \
                                     -e DOCS_STAMP \
                                     -w /workspace \
-                                    gpf-web-api-ci:${BUILD_NUMBER} \
+                                    gpf-web-api-ci:${CI_TAG} \
                                     sh -c '
                                         set -eu
                                         apt-get update
@@ -1153,7 +1213,7 @@ pipeline {
                                     -v $PWD:/workspace \
                                     -w /workspace \
                                     -e VCS_VERSION="$VCS_VERSION" \
-                                    gpf-conda-builder-ci:${BUILD_NUMBER} \
+                                    gpf-conda-builder-ci:${CI_TAG} \
                                     rattler-build build \
                                         --recipe $proj/conda-recipe/recipe.yaml \
                                         --output-dir conda/$proj
@@ -1180,6 +1240,16 @@ pipeline {
                     //   :${BUILD_NUMBER}  — Jenkins build identity
                     //   :${GIT_SHORT}     — immutable git-anchored handle
                     //   :latest           — moving pointer for prod
+                    //
+                    // Those three are a *published* contract — gpf-web-e2e
+                    // pulls the upstream master build's images by
+                    // :${BUILD_NUMBER} — so they are deliberately NOT
+                    // branch-scoped. They are applied on the push path
+                    // below, which only master reaches. Locally the
+                    // images are built and cross-referenced under
+                    // :${CI_TAG}, which is unique per (branch, build)
+                    // so concurrent branches cannot retag each other's
+                    // images out from under them (#1049).
                     environment {
                         REGISTRY      = 'registry.seqpipe.org'
                         BACKEND_REPO  = "${env.REGISTRY}/gpf-web-api"
@@ -1206,18 +1276,21 @@ pipeline {
                             docker pull node:22.14.0-alpine
                             docker pull httpd:2.4-alpine
 
-                            # Build backend; tag with build number first
-                            # so the frontend's --build-arg can reference
-                            # it. PYTHON_IMAGE is passed explicitly so the
+                            # Build backend under $CI_TAG so the
+                            # frontend's and bundle's --build-args below
+                            # resolve to *this* build's backend. Naming it
+                            # :$BUILD_NUMBER here instead would let a
+                            # concurrent branch retag that name between
+                            # the builds and splice its backend into our
+                            # frontend / bundle image (#1049).
+                            # PYTHON_IMAGE is passed explicitly so the
                             # Dockerfile is consistent across master (this
                             # path, floating tag) and any future digest-
                             # pinned release stage.
                             docker build \
                                 -f web_api/Dockerfile.production \
                                 --build-arg PYTHON_IMAGE=python:3.12-slim \
-                                -t "$BACKEND_REPO:$BUILD_NUMBER" .
-                            docker tag "$BACKEND_REPO:$BUILD_NUMBER" \
-                                       "$BACKEND_REPO:$GIT_SHORT"
+                                -t "$BACKEND_REPO:$CI_TAG" .
 
                             # Build frontend; multi-stages collectstatic
                             # from the backend image we just built.
@@ -1225,10 +1298,8 @@ pipeline {
                                 -f web_ui/Dockerfile.production \
                                 --build-arg NODE_IMAGE=node:22.14.0-alpine \
                                 --build-arg HTTPD_IMAGE=httpd:2.4-alpine \
-                                --build-arg BACKEND_IMAGE="$BACKEND_REPO:$BUILD_NUMBER" \
-                                -t "$FRONTEND_REPO:$BUILD_NUMBER" .
-                            docker tag "$FRONTEND_REPO:$BUILD_NUMBER" \
-                                       "$FRONTEND_REPO:$GIT_SHORT"
+                                --build-arg BACKEND_IMAGE="$BACKEND_REPO:$CI_TAG" \
+                                -t "$FRONTEND_REPO:$CI_TAG" .
 
                             # Build the combined bundle image: thin
                             # assembly layer that copies the venv from
@@ -1240,11 +1311,9 @@ pipeline {
                             docker build \
                                 -f Dockerfile.production \
                                 --build-arg PYTHON_IMAGE=python:3.12-slim \
-                                --build-arg BACKEND_IMAGE="$BACKEND_REPO:$BUILD_NUMBER" \
-                                --build-arg FRONTEND_IMAGE="$FRONTEND_REPO:$BUILD_NUMBER" \
-                                -t "$BUNDLE_REPO:$BUILD_NUMBER" .
-                            docker tag "$BUNDLE_REPO:$BUILD_NUMBER" \
-                                       "$BUNDLE_REPO:$GIT_SHORT"
+                                --build-arg BACKEND_IMAGE="$BACKEND_REPO:$CI_TAG" \
+                                --build-arg FRONTEND_IMAGE="$FRONTEND_REPO:$CI_TAG" \
+                                -t "$BUNDLE_REPO:$CI_TAG" .
 
                             # URL-prefix support smoke (gpf#903). The
                             # entrypoint renders the prefixed Apache
@@ -1256,7 +1325,7 @@ pipeline {
                             #   - prefixed Apache config parses,
                             #   - the SPA base href is rewritten,
                             #   - Django produces the prefixed settings.
-                            IMG="$BUNDLE_REPO:$BUILD_NUMBER"
+                            IMG="$BUNDLE_REPO:$CI_TAG"
                             docker run --rm "$IMG" apache2ctl configtest
                             docker run --rm -e GPF_PREFIX=gpf "$IMG" apache2ctl configtest
                             docker run --rm -e GPF_PREFIX=gpf "$IMG" \
@@ -1379,11 +1448,21 @@ print('gpf-web prefix settings OK')"
                                     # Docker daemon had untagged :latest
                                     # in between. gpf has the same shape
                                     # with one extra repo (BUNDLE) — fix
-                                    # preemptively.
+                                    # preemptively. The same applies to
+                                    # all three published names: each is
+                                    # derived from the build-local
+                                    # :$CI_TAG image right before its
+                                    # push, so the published contract
+                                    # stays exactly :$BUILD_NUMBER /
+                                    # :$GIT_SHORT / :latest while the
+                                    # build itself stays branch-scoped
+                                    # (#1049).
                                     for repo in "$BACKEND_REPO" "$FRONTEND_REPO" "$BUNDLE_REPO"; do
+                                        docker tag "$repo:$CI_TAG" "$repo:$BUILD_NUMBER"
                                         docker push "$repo:$BUILD_NUMBER"
+                                        docker tag "$repo:$CI_TAG" "$repo:$GIT_SHORT"
                                         docker push "$repo:$GIT_SHORT"
-                                        docker tag "$repo:$BUILD_NUMBER" "$repo:latest"
+                                        docker tag "$repo:$CI_TAG" "$repo:latest"
                                         docker push "$repo:latest"
                                     done
                                 '''
@@ -1742,20 +1821,36 @@ print('gpf-web prefix settings OK')"
         }
         cleanup {
             sh '''
+                # Remove exactly the names this build created — all of
+                # them $CI_TAG-scoped. An rmi of an unscoped
+                # <name>:$BUILD_NUMBER here would untag a concurrent
+                # branch's image and reintroduce #1049 wholesale.
                 for img in gpf-core-ci gpf-web-api-ci gpf-web-ui-ci gpf-federation-ci gpf-rest-client-ci gpf-conda-builder-ci; do
-                    docker rmi "$img:${BUILD_NUMBER}" 2>/dev/null || true
+                    docker rmi "$img:${CI_TAG}" 2>/dev/null || true
                 done
-                # Registry-prefixed prod images. `:latest` only exists on
-                # master but the rmi is harmless on branches. GIT_SHORT
-                # may be unset if the build failed before that stage —
-                # the rmi just no-ops then.
+                # Registry-prefixed prod images. The build-local
+                # :$CI_TAG image is ours on every branch.
                 for repo in registry.seqpipe.org/gpf-web-api \
                             registry.seqpipe.org/gpf-web-ui \
                             registry.seqpipe.org/gpf-web; do
-                    for tag in "$BUILD_NUMBER" "${GIT_COMMIT:0:8}" latest; do
-                        docker rmi "$repo:$tag" 2>/dev/null || true
-                    done
+                    docker rmi "$repo:${CI_TAG}" 2>/dev/null || true
                 done
+                # The published :$BUILD_NUMBER / :$GIT_SHORT / :latest
+                # names are only ever created on the master push path, so
+                # only master removes them. Doing this unconditionally
+                # let a branch build untag whichever master build was
+                # pushing right then — the tb-w8d ":latest tag does not
+                # exist" race. GIT_SHORT may be unset if the build failed
+                # before that stage — the rmi just no-ops then.
+                if [ "${BRANCH_NAME:-}" = master ]; then
+                    for repo in registry.seqpipe.org/gpf-web-api \
+                                registry.seqpipe.org/gpf-web-ui \
+                                registry.seqpipe.org/gpf-web; do
+                        for tag in "$BUILD_NUMBER" "${GIT_COMMIT:0:8}" latest; do
+                            docker rmi "$repo:$tag" 2>/dev/null || true
+                        done
+                    done
+                fi
             '''
         }
     }
