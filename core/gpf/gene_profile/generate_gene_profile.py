@@ -68,8 +68,9 @@ def generate_gp(
                     f"gene_scores_db configuration",
                 )
             gene_score = gene_scores_db.get_gene_score(score_desc.resource_id)
-            value = gene_score.get_gene_value(gene_score_name, gene_symbol)
-            scores[category_name][gene_score_name] = value
+            assert gene_score is not None
+            scores[category_name][gene_score_name] = \
+                gene_score.get_gene_value(gene_score_name, gene_symbol)
 
     variant_counts: dict[str, Any] = {}
     for dataset_id, value in config["datasets"].items():

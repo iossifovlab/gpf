@@ -1,10 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
 import pathlib
+import textwrap
+from collections.abc import Callable
 
 import pytest
 import pytest_mock
 from django.test.client import Client
+from gain.gene_scores.gene_scores import build_gene_score_from_resource
 from gain.genomic_resources.cli import cli_manage
 from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
@@ -16,34 +19,23 @@ from studies.response_transformer import ResponseTransformer
 from utils.testing import setup_t4c8_instance
 
 
-@pytest.fixture
-def categorical_wgpf_instance(
-    tmp_path: pathlib.Path,
-    db: None,  # ruff: ignore[unused-function-argument] ; enable the Django test database
+def _wgpf_instance_with_gene_score(
+    root_path: pathlib.Path,
     mocker: pytest_mock.MockFixture,
+    resource_name: str,
+    realize: Callable[[pathlib.Path], None],
 ) -> WGPFInstance:
-    """A WGPF instance carrying a number and a categorical gene score.
+    """Build the t4c8 WGPF instance with one extra gene score wired in.
 
-    Built on the shared t4c8 instance (which already ships the number score
-    ``t4c8_score``); a categorical gene score ``cat_score`` is added to the
-    GRR and wired into ``gene_scores_db`` so both scores surface through the
-    gene-scores endpoints.
+    ``realize`` writes the extra gene-score resource into the directory it
+    is given; the resource is then added to the GRR and to
+    ``gene_scores_db`` next to the t4c8 instance's own ``t4c8_score``, so
+    both surface through the gene-scores endpoints.
     """
-    root_path = tmp_path
     t4c8_instance = setup_t4c8_instance(root_path)
     grr_dir = root_path / "t4c8_grr"
 
-    (
-        a_gene_score()
-        .with_score("cat_score", column_name="score", desc="categorical score")
-        .with_histogram({"type": "categorical", "value_order": [1, 2, 3]})
-        .with_data("""
-            gene score
-            t4    1
-            c8    2
-        """)
-        .realize_into(grr_dir / "gene_scores" / "cat_score")
-    )
+    realize(grr_dir / "gene_scores" / resource_name)
     cli_manage(["repo-repair", "-R", str(grr_dir), "-j", "1"])
 
     instance_filename = (
@@ -52,7 +44,8 @@ def categorical_wgpf_instance(
     instance_filename.write_text(
         instance_filename.read_text().replace(
             '  - "gene_scores/t4c8_score"',
-            '  - "gene_scores/t4c8_score"\n  - "gene_scores/cat_score"',
+            '  - "gene_scores/t4c8_score"\n'
+            f'  - "gene_scores/{resource_name}"',
         ),
     )
 
@@ -86,6 +79,95 @@ def categorical_wgpf_instance(
     )
 
     return wgpf_instance
+
+
+@pytest.fixture
+def categorical_wgpf_instance(
+    tmp_path: pathlib.Path,
+    db: None,  # ruff: ignore[unused-function-argument] ; enable the Django test database
+    mocker: pytest_mock.MockFixture,
+) -> WGPFInstance:
+    """A WGPF instance carrying a number and a categorical gene score.
+
+    The categorical gene score ``cat_score`` sits next to the t4c8
+    instance's number score ``t4c8_score``.
+    """
+    def realize(resource_dir: pathlib.Path) -> None:
+        (
+            a_gene_score()
+            .with_score(
+                "cat_score", column_name="score", desc="categorical score")
+            .with_histogram({"type": "categorical", "value_order": [1, 2, 3]})
+            .with_data("""
+                gene score
+                t4    1
+                c8    2
+            """)
+            .realize_into(resource_dir)
+        )
+
+    return _wgpf_instance_with_gene_score(
+        tmp_path, mocker, "cat_score", realize)
+
+
+@pytest.fixture
+def described_wgpf_instance(
+    tmp_path: pathlib.Path,
+    db: None,  # ruff: ignore[unused-function-argument] ; enable the Django test database
+    mocker: pytest_mock.MockFixture,
+) -> WGPFInstance:
+    """A WGPF instance with a gene score declaring every description field.
+
+    ``desc_score`` carries a description and distinct small- and
+    large-values descriptions, so a serializer that drops, swaps or
+    substitutes any of them is caught.
+    """
+    def realize(resource_dir: pathlib.Path) -> None:
+        resource_dir.mkdir(parents=True)
+        (resource_dir / "genomic_resource.yaml").write_text(textwrap.dedent("""
+            type: gene_score
+            filename: scores.csv
+            scores:
+            - id: desc_score
+              desc: a described score
+              small_values_desc: low values are benign
+              large_values_desc: high values are damaging
+              histogram:
+                type: number
+                number_of_bins: 3
+                x_log_scale: false
+                y_log_scale: false
+        """))
+        (resource_dir / "scores.csv").write_text(textwrap.dedent("""\
+            gene,desc_score
+            t4,1
+            c8,2
+        """))
+
+    return _wgpf_instance_with_gene_score(
+        tmp_path, mocker, "desc_score", realize)
+
+
+@pytest.mark.parametrize("url", [
+    "/api/v3/gene_scores",
+    "/api/v3/gene_scores/histograms",
+])
+def test_gene_scores_views_serialize_the_score_descriptions(
+    user_client: Client,
+    described_wgpf_instance: WGPFInstance,
+    url: str,
+) -> None:
+    response = user_client.get(url)
+    assert response.status_code == 200
+
+    record = {d["score"]: d for d in response.json()}["desc_score"]
+    gene_score = build_gene_score_from_resource(
+        described_wgpf_instance.grr.get_resource("gene_scores/desc_score"))
+
+    assert record["desc"] == "desc_score - a described score"
+    assert record["small_values_desc"] == "low values are benign"
+    assert record["large_values_desc"] == "high values are damaging"
+    assert record["help"] == gene_score.build_score_help("desc_score")
 
 
 def test_gene_scores_list_view_categorical(
