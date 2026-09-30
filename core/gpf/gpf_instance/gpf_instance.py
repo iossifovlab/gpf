@@ -16,8 +16,10 @@ from gain.annotation.annotation_factory import (
     build_annotation_pipeline,
 )
 from gain.annotation.annotation_pipeline import AnnotationPipeline
-from gain.gene_scores.gene_scores import GeneScore
-from gain.gene_scores.gene_scores import ScoreDesc as GeneScoreDesc
+from gain.gene_scores.gene_scores import (
+    GeneScore,
+    build_gene_score_from_resource,
+)
 from gain.gene_sets.gene_set import build_gene_set_collection_from_resource
 from gain.genomic_resources.gene_models import (
     GeneModels,
@@ -33,6 +35,7 @@ from gpf.configuration.gpf_instance_config import (
 from gpf.configuration.schemas.gene_profile import gene_profiles_config
 from gpf.gene_profile.db import GeneProfileDB
 from gpf.gene_profile.statistic import GPStatistic
+from gpf.gene_scores import GeneScoreDesc, GeneScoresDb
 from gpf.gene_sets.denovo_gene_sets_db import DenovoGeneSetsDb
 from gpf.gene_sets.gene_sets_db import GeneSetsDb
 from gpf.genomic_scores.scores import GenomicScoresRegistry
@@ -282,12 +285,8 @@ class GPFInstance:
         )
 
     @cached_property
-    def gene_scores_db(self) -> Any:
+    def gene_scores_db(self) -> GeneScoresDb:
         """Load and return gene scores db."""
-        from gain.gene_scores.gene_scores import (
-            GeneScoresDb,
-            build_gene_score_from_resource,
-        )
         if self.dae_config.gene_scores_db is None:
             return GeneScoresDb([])
 
@@ -476,10 +475,10 @@ class GPFInstance:
         )
 
     def get_all_gene_scores(self) -> list[GeneScore]:
-        return cast(list[GeneScore], self.gene_scores_db.get_gene_scores())
+        return self.gene_scores_db.get_gene_scores()
 
     def get_all_gene_score_descs(self) -> list[GeneScoreDesc]:
-        return cast(list[GeneScoreDesc], self.gene_scores_db.get_scores())
+        return self.gene_scores_db.get_scores()
 
     # Variants DB
     def get_dataset(self, dataset_id: str) -> GenotypeData:

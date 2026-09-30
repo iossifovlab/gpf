@@ -5,12 +5,13 @@ from datasets_api.permissions import get_instance_timestamp_etag
 from django.http.response import StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
-from gain.gene_scores.gene_scores import ScoreDesc
 from gain.genomic_resources.histogram import NumberHistogram
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
+
+from gpf.gene_scores import GeneScoreDesc
 
 
 class GeneScoresListView(QueryBaseView):
@@ -32,7 +33,7 @@ class GeneScoresListView(QueryBaseView):
         )
 
     @staticmethod
-    def _score_record(score: ScoreDesc) -> dict[str, Any]:
+    def _score_record(score: GeneScoreDesc) -> dict[str, Any]:
         """Serialize a gene score description into a flat record.
 
         A numeric score keeps today's byte-identical

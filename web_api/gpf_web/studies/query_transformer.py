@@ -7,9 +7,9 @@ from threading import Lock
 from typing import Any, ClassVar, cast
 
 from gain.effect_annotation.effect import EffectTypesMixin
-from gain.gene_scores.gene_scores import GeneScoresDb
 from gain.utils.regions import Region
 
+from gpf.gene_scores import GeneScoresDb
 from gpf.gpf_instance.gpf_instance import GPFInstance
 from gpf.person_filters import make_pedigree_filter, make_pheno_filter
 from gpf.person_filters.person_filters import make_pheno_filter_beta

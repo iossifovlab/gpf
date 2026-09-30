@@ -5,8 +5,8 @@ from typing import cast
 
 import pytest
 from box import Box
-from gain.gene_scores.gene_scores import GeneScoresDb
 
+from gpf.gene_scores import GeneScoresDb
 from gpf.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )
@@ -55,7 +55,7 @@ def pheno_db(local_gpf_instance: GPFInstance) -> PhenoRegistry:
 
 @pytest.fixture(scope="session")
 def gene_scores_db(local_gpf_instance: GPFInstance) -> GeneScoresDb:
-    return cast(GeneScoresDb, local_gpf_instance.gene_scores_db)
+    return local_gpf_instance.gene_scores_db
 
 
 @pytest.fixture(scope="session")

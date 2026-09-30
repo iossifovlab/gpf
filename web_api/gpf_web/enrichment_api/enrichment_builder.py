@@ -3,13 +3,13 @@ from abc import abstractmethod
 from collections.abc import Iterable
 from typing import Any, cast
 
-from gain.gene_scores.gene_scores import GeneScoresDb
 from gpf_instance.extension import GPFTool
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 from utils.expand_gene_set import expand_gene_set
 
 from enrichment_api.enrichment_helper import EnrichmentHelper
 from enrichment_api.enrichment_serializer import EnrichmentSerializer
+from gpf.gene_scores import GeneScoresDb
 from gpf.person_sets import PersonSetCollection
 
 logger = logging.getLogger(__name__)
