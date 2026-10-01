@@ -1,0 +1,76 @@
+# The roborev PR poller (seqpipe/infra docs/roborev-setup.md) reviews every
+# open PR in this repo except those carrying the `draft` label -- roborev
+# cannot see GitHub's draft flag, only labels. This workflow keeps the label
+# equal to the flag, so "Ready for review" is what starts a review and
+# "Convert to draft" is what stops further ones. Nobody has to touch the label
+# by hand, and a PR marked ready while still labelled no longer sits unreviewed.
+#
+# pull_request_target rather than pull_request: the label write needs a token
+# with write access, which pull_request does not grant for fork PRs. Safe here
+# because the job never checks out or executes PR code -- it only reads PR
+# metadata and calls the labels API.
+#
+# Each run decides from the PR's LIVE draft flag and labels, not from the event
+# payload: a quick draft -> ready -> draft toggle fires overlapping runs, and a
+# stale snapshot acting last would leave the label wrong. Runs for one PR are
+# also serialised. `labeled` / `unlabeled` re-sync a hand-edited label (writes
+# made with GITHUB_TOKEN do not fire workflows, so this cannot loop). A PR
+# opened as a draft is unlabelled for the few seconds until this job runs.
+name: Sync draft label
+
+on:
+  pull_request_target:
+    types: [opened, reopened, converted_to_draft, ready_for_review, labeled, unlabeled]
+
+concurrency:
+  group: sync-draft-label-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+permissions:
+  pull-requests: write
+
+jobs:
+  sync-draft-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Match the draft label to the PR's draft flag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          # Read the CURRENT flag and labels from the API, and parse them with
+          # jq rather than splicing github.event values into this script via
+          # template expressions: label text is attacker-controlled. NUMBER and
+          # REPO above are safe (integer, owner/repo).
+          pr=$(gh api "repos/${REPO}/pulls/${NUMBER}")
+          is_draft=$(jq -r '.draft' <<< "$pr")
+          has_label=$(jq -r \
+            '[.labels[].name | ascii_downcase] | index("draft") != null' <<< "$pr")
+
+          case "${is_draft},${has_label}" in
+            true,false)
+              echo "#${NUMBER} is a draft without the label; adding 'draft'"
+              gh api -X POST "repos/${REPO}/issues/${NUMBER}/labels" \
+                --input - --silent <<< '{"labels":["draft"]}'
+              ;;
+            false,true)
+              echo "#${NUMBER} is ready for review; removing 'draft'"
+              # A human may remove the label between the event and this run;
+              # that 404 is the desired end state, not a failure.
+              rc=0
+              out=$(gh api -X DELETE \
+                "repos/${REPO}/issues/${NUMBER}/labels/draft" 2>&1) || rc=$?
+              if [ "$rc" -ne 0 ]; then
+                case "$out" in
+                  *"Label does not exist"*) echo "'draft' was already removed" ;;
+                  *) echo "$out"; exit "$rc" ;;
+                esac
+              fi
+              ;;
+            *)
+              echo "#${NUMBER}: draft=${is_draft}, label present=${has_label}; nothing to do"
+              ;;
+          esac
