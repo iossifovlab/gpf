@@ -481,10 +481,13 @@ test.describe('Genomic scores tests', () => {
     const genomicScores = genotypeBrowser.genomicScores;
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype browser');
 
-    // MPC only annotates missense variants; the default Effect Types
-    // selection is LGDs-only (no missense). Click All so the MPC range
-    // filter has a non-empty result set deterministically on Jenkins.
-    await genotypeBrowser.effectTypes.clickButton('All');
+    // The default Effect Types selection is LGDs-only (no missense), which
+    // leaves the MPC range filter empty. Select missense alone: MPC is a
+    // missense score, but on its `substitutions` resource gain region-folds
+    // an indel over the bases it covers, so frame-shifts carry MPC too.
+    // Scoping to missense keeps the fixture independent of indel scoring.
+    await genotypeBrowser.effectTypes.clickButton('None');
+    await genotypeBrowser.effectTypes.clickLabel('missense');
 
     const mpcScore = 'mpc - Missense badness, PolyPhen-2, and Constraint. ' +
     'A deleteriousness prediction score for missense variants';
