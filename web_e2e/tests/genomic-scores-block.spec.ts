@@ -482,12 +482,10 @@ test.describe('Genomic scores tests', () => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype browser');
 
     // The default Effect Types selection is LGDs-only (no missense), which
-    // leaves the MPC range filter empty. Select missense alone: MPC is a
-    // missense score, but on its `substitutions` resource gain region-folds
-    // an indel over the bases it covers, so frame-shifts carry MPC too.
-    // Scoping to missense keeps the fixture independent of indel scoring.
-    await genotypeBrowser.effectTypes.clickButton('None');
-    await genotypeBrowser.effectTypes.clickLabel('missense');
+    // leaves the MPC range filter empty. Click All: the fixture covers both
+    // missense substitutions and indels, which MPC's `substitutions`
+    // resource scores by region-folding over the bases they cover.
+    await genotypeBrowser.effectTypes.clickButton('All');
 
     const mpcScore = 'mpc - Missense badness, PolyPhen-2, and Constraint. ' +
     'A deleteriousness prediction score for missense variants';
@@ -503,11 +501,15 @@ test.describe('Genomic scores tests', () => {
     const downloadPromise = page.waitForEvent('download');
     await genotypeBrowser.downloadButton.click();
     const download = await downloadPromise;
+    // Keep the download in the archived test output so a mismatch can be
+    // diffed against (or promoted to) the fixture.
+    const downloadPath = test.info().outputPath('variants.tsv');
+    await download.saveAs(downloadPath);
 
-    const fixtureData = scanCSV(await download.path(), {sep: '\t'});
-    const downloadData = scanCSV('fixtures/genomic-scores/variants.tsv', {sep: '\t'});
-    const fixtureFrame = (await fixtureData.collect()).sort('family id');
+    const downloadData = scanCSV(downloadPath, {sep: '\t'});
+    const fixtureData = scanCSV('fixtures/genomic-scores/variants.tsv', {sep: '\t'});
     const downloadFrame = (await downloadData.collect()).sort('family id');
-    expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
+    const fixtureFrame = (await fixtureData.collect()).sort('family id');
+    expect(downloadFrame.toString()).toEqual(fixtureFrame.toString());
   });
 });
