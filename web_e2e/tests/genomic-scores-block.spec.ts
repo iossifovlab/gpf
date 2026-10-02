@@ -481,9 +481,10 @@ test.describe('Genomic scores tests', () => {
     const genomicScores = genotypeBrowser.genomicScores;
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype browser');
 
-    // MPC only annotates missense variants; the default Effect Types
-    // selection is LGDs-only (no missense). Click All so the MPC range
-    // filter has a non-empty result set deterministically on Jenkins.
+    // The default Effect Types selection is LGDs-only (no missense), which
+    // leaves the MPC range filter empty. Click All: the fixture covers both
+    // missense substitutions and indels, which MPC's `substitutions`
+    // resource scores by region-folding over the bases they cover.
     await genotypeBrowser.effectTypes.clickButton('All');
 
     const mpcScore = 'mpc - Missense badness, PolyPhen-2, and Constraint. ' +
@@ -500,11 +501,20 @@ test.describe('Genomic scores tests', () => {
     const downloadPromise = page.waitForEvent('download');
     await genotypeBrowser.downloadButton.click();
     const download = await downloadPromise;
+    // Keep the download in the archived test output so a mismatch can be
+    // diffed against (or promoted to) the fixture.
+    const downloadPath = test.info().outputPath('variants.tsv');
+    await download.saveAs(downloadPath);
 
-    const fixtureData = scanCSV(await download.path(), {sep: '\t'});
-    const downloadData = scanCSV('fixtures/genomic-scores/variants.tsv', {sep: '\t'});
-    const fixtureFrame = (await fixtureData.collect()).sort('family id');
-    const downloadFrame = (await downloadData.collect()).sort('family id');
-    expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
+    const downloadData = scanCSV(downloadPath, {sep: '\t'});
+    const fixtureData = scanCSV('fixtures/genomic-scores/variants.tsv', {sep: '\t'});
+    // `family id` alone is not unique (one family can carry several
+    // variants), so sort by a key that is, and compare every cell: the
+    // frame's display string elides most rows and columns.
+    const sortKey = ['family id', 'location', 'variant'];
+    const downloadFrame = (await downloadData.collect()).sort(sortKey);
+    const fixtureFrame = (await fixtureData.collect()).sort(sortKey);
+    expect(downloadFrame.columns).toEqual(fixtureFrame.columns);
+    expect(downloadFrame.toRecords()).toEqual(fixtureFrame.toRecords());
   });
 });
