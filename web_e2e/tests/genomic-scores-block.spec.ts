@@ -508,8 +508,13 @@ test.describe('Genomic scores tests', () => {
 
     const downloadData = scanCSV(downloadPath, {sep: '\t'});
     const fixtureData = scanCSV('fixtures/genomic-scores/variants.tsv', {sep: '\t'});
-    const downloadFrame = (await downloadData.collect()).sort('family id');
-    const fixtureFrame = (await fixtureData.collect()).sort('family id');
-    expect(downloadFrame.toString()).toEqual(fixtureFrame.toString());
+    // `family id` alone is not unique (one family can carry several
+    // variants), so sort by a key that is, and compare every cell: the
+    // frame's display string elides most rows and columns.
+    const sortKey = ['family id', 'location', 'variant'];
+    const downloadFrame = (await downloadData.collect()).sort(sortKey);
+    const fixtureFrame = (await fixtureData.collect()).sort(sortKey);
+    expect(downloadFrame.columns).toEqual(fixtureFrame.columns);
+    expect(downloadFrame.toRecords()).toEqual(fixtureFrame.toRecords());
   });
 });
