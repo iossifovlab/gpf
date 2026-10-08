@@ -1,0 +1,5 @@
+review_guidelines = """
+- gpf core must not import `gpf_web`.
+- CI gates on ruff, mypy and pylint. Flag anything that those tools would reject.
+- Do not flag missing sanitisation on data that comes from the GRR or from trusted config files.
+"""
