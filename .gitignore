@@ -160,3 +160,7 @@ pyproject.local.toml
 # Linked git worktrees used by Claude Code for isolated
 # feature development (see superpowers `using-git-worktrees`).
 /.worktrees/
+
+# Run directories of the verify-gpf skill (.claude/skills/verify-gpf):
+# scratch and evidence of each run, never committed.
+/.verify/
