@@ -302,6 +302,18 @@ Services defined in `docker-compose.yaml`:
   `grr_http` tests; serves
   `core/tests/.test_grr/`
 
+## Deferred branch deletion
+
+A delete at merge time can stop a downstream job before it runs, because the branch build starts these jobs with `wait: false` and each one reads the branch after it leaves the Jenkins queue.
+
+```
+jenkins: https://nemo.seqpipe.org
+status-context: continuous-integration/jenkins/branch
+jobs: gpf-web-e2e, gpf-federation-integration, gpf-rest-client-integration, gpf-docs-e2e
+sha-parameter: COMMIT_SHA
+fallback-minutes: 15
+```
+
 ## Architecture
 
 ### Dependency Direction
