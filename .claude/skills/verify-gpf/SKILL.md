@@ -82,7 +82,7 @@ repository request leaves the host.
 
 ## 2. Doctor
 
-Read-only. Run it before the first drive and again after any failed drive:
+Doctor writes nothing outside the run's scratch directory. Run it before the first drive and again after any failed drive:
 
 ```bash
 PATH="$PWD/.venv/bin:$PATH" .claude/skills/verify-gpf/scripts/doctor.sh "$RUN_ID"
@@ -221,7 +221,7 @@ executable:
 | Script | Invocation | Does |
 | --- | --- | --- |
 | `launch.sh` | `launch.sh [run id]` | creates `.verify/<run id>/{scratch,evidence}`, copies the fixture GRR to scratch, writes `scratch/grr.yaml` and `scratch/instance/gpf_instance.yaml`; prints the run id |
-| `doctor.sh` | `doctor.sh <run id>` | read-only preflight (`import_genotypes` on `PATH`, the `gpf` and `gain` import paths, the fixture GRR, the run's instance loads) |
+| `doctor.sh` | `doctor.sh <run id>` | preflight that writes nothing outside the run's scratch directory (`import_genotypes` on `PATH`, the `gpf` and `gain` import paths, the fixture GRR, the run's instance loads) |
 | `drive-import-genotypes.sh` | `drive-import-genotypes.sh <run id>` | imports the de novo study with `import_genotypes`, dumps it with `dump_study.py`, keeps the evidence, runs the read-back |
 | `dump_study.py` | `.venv/bin/python -I dump_study.py <gpf_instance.yaml> <study id>` | builds the instance, loads the study and prints its families and variants as a sorted TSV |
 | `readback-import-genotypes.sh` | `readback-import-genotypes.sh <variants.tsv>` | checks the families `f1`, `f2` and the three variants with their best states |

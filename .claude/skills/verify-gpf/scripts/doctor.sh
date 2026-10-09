@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # doctor.sh <run id>
 #
-# Read-only preflight. Fails (exit 1) with a message that names the fix when:
+# Preflight. Writes nothing outside the run's scratch directory. Fails (exit 1) with a message that names the fix when:
 #   1. import_genotypes on PATH is not this checkout's .venv/bin one;
 #   2. the .venv python does not import gpf from this checkout's core/gpf,
 #      or gain from this .venv;
