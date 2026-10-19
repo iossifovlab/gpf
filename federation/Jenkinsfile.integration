@@ -62,9 +62,9 @@ pipeline {
         string(
             name: 'COMMIT_SHA',
             defaultValue: '',
-            description: 'Specific commit SHA to test (takes ' +
-                'precedence over BRANCH_NAME). Empty = use ' +
-                'BRANCH_NAME HEAD.',
+            description: 'Specific full 40-character commit SHA ' +
+                'to test (takes precedence over BRANCH_NAME). ' +
+                'Empty = use BRANCH_NAME HEAD.',
         )
         string(
             name: 'UPSTREAM_PROJECT',
@@ -136,6 +136,11 @@ pipeline {
                         url: 'https://github.com/iossifovlab/gpf.git',
                     ]
                     if (sha) {
+                        // Git fetches a bare SHA only in its full form.
+                        if (!(sha ==~ /[0-9a-fA-F]{40}/)) {
+                            error("COMMIT_SHA must be a full 40-character " +
+                                "SHA, got '${sha}'")
+                        }
                         remote.refspec = "+${sha}:refs/remotes/origin/pinned"
                     }
                     def scmVars = checkout([
