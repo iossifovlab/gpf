@@ -7,6 +7,11 @@ describe('formatValue', () => {
     expect(formatValue('%s', null)).toBe('null');
   });
 
+  it('formats %s of an object with String, like sprintf.js', () => {
+    expect(formatValue('%s', [1, 2])).toBe('1,2');
+    expect(formatValue('%s', { a: 1 })).toBe('[object Object]');
+  });
+
   it('formats %d as the integer part of the value, like sprintf.js', () => {
     expect(formatValue('%d', 42)).toBe('42');
     expect(formatValue('%d', 3.9)).toBe('3');
