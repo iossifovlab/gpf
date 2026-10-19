@@ -221,18 +221,26 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    String ref = params.COMMIT_SHA?.trim() ?:
-                                 params.BRANCH_NAME
+                    String sha = params.COMMIT_SHA?.trim()
+                    String ref = sha ?: params.BRANCH_NAME
+                    // Fetch a pinned SHA by itself: after a newer push to
+                    // the branch it is no longer a tip, and a depth-1 fetch
+                    // of refs/heads/* cannot find it (#1074).
+                    Map remote = [
+                        url: 'https://github.com/iossifovlab/gpf.git',
+                    ]
+                    if (sha) {
+                        remote.refspec = "+${sha}:refs/remotes/origin/pinned"
+                    }
                     checkout([
                         $class: 'GitSCM',
                         branches: [[name: ref]],
-                        userRemoteConfigs: [[
-                            url: 'https://github.com/iossifovlab/gpf.git',
-                        ]],
+                        userRemoteConfigs: [remote],
                         extensions: [[$class: 'CloneOption',
                                       shallow: true,
                                       noTags: true,
-                                      depth: 1]],
+                                      depth: 1,
+                                      honorRefspec: true]],
                     ])
                 }
             }
