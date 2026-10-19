@@ -90,9 +90,9 @@ pipeline {
         string(
             name: 'COMMIT_SHA',
             defaultValue: '',
-            description: 'Specific commit SHA to test (takes ' +
-                'precedence over BRANCH_NAME). Empty = use ' +
-                'BRANCH_NAME HEAD.',
+            description: 'Specific full 40-character commit SHA ' +
+                'to test (takes precedence over BRANCH_NAME). ' +
+                'Empty = use BRANCH_NAME HEAD.',
         )
         string(
             name: 'UPSTREAM_PROJECT',
@@ -221,18 +221,31 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    String ref = params.COMMIT_SHA?.trim() ?:
-                                 params.BRANCH_NAME
+                    String sha = params.COMMIT_SHA?.trim()
+                    String ref = sha ?: params.BRANCH_NAME
+                    // Fetch a pinned SHA by itself: after a newer push to
+                    // the branch it is no longer a tip, and a depth-1 fetch
+                    // of refs/heads/* cannot find it (#1074).
+                    Map remote = [
+                        url: 'https://github.com/iossifovlab/gpf.git',
+                    ]
+                    if (sha) {
+                        // Git fetches a bare SHA only in its full form.
+                        if (!(sha ==~ /[0-9a-fA-F]{40}/)) {
+                            error("COMMIT_SHA must be a full 40-character " +
+                                "SHA, got '${sha}'")
+                        }
+                        remote.refspec = "+${sha}:refs/remotes/origin/pinned"
+                    }
                     checkout([
                         $class: 'GitSCM',
                         branches: [[name: ref]],
-                        userRemoteConfigs: [[
-                            url: 'https://github.com/iossifovlab/gpf.git',
-                        ]],
+                        userRemoteConfigs: [remote],
                         extensions: [[$class: 'CloneOption',
                                       shallow: true,
                                       noTags: true,
-                                      depth: 1]],
+                                      depth: 1,
+                                      honorRefspec: true]],
                     ])
                 }
             }
