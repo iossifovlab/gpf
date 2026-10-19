@@ -25,7 +25,7 @@ import { GenomicScoreState, setGenomicScores } from 'app/genomic-scores-block/ge
 import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
 import { NumberHistogram, CategoricalHistogram } from 'app/utils/histogram-types';
 import { setUniqueFamilyVariantsFilter } from 'app/unique-family-variants-filter/unique-family-variants-filter.state';
-import { sprintf } from 'sprintf-js';
+import { formatValue } from 'app/utils/format-value';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -163,7 +163,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
     if (value === null) {
       return null;
     }
-    return Number(sprintf(format, value));
+    return Number(formatValue(format, value));
   }
 
   // Remove when GPF starts supporting string names for categorical histogram values

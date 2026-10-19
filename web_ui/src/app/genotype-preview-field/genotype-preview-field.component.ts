@@ -1,5 +1,5 @@
 import { Component, Input, OnChanges, OnInit } from '@angular/core';
-import { sprintf } from 'sprintf-js';
+import { formatValue } from 'app/utils/format-value';
 import { FullEffectDetails } from './genotype-preview-field';
 
 @Component({
@@ -38,7 +38,7 @@ export class GenotypePreviewFieldComponent implements OnInit, OnChanges {
     if (value === 'nan') {
       return value;
     }
-    return sprintf(format, value);
+    return formatValue(format, value);
   }
 
   public formatValue(): string | string[] {

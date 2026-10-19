@@ -33,7 +33,6 @@
     "@sentry/angular": "10.60.0",
     "@types/d3": "7.4.0",
     "@types/lodash": "4.17.24",
-    "@types/sprintf-js": "1.1.2",
     "angular-confirmation-popover": "7.0.0",
     "angular-markdown-editor": "3.0.2",
     "bn-ng-idle": "2.0.4",
@@ -55,7 +54,6 @@
     "popper.js": "1.16.1",
     "reflect-metadata": "0.1.13",
     "rxjs": "7.8.0",
-    "sprintf-js": "1.1.2",
     "stylelint-checkstyle-formatter": "0.1.2",
     "tether": "2.0.0",
     "zone.js": "0.15.1"

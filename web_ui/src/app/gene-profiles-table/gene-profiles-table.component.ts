@@ -22,7 +22,7 @@ import {
   setGeneProfilesSortBy,
   setGeneProfilesValues } from './gene-profiles-table.state';
 import { UsersService } from 'app/users/users.service';
-import { sprintf } from 'sprintf-js';
+import { formatValue } from 'app/utils/format-value';
 
 @Component({
   selector: 'gpf-gene-profiles-table',
@@ -207,7 +207,7 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
           const value = gene[leaf.id];
           if (value) {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            gene[leaf.id] = sprintf(leaf.format, value);
+            gene[leaf.id] = formatValue(leaf.format, value);
           }
         });
       }
