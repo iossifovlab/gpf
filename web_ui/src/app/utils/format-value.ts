@@ -1,14 +1,3 @@
-/**
- * Formats one value with a printf-style format string.
- *
- * Replaces the sprintf.js library for the format strings that GPF configs use:
- * `%s`, `%d`, `%f` and `%.Nf`, plus `%%` for a literal percent sign.
- * The output matches sprintf.js 1.1.2 for these specifiers.
- * Text that is not one of these specifiers is kept as it is.
- *
- * A precision above 100 is clamped to 100, so a bad configuration can
- * not make `toFixed` throw a `RangeError`.
- */
 const PLACEHOLDER = /%%|%(?:\.(\d+))?([sdf])/g;
 // `Number.prototype.toFixed` throws a RangeError outside 0..100.
 const MAX_PRECISION = 100;
@@ -32,6 +21,17 @@ function formatNumber(value: unknown, type: string, precision: string | undefine
   return withSign(value, number.toFixed(Math.min(Number(precision), MAX_PRECISION)));
 }
 
+/**
+ * Formats one value with a printf-style format string.
+ *
+ * Replaces the sprintf.js library for the format strings that GPF configs use:
+ * `%s`, `%d`, `%f` and `%.Nf`, plus `%%` for a literal percent sign.
+ * The output matches sprintf.js 1.1.2 for these specifiers.
+ * Text that is not one of these specifiers is kept as it is.
+ *
+ * A precision above 100 is clamped to 100, so a bad configuration can
+ * not make `toFixed` throw a `RangeError`.
+ */
 export function formatValue(format: string, value: unknown): string {
   return format.replace(PLACEHOLDER, (match: string, precision: string | undefined, type: string | undefined) => {
     if (match === '%%') {
