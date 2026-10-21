@@ -59,7 +59,6 @@
     "zone.js": "0.15.1"
   },
   "devDependencies": {
-    "@angular-builders/jest": "21.0.4",
     "@angular-eslint/builder": "21.0.0",
     "@angular-eslint/eslint-plugin": "21.0.0",
     "@angular-eslint/eslint-plugin-template": "21.0.0",
@@ -99,24 +98,18 @@
     "maintained node versions"
   ],
   "overrides": {
-    "http-proxy-middleware": "3.0.7",
-    "serialize-javascript": "7.0.5",
-    "@tootallnate/once": "3.0.1",
     "mermaid": "11.16.1",
     "qs": "6.15.2",
     "uuid": "11.1.1",
-    "webpack-dev-server": "5.2.6",
     "brace-expansion@<5": "^2.1.7",
     "brace-expansion@>=5": "^5.0.12",
     "postcss": "^8.5.18",
     "ws@8.0.0": "8.20.1",
-    "@noble/hashes": "2.2.0",
     "undici": "7.29.1",
     "@babel/core": "7.29.7",
     "esbuild": "0.28.1",
     "@modelcontextprotocol/sdk": "1.31.0",
-    "katex": "^0.18.2",
-    "follow-redirects": "1.16.1"
+    "katex": "^0.18.2"
   },
   "allowScripts": {
     "@parcel/watcher@2.5.6": true,
