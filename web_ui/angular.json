@@ -32,14 +32,11 @@
               "src/custom-theme.scss",
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "node_modules/font-awesome/css/font-awesome.css",
-              "node_modules/bootstrap/dist/css/bootstrap.css",
               "src/styles.css"
             ],
             "scripts": [
               "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js",
               "node_modules/jquery/dist/jquery.min.js",
-              "node_modules/tether/dist/js/tether.min.js",
-              "node_modules/popper.js/dist/umd/popper.min.js",
               "node_modules/marked/lib/marked.umd.js",
               "node_modules/bootstrap-markdown/js/bootstrap-markdown.js"
             ],
