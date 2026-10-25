@@ -1,9 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+import os
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any, cast
 
 import pytest
+import pytest_mock
 from django.http import StreamingHttpResponse
 from django.test import Client, override_settings
 from gpf_instance.gpf_instance import WGPFInstance
@@ -16,6 +19,7 @@ MEASURES_COUNT_URL = "/api/v3/pheno_browser/measures_count"
 MEASURES_INFO_URL = "/api/v3/pheno_browser/measures_info"
 MEASURE_DESCRIPTION_URL = "/api/v3/pheno_browser/measure_description"
 DOWNLOAD_URL = "/api/v3/pheno_browser/download"
+IMAGES_URL = "/api/v3/pheno_browser/images"
 
 
 @pytest.mark.parametrize("url,method,body,status", [
@@ -338,3 +342,75 @@ def test_measure_details(
         68.00148724003327,
         565.9100943623504,
     ]
+
+
+@pytest.fixture
+def images_dir(
+    tmp_path: Path,
+    mocker: pytest_mock.MockerFixture,
+) -> Path:
+    """Configure a temporary phenotype images directory."""
+    instance_dir = tmp_path / "instance"
+    instance_dir.mkdir()
+    (instance_dir / "gpf_instance.yaml").write_text(
+        "instance_id: test_instance\n"
+        f"phenotype_images: {tmp_path / 'images'}\n",
+    )
+    mocker.patch.dict(
+        os.environ, {"DAE_DB_DIR": str(instance_dir), "GPF_CONF_DIR": ""})
+    images = tmp_path / "images"
+    (images / "i1").mkdir(parents=True)
+    (images / "i1" / "i1.age.png").write_bytes(b"PNG data")
+    (tmp_path / "outside.json").write_text("{}")
+    return images
+
+
+@pytest.mark.usefixtures("t4c8_wgpf_instance", "images_dir")
+def test_image_inside_images_dir(
+    admin_client: Client,
+) -> None:
+    response = admin_client.get(f"{IMAGES_URL}/t4c8_study_1/i1/i1.age.png")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.content == b"PNG data"
+
+
+@pytest.mark.usefixtures("t4c8_wgpf_instance", "images_dir")
+def test_image_parent_traversal_not_found(
+    admin_client: Client,
+) -> None:
+    response = admin_client.get(f"{IMAGES_URL}/t4c8_study_1/../outside.json")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.usefixtures("t4c8_wgpf_instance")
+def test_image_absolute_path_not_found(
+    admin_client: Client,
+    images_dir: Path,
+) -> None:
+    outside = images_dir.parent / "outside.json"
+
+    response = admin_client.get(f"{IMAGES_URL}/t4c8_study_1/{outside}")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.usefixtures("t4c8_wgpf_instance", "images_dir")
+def test_image_missing_inside_images_dir_not_found(
+    admin_client: Client,
+) -> None:
+    response = admin_client.get(f"{IMAGES_URL}/t4c8_study_1/i1/missing.png")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.usefixtures("t4c8_wgpf_instance", "images_dir")
+@pytest.mark.parametrize("image_path", ["i1", "i1/", "."])
+def test_image_directory_not_found(
+    admin_client: Client,
+    image_path: str,
+) -> None:
+    response = admin_client.get(f"{IMAGES_URL}/t4c8_study_1/{image_path}")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND

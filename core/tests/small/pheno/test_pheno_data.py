@@ -736,3 +736,60 @@ def test_pheno_common_report(fake_phenotype_data: PhenotypeStudy) -> None:
     assert len(families_reports[0]["counters"][0]["tags"]) == 8
 
     print(common_report.to_dict())
+
+
+@pytest.fixture
+def images_dir(
+    tmp_path: Path,
+    mocker: pytest_mock.MockerFixture,
+) -> Path:
+    """Configure a temporary phenotype images directory."""
+    instance_dir = tmp_path / "instance"
+    instance_dir.mkdir()
+    (instance_dir / "gpf_instance.yaml").write_text(
+        "instance_id: test_instance\n"
+        f"phenotype_images: {tmp_path / 'images'}\n",
+    )
+    mocker.patch.dict(
+        os.environ, {"DAE_DB_DIR": str(instance_dir), "GPF_CONF_DIR": ""})
+    images = tmp_path / "images"
+    images.mkdir()
+    (tmp_path / "outside.json").write_text("{}")
+    (tmp_path / "images_other").mkdir()
+    (tmp_path / "images_other" / "secret.json").write_text("{}")
+    return images
+
+
+@pytest.mark.usefixtures("images_dir")
+@pytest.mark.parametrize(
+    "image_path", ["../outside.json", "../images_other/secret.json"])
+def test_get_image_rejects_parent_traversal(
+    fake_phenotype_data: PhenotypeStudy,
+    image_path: str,
+) -> None:
+    with pytest.raises(ValueError, match="outside"):
+        fake_phenotype_data.get_image(image_path)
+
+
+def test_get_image_rejects_absolute_path_outside(
+    fake_phenotype_data: PhenotypeStudy,
+    images_dir: Path,
+) -> None:
+    outside = images_dir.parent / "outside.json"
+
+    with pytest.raises(ValueError, match="outside"):
+        fake_phenotype_data.get_image(str(outside))
+
+
+@pytest.mark.parametrize("image_path", ["top.png", "i1/m1.png"])
+def test_get_image_returns_image_inside_directory(
+    fake_phenotype_data: PhenotypeStudy,
+    images_dir: Path,
+    image_path: str,
+) -> None:
+    (images_dir / "i1").mkdir()
+    (images_dir / image_path).write_bytes(b"PNG data")
+
+    image, mimetype = fake_phenotype_data.get_image(image_path)
+
+    assert (image, mimetype) == (b"PNG data", "image/png")

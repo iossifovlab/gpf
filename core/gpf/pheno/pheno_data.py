@@ -517,11 +517,20 @@ class PhenotypeData(CommonStudyMixin, ABC):
         return self._measures[measure_id]
 
     def get_image(self, image_path: str) -> tuple[bytes, str]:
-        """Return binary image data with mimetype."""
+        """Return binary image data with mimetype.
 
-        base_image_dir = Path(get_pheno_browser_images_dir())
+        Raises ``ValueError`` when ``image_path`` resolves to a file
+        outside the phenotype images directory.
+        """
 
-        full_image_path = base_image_dir / image_path
+        base_image_dir = Path(get_pheno_browser_images_dir()).resolve()
+
+        full_image_path = (base_image_dir / image_path).resolve()
+
+        if not full_image_path.is_relative_to(base_image_dir):
+            raise ValueError(
+                f"Image path {image_path} is outside the images directory",
+            )
 
         image_data = full_image_path.read_bytes()
 

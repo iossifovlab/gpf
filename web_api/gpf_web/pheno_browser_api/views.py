@@ -327,7 +327,7 @@ class PhenoImagesView(QueryBaseView, DatasetAccessRightsView):
 
         try:
             image, _mimetype = pheno_browser_helper.get_image(image_path)
-        except ValueError:
+        except (ValueError, OSError):
             logger.exception(
                 "Could not get image %s for %s",
                 image_path,
