@@ -16,7 +16,10 @@ from gpf_instance.gpf_instance import (
 )
 from rest_framework import permissions
 from rest_framework.request import Request
-from utils.datasets import find_dataset_id_in_request
+from utils.datasets import (
+    ConflictingDatasetIdsError,
+    find_dataset_id_in_request,
+)
 
 from .models import Dataset, DatasetHierarchy
 
@@ -49,7 +52,13 @@ class IsDatasetAllowed(permissions.BasePermission):
         self, request: HttpRequest,
         view: Any,
     ) -> bool:
-        dataset_id = find_dataset_id_in_request(request)
+        try:
+            dataset_id = find_dataset_id_in_request(request)
+        except ConflictingDatasetIdsError:
+            logger.warning(
+                "refusing a request that names conflicting dataset ids",
+            )
+            return False
 
         if dataset_id is None:
             return True
