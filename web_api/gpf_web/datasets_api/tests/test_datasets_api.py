@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
 
+from django.contrib.auth.models import AbstractUser
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
@@ -283,6 +284,29 @@ def test_datasets_permissions(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
+FORBIDDEN_PERMISSIONS_BODY = {
+    "error": "Only staff users can view dataset permissions.",
+}
+
+
+def test_datasets_permissions_anonymous_forbidden(
+    anonymous_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
+) -> None:
+    response = anonymous_client.get("/api/v3/datasets/permissions")
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == FORBIDDEN_PERMISSIONS_BODY
+
+
+def test_datasets_permissions_user_forbidden(
+    user_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
+) -> None:
+    response = user_client.get("/api/v3/datasets/permissions")
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == FORBIDDEN_PERMISSIONS_BODY
+
+
 def test_datasets_permissions_pagination(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
@@ -326,6 +350,50 @@ def test_datasets_permissions_single_missing(
 ) -> None:
     response = admin_client.get("/api/v3/datasets/permissions/alabala")
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_datasets_permissions_single_anonymous_forbidden(
+    anonymous_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
+) -> None:
+    response = anonymous_client.get(
+        "/api/v3/datasets/permissions/t4c8_study_1")
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == FORBIDDEN_PERMISSIONS_BODY
+
+
+def test_datasets_permissions_single_user_forbidden(
+    user_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
+) -> None:
+    response = user_client.get("/api/v3/datasets/permissions/t4c8_study_1")
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == FORBIDDEN_PERMISSIONS_BODY
+
+
+def test_datasets_permissions_single_user_missing_forbidden(
+    user_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
+) -> None:
+    response = user_client.get("/api/v3/datasets/permissions/alabala")
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == FORBIDDEN_PERMISSIONS_BODY
+
+
+def test_datasets_permissions_single_admin_gets_users_and_groups(
+    admin_client: Client,
+    user: AbstractUser,
+    t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
+) -> None:
+    add_group_perm_to_dataset(user.email, "t4c8_study_1")
+
+    response = admin_client.get("/api/v3/datasets/permissions/t4c8_study_1")
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert data["dataset_id"] == "t4c8_study_1"
+    assert user.email in data["groups"]
+    assert data["users"] == [{"name": "User", "email": user.email}]
 
 
 def test_datasets_permissions_search(
