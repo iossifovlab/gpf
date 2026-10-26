@@ -60,12 +60,13 @@ uv pip install -e ./impala_storage
 
 Run any command in the project's environment without
 activation via `uv run` (canonical form — works in any
-fresh shell, no activation required):
+fresh shell, no activation required). Run each line in a
+new shell at the repo root, because a `cd` stays in effect:
 
 ```bash
-uv run pytest -v tests/small/
+cd core && uv run pytest -v tests/small/
 uv run ruff check --fix .
-uv run mypy gpf --exclude core/docs/
+cd core && uv run mypy gpf
 ```
 
 Manage dependencies via uv (don't edit `pyproject.toml`
@@ -180,6 +181,70 @@ build hardcodes the SPA's asset URLs to assume
 `STATIC_URL` for conda-installed gpf-web without rebuilding
 the SPA with a matching deploy-url.
 
+## Environment of a loop worktree
+
+A fresh worktree cannot run its own tests. `.gitignore`
+ignores `/dist/`, so the worktree has no gain wheel in
+`dist/gain`. The `gain-core` entry of `uv.lock` names a
+`+g<sha>` version from `dist/gain`, and CI never installs
+that locked wheel. CI copies the wheel of the last green
+gain `master` build into `dist/gain` and installs it with
+`--upgrade-package gain-core`. The locked wheel cannot import
+the gain API that gpf `master` uses. `uv run` syncs the
+environment to `uv.lock` before each command, so a plain
+`uv run` puts the locked wheel back.
+
+The loop gates refuse a proof that installs a package. Prepare
+the environment of the worktree before the loop starts, in
+this order:
+
+1. Copy the locked gain wheel and the current gain wheel into
+   the ignored `dist/gain` of the worktree.
+2. Run `uv sync --frozen --find-links ./dist/gain --all-packages --all-groups`.
+3. Run `uv pip install --python .venv/bin/python ./dist/gain/<current gain wheel>`.
+4. Run every proof command with `uv run --no-sync`.
+
+The two wheels come from these sources:
+
+- **The locked gain wheel.** Step 2 needs the exact version
+  that `uv.lock` names, because `--frozen` does not resolve
+  again. Read the gain commit after `+g` in the locked
+  version. In a throwaway gain worktree at that commit, run
+  `uv build --package gain-core`. Do not change `uv.lock`.
+- **The current gain wheel.** Use the wheel that CI uses: the
+  `dist/core/*.whl` artifact of the last green
+  `iossifovlab/gain/master` build. CI tests gpf against that
+  wheel. If the artifact is not available, build the wheel at
+  the gain commit that the meta-repo pins.
+
+Do not add `--no-deps` to step 3. A newer gain can add
+dependencies. On gpf#1100, `--no-deps` left out `pathspec`,
+and the test suite failed at import.
+
+The loop gates run each proof command from the worktree root.
+Start each proof command in a new shell at the worktree root.
+A command for one workspace member includes its own
+`cd <member> &&`. Examples:
+
+```bash
+cd core && uv run --no-sync pytest -v tests/small/
+cd web_api && uv run --no-sync pytest -v -n 5 gpf_web/
+cd core && uv run --no-sync mypy gpf
+cd web_api && uv run --no-sync mypy --config-file mypy.ini \
+    -p gpf_web -p common_reports_api -p datasets_api \
+    -p enrichment_api -p family_api -p gene_profiles_api \
+    -p gene_scores -p gene_sets -p gene_view -p genomes_api \
+    -p genomic_scores_api -p genotype_browser -p gpf_instance \
+    -p gpfjs -p groups_api -p measures_api -p person_sets_api \
+    -p pheno_browser_api -p pheno_tool_api -p query_base \
+    -p query_state_save -p sentry -p studies -p user_queries \
+    -p users_api -p utils
+```
+
+The `-p` list is the `mypyTarget` of the `web_api` stage
+(`pkg: 'gpf_web'`) in the `Jenkinsfile`. Keep the two lists
+equal.
+
 ## Commands
 
 ### Testing
@@ -213,14 +278,24 @@ driver container before committing** (recipe there).
 
 ### Linting and Type Checking
 
+Run each command in a new shell at the repo root, because a
+`cd` stays in effect:
+
 ```bash
 # Ruff linting (fast, primary linter)
 uv run ruff check --fix .
 
 # Type checking (slow, 2-5 minutes)
-uv run mypy gpf --exclude core/docs/
-uv run mypy gpf_web --exclude web_api/docs/ \
-    --exclude web_api/conftest.py
+cd core && uv run mypy gpf
+cd web_api && uv run mypy --config-file mypy.ini \
+    -p gpf_web -p common_reports_api -p datasets_api \
+    -p enrichment_api -p family_api -p gene_profiles_api \
+    -p gene_scores -p gene_sets -p gene_view -p genomes_api \
+    -p genomic_scores_api -p genotype_browser -p gpf_instance \
+    -p gpfjs -p groups_api -p measures_api -p person_sets_api \
+    -p pheno_browser_api -p pheno_tool_api -p query_base \
+    -p query_state_save -p sentry -p studies -p user_queries \
+    -p users_api -p utils
 ```
 
 Config: `ruff.toml` (line-length: 80, target: py310),
