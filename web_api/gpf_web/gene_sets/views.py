@@ -3,6 +3,7 @@
 import ast
 import itertools
 import logging
+import secrets
 from collections.abc import Sequence
 from copy import deepcopy
 from typing import Any, cast
@@ -56,19 +57,41 @@ class DenovoGeneSetsDb(QueryBaseView):
     """
     Class to return the entire denovo gene sets db.
 
-    Used for federation remote purposes.
+    Used for federation remote purposes. The response replaces each
+    family id with a random token. One token map serves the whole
+    response, so a family keeps its token across studies. The tokens
+    change from request to request.
+
+    The tokens are pseudonyms: inside one response, a caller can still
+    group all de novo hits of one family by its token. A dump of
+    per-gene family counts would remove this link.
     """
+
+    @classmethod
+    def _tokenise_cache(
+        cls, cache: Any, tokens: dict[str, str],
+    ) -> Any:
+        if isinstance(cache, dict):
+            return {
+                key: cls._tokenise_cache(value, tokens)
+                for key, value in cache.items()
+            }
+        return sorted(
+            tokens.setdefault(family_id, secrets.token_hex(16))
+            for family_id in cache
+        )
 
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, _request: Request) -> Response:
         """Build response to a get request."""
         result = {}
+        tokens: dict[str, str] = {}
         denovo_collections = self.gpf_instance \
             .denovo_gene_sets_db._denovo_gene_set_collections  # ruff: ignore[private-member-access]
 
         for study_id, collection in denovo_collections.items():
             result[study_id] = {
-                "cache": dict(collection.cache),
+                "cache": self._tokenise_cache(collection.cache, tokens),
                 "legend": collection.get_gene_sets_types_legend(),
             }
 

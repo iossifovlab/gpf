@@ -4,9 +4,12 @@ import json
 from typing import Any, cast
 from urllib.parse import urlencode
 
+import pytest
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
+
+from gpf.gene_sets.denovo_gene_sets_db import DenovoGeneSetsDb
 
 
 def name_in_gene_sets(
@@ -438,3 +441,122 @@ def test_gene_sets_missing_collection(
         url, json.dumps(query), content_type="application/json", format="json",
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def _cache_family_ids(cache: Any) -> set[str]:
+    if isinstance(cache, dict):
+        result: set[str] = set()
+        for value in cache.values():
+            result |= _cache_family_ids(value)
+        return result
+    return set(cache)
+
+
+def test_denovo_gene_sets_db_hides_family_ids(
+    anonymous_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,
+) -> None:
+    family_ids: set[str] = set()
+    for collection in t4c8_wgpf_instance.denovo_gene_sets_db\
+            ._denovo_gene_set_collections.values():
+        family_ids |= _cache_family_ids(collection.cache)
+    assert "f1.1" in family_ids
+
+    response = anonymous_client.get("/api/v3/gene_sets/denovo_gene_sets_db")
+
+    assert response.status_code == status.HTTP_200_OK
+    content = response.content.decode()
+    leaked = {fid for fid in family_ids if fid in content}
+    assert leaked == set()
+
+
+def _single_family_leaves(
+    cache: Any, tokenised: Any,
+) -> list[tuple[str, str]]:
+    if isinstance(cache, dict):
+        result = []
+        for key, value in cache.items():
+            result.extend(_single_family_leaves(value, tokenised[key]))
+        return result
+    if len(cache) == 1:
+        return [(next(iter(cache)), tokenised[0])]
+    return []
+
+
+def test_denovo_gene_sets_db_family_token_shared_across_studies(
+    anonymous_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,
+) -> None:
+    collections = t4c8_wgpf_instance.denovo_gene_sets_db\
+        ._denovo_gene_set_collections
+
+    response = anonymous_client.get("/api/v3/gene_sets/denovo_gene_sets_db")
+
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    family_tokens: dict[str, set[str]] = {}
+    family_studies: dict[str, set[str]] = {}
+    for study_id, collection in collections.items():
+        for family_id, token in _single_family_leaves(
+                collection.cache, data[study_id]["cache"]):
+            family_tokens.setdefault(family_id, set()).add(token)
+            family_studies.setdefault(family_id, set()).add(study_id)
+    shared = {
+        fid for fid, studies in family_studies.items() if len(studies) > 1
+    }
+    assert "f1.1" in shared
+    assert {fid: family_tokens[fid] for fid in shared if
+            len(family_tokens[fid]) != 1} == {}
+
+
+@pytest.mark.parametrize("gene_set_id,study_ids", [
+    ("Synonymous.Recurrent", ["t4c8_study_4"]),
+    ("Synonymous.Recurrent",
+     ["t4c8_dataset", "t4c8_study_1", "t4c8_study_2", "t4c8_study_4"]),
+    ("Missense.Recurrent",
+     ["t4c8_dataset", "t4c8_study_1", "t4c8_study_2", "t4c8_study_4"]),
+])
+def test_denovo_gene_sets_db_round_trip_keeps_recurrent_gene_sets(
+    anonymous_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,
+    gene_set_id: str,
+    study_ids: list[str],
+) -> None:
+    spec = {
+        study_id: {"phenotype": ["autism", "unaffected"]}
+        for study_id in study_ids
+    }
+    expected = t4c8_wgpf_instance.denovo_gene_sets_db.get_gene_set(
+        gene_set_id, spec)
+    assert expected is not None
+    response = anonymous_client.get("/api/v3/gene_sets/denovo_gene_sets_db")
+    assert response.status_code == status.HTTP_200_OK
+    remote_db = DenovoGeneSetsDb(t4c8_wgpf_instance)
+
+    remote_db.update_cache(response.json())
+
+    assert remote_db.get_gene_set(gene_set_id, spec) == expected
+
+
+def test_denovo_gene_sets_db_round_trip_counts_a_family_once(
+    anonymous_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,
+) -> None:
+    # Family f1.1 is the only carrier of a Missense hit in c8, in two
+    # studies and in two leaves of the cache. With one token for f1.1,
+    # c8 is not recurrent.
+    spec = {
+        study_id: {"phenotype": ["autism", "unaffected"]}
+        for study_id in ["t4c8_dataset", "t4c8_study_1"]
+    }
+    assert t4c8_wgpf_instance.denovo_gene_sets_db.get_gene_set(
+        "Missense", spec) is not None
+    assert t4c8_wgpf_instance.denovo_gene_sets_db.get_gene_set(
+        "Missense.Recurrent", spec) is None
+    response = anonymous_client.get("/api/v3/gene_sets/denovo_gene_sets_db")
+    assert response.status_code == status.HTTP_200_OK
+    remote_db = DenovoGeneSetsDb(t4c8_wgpf_instance)
+
+    remote_db.update_cache(response.json())
+
+    assert remote_db.get_gene_set("Missense.Recurrent", spec) is None
