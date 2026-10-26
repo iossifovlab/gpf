@@ -60,7 +60,8 @@ uv pip install -e ./impala_storage
 
 Run any command in the project's environment without
 activation via `uv run` (canonical form — works in any
-fresh shell, no activation required):
+fresh shell, no activation required). Run each line in a
+new shell at the repo root, because a `cd` stays in effect:
 
 ```bash
 cd core && uv run pytest -v tests/small/
@@ -216,12 +217,14 @@ The two wheels come from these sources:
   wheel. If the artifact is not available, build the wheel at
   the gain commit that the meta-repo pins.
 
-Do not add `--no-deps` to step 3: a newer gain can add dependencies, and on gpf#1100 `--no-deps` left out `pathspec`, so the test suite failed at import.
+Do not add `--no-deps` to step 3. A newer gain can add
+dependencies. On gpf#1100, `--no-deps` left out `pathspec`,
+and the test suite failed at import.
 
 The loop gates run each proof command from the worktree root.
-Start each proof command at the worktree root. A command for
-one workspace member includes its own `cd <member> &&`.
-Examples:
+Start each proof command in a new shell at the worktree root.
+A command for one workspace member includes its own
+`cd <member> &&`. Examples:
 
 ```bash
 cd core && uv run --no-sync pytest -v tests/small/
@@ -274,6 +277,9 @@ static checks miss fixture-wiring bugs — **always run it locally in the
 driver container before committing** (recipe there).
 
 ### Linting and Type Checking
+
+Run each command in a new shell at the repo root, because a
+`cd` stays in effect:
 
 ```bash
 # Ruff linting (fast, primary linter)
