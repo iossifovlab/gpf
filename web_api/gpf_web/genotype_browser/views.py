@@ -164,6 +164,41 @@ class GenotypeBrowserQueryDownloadView(QueryBaseView, DatasetAccessRightsView):
     MAX_SHOWN_VARIANTS = 1000
     DOWNLOAD_LIMIT = 10_000
 
+    @staticmethod
+    def _as_count(requested: object) -> int | None:
+        """Return the requested value as an integer, or None if invalid."""
+        if isinstance(requested, bool):
+            return None
+        if isinstance(requested, int):
+            return requested
+        if isinstance(requested, float) and requested.is_integer():
+            return int(requested)
+        if isinstance(requested, str) and requested.strip().isdigit():
+            try:
+                return int(requested)
+            except ValueError:
+                return None
+        return None
+
+    @classmethod
+    def _download_limit(
+        cls, user: Any, requested: object,
+    ) -> int | None:
+        """Return the effective variant limit of a download.
+
+        A staff user or a user with unlimited download gets the requested
+        positive count, or no limit. Every other user gets at most
+        DOWNLOAD_LIMIT variants.
+        """
+        unlimited = not user.is_anonymous and \
+            (user.is_staff or user.has_unlimited_download)
+        count = cls._as_count(requested)
+        if count is None or count <= 0:
+            return None if unlimited else cls.DOWNLOAD_LIMIT
+        if unlimited:
+            return count
+        return min(count, cls.DOWNLOAD_LIMIT)
+
     @request_logging(logger)
     def post(
         self, request: Request,
@@ -197,17 +232,14 @@ class GenotypeBrowserQueryDownloadView(QueryBaseView, DatasetAccessRightsView):
                         and score.get("values") is None:
                     return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        if "maxVariantsCount" in data:
-            max_variants = cast(int, data["maxVariantsCount"])
+        max_variants = self._download_limit(
+            user, data.get("maxVariantsCount"))
+        # The query transformer turns maxVariantsCount into the limit
+        # kwarg, so the storage layer must see only the effective limit.
+        if max_variants is None:
+            data.pop("maxVariantsCount", None)
         else:
-            max_variants = self.DOWNLOAD_LIMIT
-            if not user.is_anonymous and \
-                    (user.is_staff or user.has_unlimited_download):
-                max_variants = None
-
-        if max_variants == -1:
-            # unlimited variants preview
-            max_variants = None
+            data["maxVariantsCount"] = max_variants
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
