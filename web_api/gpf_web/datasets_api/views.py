@@ -13,7 +13,7 @@ from gpf_instance.gpf_instance import (
     get_cacheable_hash,
 )
 from groups_api.serializers import GroupSerializer
-from query_base.query_base import QueryBaseView
+from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -156,7 +156,7 @@ class DatasetView(QueryBaseView):
         return Response({"data": self._collect_single_dataset(user, dataset)})
 
 
-class DatasetPedigreeView(QueryBaseView):
+class DatasetPedigreeView(QueryBaseView, DatasetAccessRightsView):
     """Provide pedigree data for a given dataset."""
 
     @method_decorator(etag(get_instance_timestamp_etag))
@@ -265,6 +265,16 @@ class DatasetDescriptionView(QueryBaseView):
 class BaseDatasetPermissionsView(QueryBaseView):
     """Base dataset permission view."""
 
+    @staticmethod
+    def _forbid_non_staff(request: Request) -> Response | None:
+        """Return a 403 response when the caller is not staff."""
+        if request.user.is_staff:
+            return None
+        return Response(
+            {"error": "Only staff users can view dataset permissions."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     def _get_dataset_info(self, dataset: Dataset) -> dict[str, Any] | None:
         groups = dataset.groups.all()
         group_names = sorted([group.name for group in groups])
@@ -318,11 +328,9 @@ class DatasetPermissionsView(BaseDatasetPermissionsView):
     def get(self, request: Request) -> Response:
         """Return dataset permissions details."""
 
-        if not request.user.is_staff:
-            return Response(
-                {"error": "You have no permission to edit the description."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+        forbidden = self._forbid_non_staff(request)
+        if forbidden is not None:
+            return forbidden
 
         dataset_search = request.GET.get("search")
         page = request.GET.get("page", 1)
@@ -362,9 +370,12 @@ class DatasetPermissionsSingleView(BaseDatasetPermissionsView):
 
     page_size = settings.REST_FRAMEWORK["PAGE_SIZE"]
 
-    def get(self, _request: Request, dataset_id: str) -> Response:
-        # pylint: disable=unused-argument
+    def get(self, request: Request, dataset_id: str) -> Response:
         """Return dataset permission details."""
+        forbidden = self._forbid_non_staff(request)
+        if forbidden is not None:
+            return forbidden
+
         try:
             dataset = Dataset.objects.get(dataset_id=dataset_id)
         except Dataset.DoesNotExist:

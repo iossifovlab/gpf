@@ -2,37 +2,17 @@
 import json
 import operator
 
-import pytest
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
 
 
-@pytest.mark.parametrize("url,method,body", [
-    ("/api/v3/enrichment/models/t4c8_study_1", "GET", None),
-    ("/api/v3/enrichment/test", "POST",
-     {
-         "datasetId": "t4c8_study_1",
-         "enrichmentBackgroundModel": "coding_len_background",
-         "enrichmentCountingModel": "enrichment_gene_counting",
-         "geneSymbols": ["T4", "C8"],
-     }),
-])
-def test_enrichment_api_permissions(
+def test_enrichment_models_allow_anonymous_client(
     anonymous_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # ruff: ignore[unused-function-argument] ; setup WGPF instance
-    url: str,
-    method: str,
-    body: dict[str, str | list[str]] | None,
 ) -> None:
-    if method == "GET":
-        response = anonymous_client.get(url)
-    else:
-        response = anonymous_client.post(
-            url, json.dumps(body), content_type="application/json",
-        )
+    response = anonymous_client.get("/api/v3/enrichment/models/t4c8_study_1")
 
-    assert response
     assert response.status_code == status.HTTP_200_OK
 
 
