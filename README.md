@@ -93,12 +93,13 @@ source .venv/bin/activate
 ```
 
 Run any command in the project's environment without
-activation via `uv run`:
+activation via `uv run`. Run each command in a
+new shell at the repo root, because a `cd` stays in effect:
 
 ```bash
-uv run pytest -v tests/small/
+cd core && uv run pytest -v tests/small/
 uv run ruff check --fix .
-uv run mypy gpf --exclude core/docs/
+cd core && uv run mypy gpf
 ```
 
 Manage dependencies via uv (don't edit `pyproject.toml`
@@ -260,11 +261,21 @@ Test markers and configuration are defined in
 
 ### Linting and type checking
 
+Run each command in a new shell at the repo root, because a
+`cd` stays in effect:
+
 ```bash
 uv run ruff check --fix .
-uv run mypy gpf --exclude core/docs/
-uv run mypy gpf_web --exclude web_api/docs/ \
-    --exclude web_api/conftest.py
+cd core && uv run mypy gpf
+cd web_api && uv run mypy --config-file mypy.ini \
+    -p gpf_web -p common_reports_api -p datasets_api \
+    -p enrichment_api -p family_api -p gene_profiles_api \
+    -p gene_scores -p gene_sets -p gene_view -p genomes_api \
+    -p genomic_scores_api -p genotype_browser -p gpf_instance \
+    -p gpfjs -p groups_api -p measures_api -p person_sets_api \
+    -p pheno_browser_api -p pheno_tool_api -p query_base \
+    -p query_state_save -p sentry -p studies -p user_queries \
+    -p users_api -p utils
 ```
 
 ### Optional genotype storages
