@@ -5,7 +5,7 @@ from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
 from gpf_instance.gpf_instance import WGPFInstance
-from query_base.query_base import QueryBaseView
+from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -41,7 +41,7 @@ class EnrichmentModelsView(QueryBaseView):
         return Response(enrichment_helper.get_enrichment_models())
 
 
-class EnrichmentTestView(QueryBaseView):
+class EnrichmentTestView(QueryBaseView, DatasetAccessRightsView):
     """View for running enrichment testing."""
 
     def __init__(self) -> None:

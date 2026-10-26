@@ -13,7 +13,7 @@ from gpf_instance.gpf_instance import (
     get_cacheable_hash,
 )
 from groups_api.serializers import GroupSerializer
-from query_base.query_base import QueryBaseView
+from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -156,7 +156,7 @@ class DatasetView(QueryBaseView):
         return Response({"data": self._collect_single_dataset(user, dataset)})
 
 
-class DatasetPedigreeView(QueryBaseView):
+class DatasetPedigreeView(QueryBaseView, DatasetAccessRightsView):
     """Provide pedigree data for a given dataset."""
 
     @method_decorator(etag(get_instance_timestamp_etag))

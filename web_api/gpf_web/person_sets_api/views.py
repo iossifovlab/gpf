@@ -1,13 +1,13 @@
 from datasets_api.permissions import get_permissions_etag
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
-from query_base.query_base import QueryBaseView
+from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 
-class CollectionConfigsView(QueryBaseView):
+class CollectionConfigsView(QueryBaseView, DatasetAccessRightsView):
     """Serve person set collections configuration view."""
 
     @method_decorator(etag(get_permissions_etag))
@@ -32,7 +32,7 @@ class CollectionConfigsView(QueryBaseView):
         )
 
 
-class CollectionDomainView(QueryBaseView):
+class CollectionDomainView(QueryBaseView, DatasetAccessRightsView):
     """Serve person set collections domain view."""
 
     @method_decorator(etag(get_permissions_etag))
@@ -57,7 +57,7 @@ class CollectionDomainView(QueryBaseView):
         )
 
 
-class CollectionStatsView(QueryBaseView):
+class CollectionStatsView(QueryBaseView, DatasetAccessRightsView):
     """Serve person set collections statistics view."""
 
     def get(
