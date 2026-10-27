@@ -196,7 +196,10 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             failed_attempt=0,
         ).save()
 
-        verification_path.delete()
+        # A new password ends every pending verification code of the user,
+        # not only the code that this change used.
+        SetPasswordCode.objects.filter(user=user).delete()
+        ResetPasswordCode.objects.filter(user=user).delete()
 
         user.deauthenticate()
         refresh_tokens = get_refresh_token_model().objects.filter(

@@ -170,19 +170,20 @@ def test_completed_reset_keeps_the_sessions_of_another_user(
 
 @pytest.mark.django_db
 def test_completed_set_password_ends_the_session_and_the_tokens(
-    researcher: WdaeUser, oauth_app: Application,
+    researcher_without_password: WdaeUser, oauth_app: Application,
 ) -> None:
-    give_access_token(researcher, oauth_app, "old-token")
-    client = Client()
-    assert client.login(email=researcher.email, password="alabala")
+    user = researcher_without_password
+    give_access_token(user, oauth_app, "old-token")
+    # An inactive user cannot log in, so force_login makes the session.
+    Client().force_login(user)
+    assert has_session(user)
 
     response = complete_password_change(
-        client, SET_URL, SetPasswordCode.create(researcher))
+        Client(), SET_URL, SetPasswordCode.create(user))
 
     assert response["Location"] == DEFAULT_REDIRECT_URI
-    assert not has_session(researcher)
-    assert not get_access_token_model().objects.filter(
-        user=researcher).exists()
+    assert not has_session(user)
+    assert not get_access_token_model().objects.filter(user=user).exists()
 
 
 @pytest.mark.django_db

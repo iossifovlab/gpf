@@ -329,6 +329,8 @@ class BasePasswordView(views.APIView):
     template: str | None = None
     form: forms.Form | None = None
     code_type: str | None = None
+    # True refuses a code whose user is already active.
+    refuse_active_user: bool = False
 
     def _check_request_verification_path(
         self, request: Request,
@@ -360,6 +362,9 @@ class BasePasswordView(views.APIView):
 
         if not is_valid:
             return verif_code, f"Expired {self.code_type} code"
+
+        if self.refuse_active_user and verif_code.user.is_active:
+            return verif_code, f"Invalid {self.code_type} code"
 
         return verif_code, None
 
@@ -450,6 +455,7 @@ class SetPassword(BasePasswordView):
     template = "users_api/registration/set-password.html"
     form = cast(forms.Form, WdaeRegisterPasswordForm)
     code_type = "set"
+    refuse_active_user = True
 
 
 class RESTLoginView(views.APIView):
