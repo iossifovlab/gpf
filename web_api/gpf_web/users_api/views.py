@@ -8,7 +8,12 @@ from typing import Any, ClassVar, cast
 import django.contrib.auth
 from django import forms
 from django.conf import settings
-from django.contrib.auth import authenticate, get_user_model, login
+from django.contrib.auth import (
+    SESSION_KEY,
+    authenticate,
+    get_user_model,
+    login,
+)
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -235,7 +240,6 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             user.reset_password()
-            user.deauthenticate()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except user_model.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -294,7 +298,6 @@ class ForgotPassword(views.APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             user.reset_password()
-            user.deauthenticate()
 
             return render(
                 request,  # pyright: ignore
@@ -422,8 +425,14 @@ class BasePasswordView(views.APIView):
             )
 
         new_password = form.cleaned_data["new_password1"]
+        session_user_id = request.session.get(SESSION_KEY)
         user.change_password(verif_code, new_password)
-        del request.session[f"{self.code_type}_code"]
+        if session_user_id == str(user.pk):
+            # change_password deleted the session row of the user, so a
+            # write to that session raises SessionInterrupted.
+            request.session.flush()
+        else:
+            del request.session[f"{self.code_type}_code"]
         application = get_default_application()
         redirect_uri = application.redirect_uris.split(" ")[0]
         return HttpResponseRedirect(redirect_uri)
