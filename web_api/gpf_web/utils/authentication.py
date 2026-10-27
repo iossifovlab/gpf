@@ -58,6 +58,10 @@ class GPFOAuth2Authentication(OAuth2Authentication):
             if user is None:
                 # handle federation users, set the user to the app owner
                 user = auth.application.user
+            if user is not None and not user.is_active:
+                raise exceptions.AuthenticationFailed(
+                    "Invalid or expired OAuth token.",
+                )
             return user, auth
         return retval  # no user authenticated, just pass on
 

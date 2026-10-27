@@ -32,7 +32,10 @@ from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import ensure_csrf_cookie
 from gpf_instance.gpf_instance import permission_update
-from oauth2_provider.models import get_application_model
+from oauth2_provider.models import (
+    get_access_token_model,
+    get_application_model,
+)
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.decorators import (
     action,
@@ -712,6 +715,20 @@ def register(request: Request) -> Response:
         return Response({}, status=status.HTTP_201_CREATED)
 
 
+def revoke_request_token(request: Request) -> None:
+    """Revoke the access token of the request and its refresh token."""
+    access_token = request.auth
+    if not isinstance(access_token, get_access_token_model()):
+        return
+    try:
+        refresh_token = access_token.refresh_token
+    except ObjectDoesNotExist:
+        access_token.revoke()
+        return
+    # Revoking the refresh token also revokes its access token.
+    refresh_token.revoke()
+
+
 @request_logging_function_view(logger)
 @csrf_clear
 @api_view(["POST"])
@@ -719,6 +736,7 @@ def register(request: Request) -> Response:
     (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF))
 def logout(request: Request) -> Response:
     """Log out the currently logged-in user."""
+    revoke_request_token(request)
     django.contrib.auth.logout(request)  # pyright: ignore
     return Response(status=status.HTTP_204_NO_CONTENT)
 
