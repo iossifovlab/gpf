@@ -574,8 +574,7 @@ def change_password(request: Request) -> Response:
     if not is_password_valid(password):
         logger.error(log_filter(
             request,
-            "Password change failed: Invalid password: '%s'",
-            str(password),
+            "Password change failed: Invalid password",
         ))
         return Response(
             {"error_msg": ("Invalid password entered. Password is either too"
@@ -663,8 +662,8 @@ def register(request: Request) -> Response:
         logger.warning(
             log_filter(
                 request,
-                "Registration failed: KeyError; %s",
-                str(request.data),
+                "Registration failed: KeyError; keys: %s",
+                sorted(request.data),
             ),
         )
         return Response({}, status=status.HTTP_201_CREATED)

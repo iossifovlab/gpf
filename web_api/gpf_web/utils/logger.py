@@ -10,6 +10,24 @@ from rest_framework.request import Request
 # Type variable for decorated functions
 F = TypeVar("F", bound=Callable[..., Any])
 
+LOG_MASK = "******"
+SECRET_KEYS = frozenset({"code", "verifPath", "token"})
+
+
+def _is_secret_key(key: object) -> bool:
+    if not isinstance(key, str):
+        return False
+    return key in SECRET_KEYS or "password" in key.lower()
+
+
+def _mask_secrets(params: Any) -> None:
+    """Replace the value of each secret key of params with the mask."""
+    if not hasattr(params, "keys") or not hasattr(params, "__setitem__"):
+        return
+    for key in list(params.keys()):
+        if _is_secret_key(key):
+            params[key] = LOG_MASK
+
 
 def log_filter(
     request: Request | WSGIRequest,
@@ -30,10 +48,8 @@ def log_filter(
     remote_addr: str = meta.get("REMOTE_ADDR", "-")
     data: Any = copy.deepcopy(getattr(request, "data", "-"))
     query_params: Any = copy.deepcopy(getattr(request, "query_params", "-"))
-    if "password" in data:
-        data["password"] = "******"  # ruff: ignore[hardcoded-password-string]
-    if "password" in query_params:
-        query_params["password"] = "******"  # ruff: ignore[hardcoded-password-string]
+    _mask_secrets(data)
+    _mask_secrets(query_params)
 
     return (
         f"user: {username}; remote addr: {remote_addr}; "

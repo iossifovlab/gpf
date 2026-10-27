@@ -130,7 +130,6 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         logger.info("email sent: to:      <%s>", self.email)
         logger.info("email sent: from:    <%s>", from_email)
         logger.info("email sent: subject:  %s", subject)
-        logger.info("email sent: message:  %s", message)
 
         return mail
 
