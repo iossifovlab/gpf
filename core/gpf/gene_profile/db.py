@@ -70,7 +70,7 @@ class GeneProfileDB:
         """
         query = select("*") \
             .from_(self.table) \
-            .where(f"symbol_name = '{gene_symbol}'")
+            .where(column("symbol_name").eq(gene_symbol))
         with duckdb.connect(f"{self.dbfile}", read_only=True) as connection:
             rows = connection.execute(
                 to_duckdb_transpile(query),

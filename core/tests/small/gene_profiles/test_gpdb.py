@@ -105,6 +105,33 @@ def test_gpdb_get_gp_by_exact_symbol(
     assert gp.gene_symbol == "CHD"
 
 
+def test_gpdb_get_gp_matches_the_whole_symbol_with_a_quote(
+        gp_gpf_instance: GPFInstance,
+        gpdb_write: GeneProfileDBWriter,
+        sample_gp: GPStatistic) -> None:
+    gpdb_write.insert_gp(sample_gp)
+    sample_gp.gene_symbol = "CHD7"
+    gpdb_write.insert_gp(sample_gp)
+
+    gp = gp_gpf_instance._gene_profile_db.get_gp("X' OR '1'='1")
+
+    assert gp is None
+
+
+def test_gpdb_get_gp_by_exact_symbol_with_a_quote(
+        gp_gpf_instance: GPFInstance,
+        gpdb_write: GeneProfileDBWriter,
+        sample_gp: GPStatistic) -> None:
+    gpdb_write.insert_gp(sample_gp)
+    sample_gp.gene_symbol = "CHD8'A"
+    gpdb_write.insert_gp(sample_gp)
+
+    gp = gp_gpf_instance._gene_profile_db.get_gp("CHD8'A")
+
+    assert gp is not None
+    assert gp.gene_symbol == "CHD8'A"
+
+
 def test_gpdb_sort(
         gp_gpf_instance: GPFInstance,
         gpdb_write: GeneProfileDBWriter,
