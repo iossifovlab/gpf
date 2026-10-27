@@ -105,6 +105,33 @@ def test_gpdb_get_gp_by_exact_symbol(
     assert gp.gene_symbol == "CHD"
 
 
+def test_gpdb_get_gp_matches_the_whole_symbol_with_a_quote(
+        gp_gpf_instance: GPFInstance,
+        gpdb_write: GeneProfileDBWriter,
+        sample_gp: GPStatistic) -> None:
+    gpdb_write.insert_gp(sample_gp)
+    sample_gp.gene_symbol = "CHD7"
+    gpdb_write.insert_gp(sample_gp)
+
+    gp = gp_gpf_instance._gene_profile_db.get_gp("X' OR '1'='1")
+
+    assert gp is None
+
+
+def test_gpdb_get_gp_by_exact_symbol_with_a_quote(
+        gp_gpf_instance: GPFInstance,
+        gpdb_write: GeneProfileDBWriter,
+        sample_gp: GPStatistic) -> None:
+    gpdb_write.insert_gp(sample_gp)
+    sample_gp.gene_symbol = "CHD8'A"
+    gpdb_write.insert_gp(sample_gp)
+
+    gp = gp_gpf_instance._gene_profile_db.get_gp("CHD8'A")
+
+    assert gp is not None
+    assert gp.gene_symbol == "CHD8'A"
+
+
 def test_gpdb_sort(
         gp_gpf_instance: GPFInstance,
         gpdb_write: GeneProfileDBWriter,
@@ -159,3 +186,81 @@ def test_gpdb_symbol_search(
     all_symbols = gp_gpf_instance._gene_profile_db.list_symbols(1, "TEST")
     assert len(all_symbols) == 1
     assert all_symbols[0] == "TESTCHD"
+
+
+def test_query_gps_refuses_a_sort_by_with_a_quote_and_a_second_term(
+        gp_gpf_instance: GPFInstance,
+        gpdb_write: GeneProfileDBWriter,
+        sample_gp: GPStatistic) -> None:
+    gpdb_write.insert_gp(sample_gp)
+    gpdb = gp_gpf_instance._gene_profile_db
+
+    with pytest.raises(ValueError, match="sort"):
+        gpdb.query_gps(1, sort_by='symbol_name" ASC, "symbol_name')
+
+
+def test_query_gps_refuses_a_sort_by_that_is_not_a_column(
+        gp_gpf_instance: GPFInstance,
+        gpdb_write: GeneProfileDBWriter,
+        sample_gp: GPStatistic) -> None:
+    gpdb_write.insert_gp(sample_gp)
+    gpdb = gp_gpf_instance._gene_profile_db
+
+    with pytest.raises(ValueError, match="no_such_column"):
+        gpdb.query_gps(1, sort_by="no_such_column", order="asc")
+
+
+def _low_and_high(
+        sample_gp: GPStatistic) -> tuple[GPStatistic, GPStatistic]:
+    """Return a LOW and a HIGH statistic that differ in every sort column."""
+    low = GPStatistic(
+        "LOW", [],
+        {"protection_scores": {"SFARI gene score": -11}},
+        sample_gp.variant_counts,
+    )
+    high = GPStatistic(
+        "HIGH", ["main_CHD8 target genes"],
+        {"protection_scores": {"SFARI gene score": 1}},
+        sample_gp.variant_counts,
+    )
+    return low, high
+
+
+@pytest.mark.parametrize("order", ["asc", "desc"])
+@pytest.mark.parametrize("sort_by", [
+    "protection_scores_SFARI gene score",
+    "relevant_gene_sets_rank",
+    "relevant_gene_sets_rank.CHD8 target genes",
+])
+def test_query_gps_sorts_by_a_column(
+        gp_gpf_instance: GPFInstance,
+        gpdb_write: GeneProfileDBWriter,
+        sample_gp: GPStatistic,
+        sort_by: str,
+        order: str) -> None:
+    low, high = _low_and_high(sample_gp)
+    expected = ["LOW", "HIGH"] if order == "asc" else ["HIGH", "LOW"]
+    by_symbol = {"LOW": low, "HIGH": high}
+    for symbol in reversed(expected):
+        gpdb_write.insert_gp(by_symbol[symbol])
+
+    rows = gp_gpf_instance._gene_profile_db.query_gps(
+        1, sort_by=sort_by, order=order,
+    )
+
+    assert [row["symbol_name"] for row in rows] == expected
+
+
+def test_query_gps_sorts_descending_when_order_is_none(
+        gp_gpf_instance: GPFInstance,
+        gpdb_write: GeneProfileDBWriter,
+        sample_gp: GPStatistic) -> None:
+    low, high = _low_and_high(sample_gp)
+    gpdb_write.insert_gp(low)
+    gpdb_write.insert_gp(high)
+
+    rows = gp_gpf_instance._gene_profile_db.query_gps(
+        1, sort_by="protection_scores_SFARI gene score",
+    )
+
+    assert [row["symbol_name"] for row in rows] == ["HIGH", "LOW"]

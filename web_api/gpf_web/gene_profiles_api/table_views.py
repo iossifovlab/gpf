@@ -8,6 +8,8 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from gpf.gene_profile.db import UnknownSortColumnError
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -23,8 +25,11 @@ class TableRowsView(QueryBaseView):
         symbol_like = data.get("symbol", None)
         sort_by = data.get("sortBy", None)
         order = data.get("order", None)
-        gps = self.gpf_instance.query_gp_statistics(
-            page, symbol_like, sort_by, order)
+        try:
+            gps = self.gpf_instance.query_gp_statistics(
+                page, symbol_like, sort_by, order)
+        except UnknownSortColumnError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         if gps is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(gps)

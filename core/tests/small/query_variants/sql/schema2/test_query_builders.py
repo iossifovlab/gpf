@@ -170,3 +170,28 @@ def test_regions(query_builder: BaseQueryBuilder) -> None:
         Region("13"),
     ])
     assert "sa.`chromosome` = '13'" in query
+
+
+@pytest.mark.parametrize("is_frequency", [False, True])
+@pytest.mark.parametrize("value_range", [
+    ("0 OR 1 = 1", 1.0),
+    (0.0, "1 OR 1 = 1"),
+    (True, 1.0),
+])
+def test_real_attr_where_refuses_bound_that_is_not_a_number(
+    query_builder: BaseQueryBuilder,
+    value_range: tuple,
+    *,
+    is_frequency: bool,
+) -> None:
+    with pytest.raises(ValueError, match="bound"):
+        query_builder._build_real_attr_where(
+            [("af_allele_freq", value_range)], is_frequency=is_frequency)
+
+
+def test_build_query_refuses_real_attr_filter_bound_that_is_a_string(
+    family_query_builder: FamilyQueryBuilder,
+) -> None:
+    with pytest.raises(ValueError, match="bound"):
+        family_query_builder.build_query(
+            real_attr_filter=[("af_allele_freq", ("0 OR 1 = 1", 1.0))])

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
+import re
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Any, cast
@@ -29,10 +30,15 @@ from gpf.query_variants.attribute_queries import (
     transform_attribute_query_to_function,
     transform_attribute_query_to_sql_expression,
 )
+from gpf.query_variants.sql.schema2.base_query_builder import (
+    check_range_bound,
+)
 from gpf.variants.attributes import Inheritance, Role, Sex, Status, Zygosity
 from gpf.variants.core import Allele
 
 logger = logging.getLogger(__name__)
+
+_ATTR_NAME_PATTERN = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
 
 # A type describing a schema as expected by the query builders
@@ -523,22 +529,30 @@ class SqlQueryBuilder(QueryBuilderBase):
         )
 
     @staticmethod
+    def _string_literal(value: str) -> str:
+        """Return the value as a quoted SQL string literal."""
+        escaped = value.replace("'", "''")
+        return f"'{escaped}'"
+
+    @staticmethod
     def genes(genes: list[str]) -> Condition:
         """Create genes condition."""
         if len(genes) == 0:
             return condition("eg.effect_gene_symbols IS NULL")
         if len(genes) == 1:
-            return condition(f"eg.effect_gene_symbols = '{genes[0]}'")
-        gene_set = ",".join(f"'{g}'" for g in genes)
+            gene = SqlQueryBuilder._string_literal(genes[0])
+            return condition(f"eg.effect_gene_symbols = {gene}")
+        gene_set = ",".join(
+            SqlQueryBuilder._string_literal(g) for g in genes)
         return condition(f"eg.effect_gene_symbols in ({gene_set})")
 
     @staticmethod
     def effect_types(effect_types: list[str]) -> Condition:
         """Create effect types condition."""
-        effect_types = [et.replace("'", "''") for et in effect_types]
         if len(effect_types) == 0:
             return condition("eg.effect_types IS NULL")
-        effect_set = ",".join(f"'{g}'" for g in effect_types)
+        effect_set = ",".join(
+            SqlQueryBuilder._string_literal(et) for et in effect_types)
         return condition(f"eg.effect_types in ({effect_set})")
 
     @staticmethod
@@ -621,20 +635,21 @@ class SqlQueryBuilder(QueryBuilderBase):
 
     @staticmethod
     def _region_to_condition(reg: Region) -> Condition:
+        chrom = SqlQueryBuilder._string_literal(reg.chrom)
         if reg.start is None and reg.stop is None:
-            return condition(f":chromosome = '{reg.chrom}'")
+            return condition(f":chromosome = {chrom}")
 
         if reg.start is None:
             assert reg.stop is not None
             return condition(
-                f":chromosome = '{reg.chrom}'"
+                f":chromosome = {chrom}"
                 f" AND NOT ( "
                 f":position > {reg.stop} )",
             )
         if reg.stop is None:
             assert reg.start is not None
             return condition(
-                f":chromosome = '{reg.chrom}'"
+                f":chromosome = {chrom}"
                 f" AND ( "
                 f"COALESCE(:end_position, :position) > {reg.start} )",
             )
@@ -643,7 +658,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         assert reg.start is not None
 
         return condition(
-            f":chromosome = '{reg.chrom}'"
+            f":chromosome = {chrom}"
             f" AND NOT ( "
             f"COALESCE(:end_position, :position) < {reg.start} OR "
             f":position > {reg.stop} )",
@@ -669,13 +684,23 @@ class SqlQueryBuilder(QueryBuilderBase):
         return result
 
     @staticmethod
+    def _check_attr_name(attr: str) -> None:
+        """Raise ValueError if the attribute name is not an identifier."""
+        if not isinstance(attr, str) or \
+                _ATTR_NAME_PATTERN.fullmatch(attr) is None:
+            raise ValueError(f"invalid attribute name: {attr!r}")
+
+    @staticmethod
     def _real_attr_filter(
         attr: str,
         value_range: tuple[float | None, float | None], *,
         is_frequency: bool = False,
     ) -> Condition:
         """Create real attribute condition."""
+        SqlQueryBuilder._check_attr_name(attr)
         left, right = value_range
+        check_range_bound(left)
+        check_range_bound(right)
 
         if left is None and right is None:
             if is_frequency:
@@ -743,7 +768,8 @@ class SqlQueryBuilder(QueryBuilderBase):
         attr: str,
         values: list[str] | list[int] | None,
     ) -> Condition:
-        """Create real attribute condition."""
+        """Create categorical attribute condition."""
+        SqlQueryBuilder._check_attr_name(attr)
         if values is None:
             return condition(f"sa.{attr} IS NULL")
 
@@ -751,7 +777,9 @@ class SqlQueryBuilder(QueryBuilderBase):
             return condition(f"sa.{attr} IS NOT NULL")
 
         if all(isinstance(v, str) for v in values):
-            return condition(" OR ".join(f"sa.{attr} = '{v}'" for v in values))
+            return condition(" OR ".join(
+                f"sa.{attr} = {SqlQueryBuilder._string_literal(cast(str, v))}"
+                for v in values))
 
         if all(isinstance(v, int) for v in values):
             return condition(" OR ".join(f"sa.{attr} = {v}" for v in values))
@@ -919,8 +947,9 @@ class SqlQueryBuilder(QueryBuilderBase):
         if not family_ids:
             return condition("fa.family_id IS NULL")
         if len(family_ids) == 1:
-            return condition(f"fa.family_id = '{next(iter(family_ids))}'")
-        fids = [f"'{fid}'" for fid in family_ids]
+            fid = SqlQueryBuilder._string_literal(next(iter(family_ids)))
+            return condition(f"fa.family_id = {fid}")
+        fids = [SqlQueryBuilder._string_literal(fid) for fid in family_ids]
         return condition(f"fa.family_id IN ({', '.join(fids)})")
 
     @staticmethod
@@ -931,8 +960,9 @@ class SqlQueryBuilder(QueryBuilderBase):
         if not person_ids:
             return condition("fa.aim IS NULL")
         if len(person_ids) == 1:
-            return condition(f"fa.aim = '{next(iter(person_ids))}'")
-        pids = [f"'{pid}'" for pid in person_ids]
+            pid = SqlQueryBuilder._string_literal(next(iter(person_ids)))
+            return condition(f"fa.aim = {pid}")
+        pids = [SqlQueryBuilder._string_literal(pid) for pid in person_ids]
         return condition(f"fa.aim IN ({', '.join(pids)})")
 
     @staticmethod

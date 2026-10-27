@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+
 import pytest
 from box import Box
 from django.test.client import Client
@@ -6,6 +8,7 @@ from gain.genomic_resources.gene_models import Exon, TranscriptModel
 from gpf_instance.gpf_instance import WGPFInstance
 from pytest_mock import MockerFixture
 
+from gpf.gene_profile.db import GeneProfileDB, GeneProfileDBWriter
 from gpf.gene_profile.statistic import GPStatistic
 
 ROUTE_PREFIX = "/api/v3/gene_profiles"
@@ -251,3 +254,26 @@ def test_get_gene_symbols(
     response = admin_client.get(f"{ROUTE_PREFIX}/table/gene_symbols")
     assert response.status_code == 200
     assert response.data == ["CHD8", "DIABLO", "FARP1"]  # type: ignore
+
+
+def test_get_statistics_with_an_unknown_sort_column(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,
+    tmp_path: pathlib.Path,
+    mocker: MockerFixture,
+) -> None:
+    dbfile = str(tmp_path / "gpdb")
+    config: dict = {"gene_sets": [], "gene_scores": [], "datasets": {}}
+    GeneProfileDBWriter(config, dbfile).insert_gp(
+        GPStatistic("CHD8", [], {}, {}),
+    )
+    mocker.patch.object(
+        t4c8_wgpf_instance, "_gene_profile_db",
+        new=GeneProfileDB(config, dbfile),
+    )
+
+    response = admin_client.get(
+        f"{ROUTE_PREFIX}/table/rows", {"sortBy": "no_such_column"},
+    )
+
+    assert response.status_code == 400

@@ -27,6 +27,10 @@ from gpf.utils.sql_utils import to_duckdb_transpile
 logger = logging.getLogger(__name__)
 
 
+class UnknownSortColumnError(ValueError):
+    """Raised when a sort column is not a column of the gene profile table."""
+
+
 class GeneProfileDB:
     """
     Class for managing the gene profile database.
@@ -70,7 +74,7 @@ class GeneProfileDB:
         """
         query = select("*") \
             .from_(self.table) \
-            .where(f"symbol_name = '{gene_symbol}'")
+            .where(column("symbol_name").eq(gene_symbol))
         with duckdb.connect(f"{self.dbfile}", read_only=True) as connection:
             rows = connection.execute(
                 to_duckdb_transpile(query),
@@ -198,6 +202,15 @@ class GeneProfileDB:
                 sort_by = ".".join((collection_id, sort_by_tokens[1]))
         return sort_by.replace(".", "_")
 
+    def _table_columns(
+        self, connection: duckdb.DuckDBPyConnection,
+    ) -> set[str]:
+        """Return the column names of the gene profile table."""
+        rows = connection.execute(
+            f"DESCRIBE {self.table.alias_or_name}",
+        ).fetchall()
+        return {row[0] for row in rows}
+
     def query_gps(
         self,
         page: int,
@@ -214,6 +227,9 @@ class GeneProfileDB:
             incomplete search
             sort_by - Column to sort by
             order - "asc" or "desc"
+
+        Raises ValueError if sort_by does not name a column of the
+        gene profile table.
         """
         query = select("*").from_(self.table)
         if symbol_like:
@@ -224,21 +240,26 @@ class GeneProfileDB:
                 ).ilike(f"%{symbol_like}%"),
             )
 
-        if sort_by is not None:
-            if order is None:
-                order = "desc"
-            sort_by = self._transform_sort_by(sort_by)
-            order = "DESC" if order == "desc" else "ASC"
-            query = query.order_by(f'"{sort_by}" {order}')
-
-        if page is not None:
-            query = query.limit(self.PAGE_SIZE).offset(
-                self.PAGE_SIZE * (page - 1),
-            )
-
         # Can't have multiple connections with sqlite db alive when
         # one of those does a 'write' action. That's why connect here:
         with duckdb.connect(f"{self.dbfile}", read_only=True) as connection:
+            if sort_by is not None:
+                sort_column = self._transform_sort_by(sort_by)
+                if sort_column not in self._table_columns(connection):
+                    raise UnknownSortColumnError(
+                        f"unknown sort column: {sort_by!r}",
+                    )
+                sort_term = column(sort_column, quoted=True)
+                query = query.order_by(
+                    sort_term.desc() if order in (None, "desc")
+                    else sort_term.asc(),
+                )
+
+            if page is not None:
+                query = query.limit(self.PAGE_SIZE).offset(
+                    self.PAGE_SIZE * (page - 1),
+                )
+
             return connection.execute(
                 to_duckdb_transpile(query),
             ).df().replace({np.nan: None}).to_dict("records")
