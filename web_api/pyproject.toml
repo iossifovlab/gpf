@@ -31,7 +31,6 @@ dependencies = [
     "importlib-metadata>=8.6",
     "requests>=2.32",
     "requests-oauthlib>=2",
-    "sentry-sdk>=2.12",
 ]
 dynamic = ["version"]
 
@@ -101,7 +100,6 @@ packages = [
     "gpf_web/pheno_tool_api",
     "gpf_web/query_base",
     "gpf_web/query_state_save",
-    "gpf_web/sentry",
     "gpf_web/studies",
     "gpf_web/user_queries",
     "gpf_web/users_api",

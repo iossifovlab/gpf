@@ -101,7 +101,6 @@ requirements:
     - importlib-metadata >=8.6
     - requests >=2.32
     - requests-oauthlib >=2
-    - sentry-sdk >=2.12
 
 about:
   homepage: https://github.com/iossifovlab/gpf

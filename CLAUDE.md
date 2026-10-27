@@ -237,7 +237,7 @@ cd web_api && uv run --no-sync mypy --config-file mypy.ini \
     -p genomic_scores_api -p genotype_browser -p gpf_instance \
     -p gpfjs -p groups_api -p measures_api -p person_sets_api \
     -p pheno_browser_api -p pheno_tool_api -p query_base \
-    -p query_state_save -p sentry -p studies -p user_queries \
+    -p query_state_save -p studies -p user_queries \
     -p users_api -p utils
 ```
 
@@ -294,7 +294,7 @@ cd web_api && uv run mypy --config-file mypy.ini \
     -p genomic_scores_api -p genotype_browser -p gpf_instance \
     -p gpfjs -p groups_api -p measures_api -p person_sets_api \
     -p pheno_browser_api -p pheno_tool_api -p query_base \
-    -p query_state_save -p sentry -p studies -p user_queries \
+    -p query_state_save -p studies -p user_queries \
     -p users_api -p utils
 ```
 
@@ -532,7 +532,6 @@ Django apps sit at `web_api/gpf_web/<app_name>/`.
 - **`genomic_scores_api`** — genomic scores endpoints
 - **`family_api`** — family data endpoints
 - **`person_sets_api`** — person set endpoints
-- **`sentry`** — Sentry integration endpoints
 
 **Shared modules (not Django apps):**
 
@@ -575,7 +574,6 @@ All endpoints under `/api/v3/`:
 | `/api/v3/person_sets` | `person_sets_api` |
 | `/api/v3/query_state` | `query_state_save` |
 | `/api/v3/user_queries` | `user_queries` |
-| `/api/v3/sentry` | `sentry` |
 | `/api/v3/instance` | `gpf_instance` |
 | `/api/v3/users/...`, `/api/v3/groups/...` | `users_api`, `groups_api` |
 | `/o/` | OAuth2 provider |
@@ -659,7 +657,6 @@ repository.
 - **pydantic 2.8** — data validation
 - **lark 1.2** — parsing (GRR search grammar)
 - **fsspec / s3fs** — filesystem abstraction + S3 access
-- **Sentry SDK** — error tracking in production
 - Dev: **ruff 0.16**, **mypy 1.15**, **pytest**,
   **pytest-xdist**, **pytestarch**
 

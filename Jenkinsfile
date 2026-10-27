@@ -707,7 +707,6 @@ pipeline {
                                             '-p pheno_tool_api ' +
                                             '-p query_base ' +
                                             '-p query_state_save ' +
-                                            '-p sentry ' +
                                             '-p studies ' +
                                             '-p user_queries ' +
                                             '-p users_api ' +
