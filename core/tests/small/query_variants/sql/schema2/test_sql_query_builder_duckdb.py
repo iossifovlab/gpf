@@ -133,3 +133,19 @@ def test_family_tag_queries_working(
     fvs = list(t4c8_storage_registry.query_variants(
         [(t4c8_study_1.study_id, params)]))
     assert len(fvs) == count
+
+
+def test_family_id_with_quote_matches_no_family_rows(
+    t4c8_study_1: GenotypeDataStudy,
+) -> None:
+    variants = cast(DuckDb2Variants, t4c8_study_1.backend)
+    queries = variants.query_builder.build_family_variants_query(
+        family_ids=["f1' OR '1' = '1"],
+    )
+
+    rows = []
+    with variants.connection_factory.connect().cursor() as cursor:
+        for query in queries:
+            rows.extend(cursor.execute(query).fetchall())
+
+    assert len(rows) == 0
