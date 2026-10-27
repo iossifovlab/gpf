@@ -26,6 +26,18 @@ RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 CategoricalAttrFilterType = list[tuple[str, list[str] | list[int] | None]]
 
 
+def check_range_bound(bound: Any) -> None:
+    """Raise ValueError if a range bound is not an int, a float or None."""
+    if bound is None:
+        return
+    if isinstance(bound, bool) or not isinstance(bound, (int, float)):
+        # The query builders raise ValueError for every bad filter input,
+        # bad attribute names included, so a bad bound raises the same
+        # exception and not the TypeError that TRY004 asks for.
+        raise ValueError(  # ruff: ignore[type-check-without-type-error]
+            f"invalid range bound: {bound!r}")
+
+
 class Dialect:
     """Caries info about a SQL dialect."""
 
@@ -459,6 +471,8 @@ class BaseQueryBuilder(ABC):
             ), f"{attr_name} - {self.combined_columns}"
 
             left, right = attr_range
+            check_range_bound(left)
+            check_range_bound(right)
             attr_name = self.where_accessors[attr_name]
 
             if left is None and right is None:

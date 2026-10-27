@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
+import re
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Any, cast
@@ -29,10 +30,15 @@ from gpf.query_variants.attribute_queries import (
     transform_attribute_query_to_function,
     transform_attribute_query_to_sql_expression,
 )
+from gpf.query_variants.sql.schema2.base_query_builder import (
+    check_range_bound,
+)
 from gpf.variants.attributes import Inheritance, Role, Sex, Status, Zygosity
 from gpf.variants.core import Allele
 
 logger = logging.getLogger(__name__)
+
+_ATTR_NAME_PATTERN = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
 
 # A type describing a schema as expected by the query builders
@@ -678,13 +684,23 @@ class SqlQueryBuilder(QueryBuilderBase):
         return result
 
     @staticmethod
+    def _check_attr_name(attr: str) -> None:
+        """Raise ValueError if the attribute name is not an identifier."""
+        if not isinstance(attr, str) or \
+                _ATTR_NAME_PATTERN.fullmatch(attr) is None:
+            raise ValueError(f"invalid attribute name: {attr!r}")
+
+    @staticmethod
     def _real_attr_filter(
         attr: str,
         value_range: tuple[float | None, float | None], *,
         is_frequency: bool = False,
     ) -> Condition:
         """Create real attribute condition."""
+        SqlQueryBuilder._check_attr_name(attr)
         left, right = value_range
+        check_range_bound(left)
+        check_range_bound(right)
 
         if left is None and right is None:
             if is_frequency:
@@ -752,7 +768,8 @@ class SqlQueryBuilder(QueryBuilderBase):
         attr: str,
         values: list[str] | list[int] | None,
     ) -> Condition:
-        """Create real attribute condition."""
+        """Create categorical attribute condition."""
+        SqlQueryBuilder._check_attr_name(attr)
         if values is None:
             return condition(f"sa.{attr} IS NULL")
 
