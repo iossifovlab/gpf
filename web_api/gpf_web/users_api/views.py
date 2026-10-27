@@ -4,6 +4,7 @@ import json
 import logging
 from collections.abc import Generator, Iterator
 from typing import Any, ClassVar, cast
+from urllib.parse import urlsplit
 
 import django.contrib.auth
 from django import forms
@@ -28,6 +29,7 @@ from django.http.response import (
     StreamingHttpResponse,
 )
 from django.shortcuts import redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import ensure_csrf_cookie
 from gpf_instance.gpf_instance import permission_update
 from oauth2_provider.models import get_application_model
@@ -505,6 +507,30 @@ class RESTLoginView(views.APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+def _default_redirect_uri() -> str:
+    return cast(str, get_default_application().redirect_uris.split(" ")[0])
+
+
+def _is_allowed_next(request: Request, next_uri: str) -> bool:
+    """Check that ``next_uri`` stays on an allowed host and scheme.
+
+    The allowed hosts are the host of the request and the hosts of the
+    redirect URIs of the default application. The default application is
+    read only when ``next_uri`` names a host.
+    """
+    allowed_hosts = {request.get_host()}
+    if urlsplit(next_uri).netloc:
+        allowed_hosts.update(
+            urlsplit(uri).netloc
+            for uri in get_default_application().redirect_uris.split()
+        )
+    return url_has_allowed_host_and_scheme(
+        next_uri,
+        allowed_hosts=allowed_hosts,
+        require_https=request.is_secure(),
+    )
+
+
 class WdaeLoginView(views.APIView):
     """View for logging in."""
 
@@ -515,8 +541,8 @@ class WdaeLoginView(views.APIView):
     def get(self, request: Request) -> HttpResponse:
         """Render the login form."""
         next_uri = request.GET.get("next")
-        if next_uri is None:
-            next_uri = get_default_application().redirect_uris.split(" ")[0]
+        if next_uri is None or not _is_allowed_next(request, next_uri):
+            next_uri = _default_redirect_uri()
 
         about_uri = next_uri[
             next_uri.find("redirect_uri=") + 13:next_uri.find("login")
@@ -548,8 +574,10 @@ class WdaeLoginView(views.APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         next_uri = data.get("next")
-        if next_uri is None:
-            next_uri = get_default_application().redirect_uris.split(" ")[0]
+        if not isinstance(next_uri, str) or not _is_allowed_next(
+            request, next_uri,
+        ):
+            next_uri = _default_redirect_uri()
 
         response_status = status.HTTP_200_OK
         form = WdaeLoginForm(request, data=data)
