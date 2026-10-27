@@ -1,6 +1,6 @@
 /* eslint-disable @stylistic/max-len */
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule, ErrorHandler, provideAppInitializer, provideZoneChangeDetection, inject } from '@angular/core';
+import { NgModule, ErrorHandler, provideZoneChangeDetection } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -47,7 +47,7 @@ import { EnrichmentTableRowComponent } from './enrichment-table/enrichment-table
 import { FullscreenLoadingComponent } from './fullscreen-loading/fullscreen-loading.component';
 import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service';
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
-import { Router, RouterModule, Routes, UrlSerializer } from '@angular/router';
+import { RouterModule, Routes, UrlSerializer } from '@angular/router';
 import { PersonFiltersSelectorComponent } from './person-filters-selector/person-filters-selector.component';
 import { PersonFiltersComponent } from './person-filters/person-filters.component';
 import { personFiltersReducer } from './person-filters/person-filters.state';
@@ -153,7 +153,6 @@ import { BackgroundColorEnrichmentPipe } from './utils/background-color-enrichme
 import { ContrastAdjustPipe } from './utils/contrast-adjust.pipe';
 import { ItemAddMenuComponent } from './item-add-menu/item-add-menu.component';
 import { ConfirmButtonComponent } from './confirm-button/confirm-button.component';
-import * as Sentry from '@sentry/angular';
 import { FederationCredentialsComponent } from './federation-credentials/federation-credentials.component';
 import { StudyFiltersTreeComponent } from './treelist-checkbox/treelist-checkbox.component';
 import { DatasetsTreeService } from './datasets/datasets-tree.service';
@@ -499,19 +498,6 @@ bootstrap: [AppComponent], imports: [BrowserModule,
     provide: UrlSerializer,
     useClass: CustomUrlSerializer
   },
-  {
-    provide: ErrorHandler,
-    useValue: Sentry.createErrorHandler({
-      showDialog: false,
-    }),
-  },
-  {
-    provide: Sentry.TraceService,
-    deps: [Router],
-  },
-  provideAppInitializer(() => {
-    inject(Sentry.TraceService);
-  }),
   provideHttpClient(withInterceptorsFromDi()),
 ] })
 export class AppModule { }

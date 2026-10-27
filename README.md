@@ -274,7 +274,7 @@ cd web_api && uv run mypy --config-file mypy.ini \
     -p genomic_scores_api -p genotype_browser -p gpf_instance \
     -p gpfjs -p groups_api -p measures_api -p person_sets_api \
     -p pheno_browser_api -p pheno_tool_api -p query_base \
-    -p query_state_save -p sentry -p studies -p user_queries \
+    -p query_state_save -p studies -p user_queries \
     -p users_api -p utils
 ```
 

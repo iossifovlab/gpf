@@ -1192,7 +1192,6 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "scipy" },
     { name = "seaborn" },
-    { name = "sentry-sdk" },
     { name = "sqlglot" },
     { name = "toml" },
     { name = "toolz" },
@@ -1254,7 +1253,6 @@ requires-dist = [
     { name = "scikit-learn", specifier = ">=1.5" },
     { name = "scipy", specifier = ">=1.15" },
     { name = "seaborn", specifier = ">=0.13" },
-    { name = "sentry-sdk", specifier = ">=2.12" },
     { name = "sqlglot", specifier = ">=28,<29" },
     { name = "toml", specifier = ">=0.10" },
     { name = "toolz", specifier = ">=0.12" },
@@ -1433,7 +1431,6 @@ dependencies = [
     { name = "importlib-metadata" },
     { name = "requests" },
     { name = "requests-oauthlib" },
-    { name = "sentry-sdk" },
 ]
 
 [package.optional-dependencies]
@@ -1473,7 +1470,6 @@ requires-dist = [
     { name = "mysqlclient", marker = "extra == 'mysql'", specifier = ">=2.2" },
     { name = "requests", specifier = ">=2.32" },
     { name = "requests-oauthlib", specifier = ">=2" },
-    { name = "sentry-sdk", specifier = ">=2.12" },
 ]
 provides-extras = ["mysql"]
 
@@ -3293,19 +3289,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/86/59/a451d7420a77ab0b98f7affa3a1d78a313d2f7281a57afb1a34bae8ab412/seaborn-0.13.2.tar.gz", hash = "sha256:93e60a40988f4d65e9f4885df477e2fdaff6b73a9ded434c1ab356dd57eefff7", size = 1457696, upload-time = "2024-01-25T13:21:52.551Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/83/11/00d3c3dfc25ad54e731d91449895a79e4bf2384dc3ac01809010ba88f6d5/seaborn-0.13.2-py3-none-any.whl", hash = "sha256:636f8336facf092165e27924f223d3c62ca560b1f2bb5dff7ab7fad265361987", size = 294914, upload-time = "2024-01-25T13:21:49.598Z" },
-]
-
-[[package]]
-name = "sentry-sdk"
-version = "2.58.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "certifi" },
-    { name = "urllib3" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/26/b3/fb8291170d0e844173164709fc0fa0c221ed75a5da740c8746f2a83b4eb1/sentry_sdk-2.58.0.tar.gz", hash = "sha256:c1144d947352d54e5b7daa63596d9f848adf684989c06c4f5a659f0c85a18f6f", size = 438764, upload-time = "2026-04-13T17:23:26.265Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/fa/eb/d875669993b762556ae8b2efd86219943b4c0864d22204d622a9aee3052b/sentry_sdk-2.58.0-py2.py3-none-any.whl", hash = "sha256:688d1c704ddecf382ea3326f21a67453d4caa95592d722b7c780a36a9d23109e", size = 460919, upload-time = "2026-04-13T17:23:24.675Z" },
 ]
 
 [[package]]

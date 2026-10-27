@@ -6,7 +6,6 @@ export const environment = {
   basePath: '',
   apiPath: basePath + 'api/v3/',
   imgPathPrefix: basePath + 'static/gpfjs/gpfjs/assets/',
-  sentryTunnel: '',
   oauthClientId: 'gpfjs',
   version: versionInfo.version
 };
