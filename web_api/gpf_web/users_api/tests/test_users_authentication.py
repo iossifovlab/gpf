@@ -2,7 +2,9 @@
 import json
 import re
 from datetime import timedelta
+from typing import cast
 
+from django.http import HttpResponse
 from django.test.client import Client
 from django.utils import timezone
 from oauth2_provider.models import AccessToken
@@ -406,3 +408,75 @@ def test_login_page_template_data(
         "authstuffredirect_uri=http://frontend/login"
     )
     assert response.context["about"] == "http://frontend/about"
+
+
+REST_LOGIN_URL = "/api/v3/users/login"
+
+
+def post_rest_login(client: Client, email: str, password: str) -> HttpResponse:
+    return cast(HttpResponse, client.post(
+        REST_LOGIN_URL,
+        json.dumps({"username": email, "password": password}),
+        content_type="application/json", format="json",
+    ))
+
+
+def test_rest_login_refuses_correct_password_during_lockout(
+    db: None, user: WdaeUser, client: Client,  # ruff: ignore[unused-function-argument]
+) -> None:
+    for _ in range(LOCKOUT_THRESHOLD + 1):
+        post_rest_login(client, user.email, "wrongpassword")
+    assert AuthenticationLog.is_user_locked_out(user.email)
+
+    response = post_rest_login(client, user.email, "secret")
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.content.find(b"This account is locked out for") != -1
+    assert "_auth_user_id" not in client.session
+    assert AuthenticationLog.is_user_locked_out(user.email)
+
+
+def test_rest_login_refuses_wrong_password_during_lockout_like_correct_one(
+    db: None, user: WdaeUser, client: Client,  # ruff: ignore[unused-function-argument]
+) -> None:
+    for _ in range(LOCKOUT_THRESHOLD + 1):
+        post_rest_login(client, user.email, "wrongpassword")
+    assert AuthenticationLog.is_user_locked_out(user.email)
+    last_login = AuthenticationLog.get_last_login_for(user.email)
+    assert last_login is not None
+    failed_before = last_login.failed_attempt
+
+    wrong = post_rest_login(client, user.email, "wrongpassword")
+    correct = post_rest_login(client, user.email, "secret")
+
+    assert wrong.status_code == status.HTTP_403_FORBIDDEN
+    assert correct.status_code == status.HTTP_403_FORBIDDEN
+    lockout_message = (
+        r'\["This account is locked out for \d+ hours and \d+ minutes"\]'
+    )
+    assert re.fullmatch(lockout_message, wrong.content.decode())
+    assert re.fullmatch(lockout_message, correct.content.decode())
+    last_login = AuthenticationLog.get_last_login_for(user.email)
+    assert last_login is not None
+    assert last_login.failed_attempt == failed_before
+
+
+def test_rest_login_accepts_correct_password(
+    db: None, user: WdaeUser, client: Client,  # ruff: ignore[unused-function-argument]
+) -> None:
+    response = post_rest_login(client, user.email, "secret")
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert client.session["_auth_user_id"] == str(user.pk)
+    last_login = AuthenticationLog.get_last_login_for(user.email)
+    assert last_login is not None
+    assert last_login.failed_attempt == 0
+
+
+def test_rest_login_rejects_wrong_password(
+    db: None, user: WdaeUser, client: Client,  # ruff: ignore[unused-function-argument]
+) -> None:
+    response = post_rest_login(client, user.email, "wrongpassword")
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert "_auth_user_id" not in client.session

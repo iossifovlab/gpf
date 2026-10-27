@@ -461,6 +461,15 @@ class RESTLoginView(views.APIView):
         if not username or not password:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        # Refuse any password during a lockout and log no attempt, as
+        # WdaeLoginForm.confirm_login_allowed does. The lockout therefore
+        # does not grow while it is in force.
+        if AuthenticationLog.is_user_locked_out(username):
+            return Response(
+                AuthenticationLog.get_locked_out_error(username),
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         user = authenticate(
             username=username, password=password,
         )
