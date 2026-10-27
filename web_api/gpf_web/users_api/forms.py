@@ -12,6 +12,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy
 from rest_framework import status
+from utils.password_requirements import is_password_valid
 
 from users_api.models import AuthenticationLog
 
@@ -30,6 +31,16 @@ class WdaeResetPasswordForm(SetPasswordForm):
             "The two passwords do not match.",
         ),
     }
+
+    def clean_new_password1(self) -> str:
+        """Refuse a new password that the password rules refuse."""
+        password = self.cleaned_data["new_password1"]
+        if not is_password_valid(password):
+            raise ValidationError(
+                self.error_messages["password_invalid"],
+                code="password_invalid",
+            )
+        return str(password)
 
 
 class WdaeRegisterPasswordForm(WdaeResetPasswordForm):
