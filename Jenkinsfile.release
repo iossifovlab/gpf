@@ -47,6 +47,10 @@
 //   - UPSTREAM_PROJECT — multibranch path used to find the master
 //                        CI build whose commit matches the tag
 //                        (default 'iossifovlab/gpf/master').
+//   - DRY_RUN          — run every pre-flight, build nothing past
+//                        the conda-builder image, publish nothing.
+//                        An already-published tag is reported, not
+//                        rejected. Default false (gpf#1130).
 //
 // Output: wheels published to wheels.seqpipe.org:/data/wheels/gpf,
 // conda packages to anaconda.org/iossifovlab (gpf-core, gpf-web,
@@ -144,6 +148,15 @@ pipeline {
                 'the tag-push dispatcher always leaves it false. ' +
                 'Leave false for normal forward releases.',
         )
+        booleanParam(
+            name: 'DRY_RUN',
+            defaultValue: false,
+            description: 'Run every pre-flight (tag checkout, master ' +
+                'CI gate, tag freshness, GAIN_PIN_VERSION probes, ' +
+                'credentials) and stop: nothing is built past the ' +
+                'conda-builder image and nothing is published. An ' +
+                'already-published tag is reported, not rejected.',
+        )
     }
 
     options {
@@ -214,6 +227,9 @@ pipeline {
         // guard below then logs the value it actually saw rather than
         // silently failing as if the operator never asked.
         FORCE_REPUBLISH  = "${params.FORCE_REPUBLISH ?: false}"
+        // Same `?: false` lift as FORCE_REPUBLISH: a stale registration
+        // that drops DRY_RUN logs as "false" in the freshness stage.
+        DRY_RUN          = "${params.DRY_RUN ?: false}"
     }
 
     stages {
@@ -368,9 +384,20 @@ pipeline {
             // wheels.seqpipe.org/gain/ — fail loud here, before any
             // docker-build cost, instead of letting the
             // `Fetch upstream artefacts` curl fail downstream.
+            //
+            // A dry run (gpf#1130) reports an already-published tag
+            // instead of aborting on it. The two tag-mutation probes
+            // run in one `sh` step with returnStatus, and exit 10 is
+            // the one code that means "published". A curl failure
+            // exits 1, so a network failure never reads as
+            // "published" and stays fatal. The GAIN_PIN_VERSION
+            // probes run in separate steps and do not read DRY_RUN:
+            // they check a required input.
             steps {
                 script {
-                sh '''
+                int published = sh(
+                    returnStatus: true,
+                    script: '''
                     # FORCE_REPUBLISH bypasses the two tag-mutation
                     # guards below (wheel index + Anaconda.org). It is
                     # the recovery path for a transient publish failure
@@ -381,11 +408,13 @@ pipeline {
                     # probe further down is NOT gated — it asserts a
                     # required input, not a re-release guard.
                     #
-                    # Echo the resolved value first (gpf#918): if a
+                    # Echo the resolved values first (gpf#918): if a
                     # stale parameter registration dropped the checkbox,
                     # this prints "FORCE_REPUBLISH override = false" so
                     # the dropped param is visible in the console instead
-                    # of looking like a deliberate guard rejection.
+                    # of looking like a deliberate guard rejection. The
+                    # same holds for DRY_RUN (gpf#1130).
+                    echo "DRY_RUN = ${DRY_RUN}"
                     echo "FORCE_REPUBLISH override = ${FORCE_REPUBLISH}"
                     if [ "${FORCE_REPUBLISH}" = "true" ]; then
                         echo "FORCE_REPUBLISH=true — skipping the" \
@@ -394,21 +423,21 @@ pipeline {
                              "idempotent; re-pushing artefacts."
                     else
                         # HEAD on the wheels index — 200 means already
-                        # published. Anything else (404, 5xx, network)
-                        # is treated as "not there yet, proceed" so a
-                        # flaky index doesn't block releases.
+                        # published. Any other HTTP code (404, 5xx) is
+                        # treated as "not there yet, proceed" so a
+                        # flaky index doesn't block releases. A curl
+                        # failure (network) exits 1: fatal, and never
+                        # the "published" exit 10.
                         code=$(curl -sS -o /dev/null \
                             -w '%{http_code}' \
-                            "https://${WHEELS_HOST}/gpf/gpf_core-${TAG_NAME}-py3-none-any.whl")
+                            "https://${WHEELS_HOST}/gpf/gpf_core-${TAG_NAME}-py3-none-any.whl") \
+                            || { echo "ERROR: wheel index probe:" \
+                                      "curl exit $?" >&2; exit 1; }
                         echo "Wheel index probe: HTTP $code"
                         if [ "$code" = "200" ]; then
-                            echo "ERROR: gpf-core ${TAG_NAME} already" \
+                            echo "gpf-core ${TAG_NAME} already" \
                                  "at https://${WHEELS_HOST}/gpf/"
-                            echo "Tag mutation is rejected." \
-                                 "Cut a new tag instead, or re-run" \
-                                 "with FORCE_REPUBLISH=true to finish" \
-                                 "a half-published release."
-                            exit 1
+                            exit 10
                         fi
 
                         # Anaconda check: exit 0 means the package
@@ -419,16 +448,42 @@ pipeline {
                             anaconda show \
                                 "${ANACONDA_USER}/gpf-core/${TAG_NAME}" \
                                 >/dev/null 2>&1; then
-                            echo "ERROR: gpf-core ${TAG_NAME} already" \
+                            echo "gpf-core ${TAG_NAME} already" \
                                  "on Anaconda.org/${ANACONDA_USER}"
-                            echo "Tag mutation is rejected." \
-                                 "Cut a new tag instead, or re-run" \
-                                 "with FORCE_REPUBLISH=true to finish" \
-                                 "a half-published release."
-                            exit 1
+                            exit 10
                         fi
                     fi
+                    ''',
+                )
+                if (published == 10) {
+                    if (params.DRY_RUN) {
+                        env.TAG_FRESHNESS_NOTE =
+                            "${params.TAG_NAME} is already " +
+                            'published; a real release would ' +
+                            'be rejected here as tag mutation'
+                        echo(
+                            'DRY RUN: ' + env.TAG_FRESHNESS_NOTE +
+                            '. Continuing.'
+                        )
+                    } else {
+                        error(
+                            "ERROR: gpf-core ${params.TAG_NAME} is " +
+                            'already published (see above). ' +
+                            'Tag mutation is rejected. Cut a new ' +
+                            'tag instead, or re-run with ' +
+                            'FORCE_REPUBLISH=true to finish a ' +
+                            'half-published release.'
+                        )
+                    }
+                } else if (published != 0) {
+                    error(
+                        'The tag freshness probe failed with exit ' +
+                        "${published} (see above). This is a probe " +
+                        'failure, not a published tag.'
+                    )
+                }
 
+                sh '''
                     # GAIN_PIN_VERSION existence probe (only when
                     # the operator set the param). 200 → pinned
                     # wheel exists, proceed. Anything else (404,
@@ -436,7 +491,8 @@ pipeline {
                     # probes above, here we WANT the URL to be
                     # populated. Curl-failure-as-success would
                     # silently fall back to no-pin behaviour and
-                    # the operator wouldn't know.
+                    # the operator wouldn't know. DRY_RUN does not
+                    # bypass it.
                     if [ -n "$GAIN_PIN_VERSION" ]; then
                         gain_url="https://${WHEELS_HOST}/gain/gain_core-${GAIN_PIN_VERSION}-py3-none-any.whl"
                         gcode=$(curl -sS -o /dev/null \
@@ -551,6 +607,8 @@ pipeline {
         }
 
         stage('Fetch upstream artefacts') {
+            // DRY_RUN stops at the pre-flights.
+            when { expression { !params.DRY_RUN } }
             // Pull three files from the master build identified
             // above:
             //   - dist/base-images.lock: digests of python-slim /
@@ -672,6 +730,8 @@ pipeline {
         }
 
         stage('Build wheels + sdists') {
+            // DRY_RUN stops at the pre-flights.
+            when { expression { !params.DRY_RUN } }
             // hatch-vcs derives the embedded version from `git
             // describe --tags`; at a tagged commit this resolves
             // to the clean ${TAG_NAME} with no .dev suffix.
@@ -739,6 +799,8 @@ pipeline {
         }
 
         stage('Build conda packages') {
+            // DRY_RUN stops at the pre-flights.
+            when { expression { !params.DRY_RUN } }
             // Reuses the rattler-build flow from the root
             // multibranch Conda packages stage, with VCS_VERSION
             // pulled from the freshly built wheel filenames so the
@@ -807,6 +869,8 @@ pipeline {
         }
 
         stage('Build prod Docker (digest-pinned)') {
+            // DRY_RUN stops at the pre-flights.
+            when { expression { !params.DRY_RUN } }
             // Same Dockerfiles the master build uses, but with
             // PYTHON_IMAGE / NODE_IMAGE / HTTPD_IMAGE pinned to
             // the digests captured by the upstream master build.
@@ -849,6 +913,14 @@ pipeline {
         }
 
         stage('Publish') {
+            // DRY_RUN stops at the pre-flights. beforeOptions:
+            // otherwise the lock below is taken before `when`
+            // is evaluated, and a dry run would queue behind a
+            // real publish for nothing.
+            when {
+                beforeOptions true
+                expression { !params.DRY_RUN }
+            }
             // Serialize across overlapping releases. The lock
             // collides only with another gpf-release currently in
             // Publish; pre-publish stages of other gpf-release
@@ -1049,6 +1121,8 @@ EOF
         }
 
         stage('Publish GitHub release') {
+            // DRY_RUN stops at the pre-flights.
+            when { expression { !params.DRY_RUN } }
             // Human-facing landing page for the release — runs AFTER
             // Publish so its body links to artifacts that already
             // exist. NON-FATAL: by this point wheels + conda + registry
@@ -1117,8 +1191,26 @@ EOF
         }
 
         stage('Notify') {
+            // A dry run says so and claims no release. It reads
+            // neither GAIN_BUNDLED_VERSION nor GH_RELEASE_URL: only
+            // the skipped stages set them.
             steps {
                 script {
+                    if (params.DRY_RUN) {
+                        String message =
+                            "DRY RUN of release ${env.TAG_NAME} " +
+                            'passed every pre-flight; nothing was ' +
+                            "built or published — ${env.BUILD_URL}"
+                        if (params.GAIN_PIN_VERSION) {
+                            message +=
+                                " (gain pin: ${params.GAIN_PIN_VERSION})"
+                        }
+                        if (env.TAG_FRESHNESS_NOTE) {
+                            message += " (${env.TAG_FRESHNESS_NOTE})"
+                        }
+                        zulipSend(topic: 'gpf-releases', message: message)
+                        return
+                    }
                     def gainNote = params.GAIN_PIN_VERSION ?
                         "gain pinned to ${env.GAIN_BUNDLED_VERSION}, " +
                             "conda gain-core ==${env.GAIN_BUNDLED_VERSION}" :
@@ -1160,7 +1252,8 @@ EOF
             // so failures here never bubble up to the multibranch
             // tag-build. Announce on Zulip so the developer who
             // pushed the tag finds out without hunting for a build
-            // URL.
+            // URL. A dry run is named as one, so a deliberate red
+            // probe of the gates is not read as a broken release.
             //
             // Wrapped in an explicit node block: a failure during
             // pipeline init (e.g., a missing credential in the
@@ -1183,7 +1276,9 @@ EOF
                     zulipSend(
                         topic: 'gpf-releases',
                         message:
-                            "Release ${params.TAG_NAME}${pinNote}" +
+                            (params.DRY_RUN ? 'DRY RUN of release '
+                                            : 'Release ') +
+                            "${params.TAG_NAME}${pinNote}" +
                             " FAILED — ${env.BUILD_URL}",
                     )
                 }
