@@ -57,8 +57,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # a fresh render of the pyprojects copied above, and each conda recipe's
 # run list to its pyproject (core's recipe arrives with core/ above); it
 # hard-fails when any of them is missing.
+# tests/small/test_gain_core_conda_probe.py runs
+# scripts/gain_core_conda_probe.sh and hard-fails when it is missing.
 COPY environment.yml dev-environment.yml ./
 COPY scripts/conda_env.py ./scripts/
+COPY scripts/gain_core_conda_probe.sh ./scripts/
 COPY web_api/conda-recipe/recipe.yaml ./web_api/conda-recipe/
 COPY federation/conda-recipe/recipe.yaml ./federation/conda-recipe/
 COPY rest_client/conda-recipe/recipe.yaml ./rest_client/conda-recipe/
