@@ -4,7 +4,7 @@ import json
 import logging
 from collections.abc import Generator, Iterator
 from typing import Any, ClassVar, cast
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urljoin, urlsplit
 
 import django.contrib.auth
 from django import forms
@@ -57,7 +57,6 @@ from utils.logger import (
     request_logging,
     request_logging_function_view,
 )
-from utils.password_requirements import is_password_valid
 from utils.streaming_response_util import convert
 
 from .forms import (
@@ -514,6 +513,27 @@ def _default_redirect_uri() -> str:
     return cast(str, get_default_application().redirect_uris.split(" ")[0])
 
 
+def _about_uri(next_uri: str) -> str:
+    """Build the About link of the login page.
+
+    The link comes from the ``redirect_uri`` query parameter of
+    ``next_uri`` when that value is a redirect URI of the default
+    application. Otherwise the link comes from the first redirect URI of
+    the default application. Without a redirect URI, or without a default
+    application, the link is ``about``.
+    """
+    try:
+        redirect_uris = get_default_application().redirect_uris.split()
+    except ObjectDoesNotExist:
+        redirect_uris = []
+    candidates = parse_qs(urlsplit(next_uri).query).get("redirect_uri", [])
+    redirect_uri = next(
+        (uri for uri in candidates if uri in redirect_uris),
+        redirect_uris[0] if redirect_uris else "",
+    )
+    return urljoin(redirect_uri, "about")
+
+
 def _is_allowed_next(request: Request, next_uri: str) -> bool:
     """Check that ``next_uri`` stays on an allowed host and scheme.
 
@@ -547,10 +567,7 @@ class WdaeLoginView(views.APIView):
         if next_uri is None or not _is_allowed_next(request, next_uri):
             next_uri = _default_redirect_uri()
 
-        about_uri = next_uri[
-            next_uri.find("redirect_uri=") + 13:next_uri.find("login")
-        ] + "about"
-        print("about:", about_uri)
+        about_uri = _about_uri(next_uri)
 
         form = WdaeLoginForm()
 
@@ -599,38 +616,6 @@ class WdaeLoginView(views.APIView):
             },
             status=response_status,
         )
-
-
-@request_logging_function_view(logger)
-@api_view(["POST"])
-@authentication_classes_decorator((
-    ReadOnlyDBAuthentication,
-))
-def change_password(request: Request) -> Response:
-    """Change the password for a user."""
-    data = request.data
-    if not isinstance(data, dict):
-        return Response(
-            {"error": "Invalid data format"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-    password = cast(str, data["password"])
-    verif_code = data["verifPath"]
-
-    if not is_password_valid(password):
-        logger.error(log_filter(
-            request,
-            "Password change failed: Invalid password",
-        ))
-        return Response(
-            {"error_msg": ("Invalid password entered. Password is either too"
-                           " short (<10 symbols) or too weak.")},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    user_model = get_user_model()
-    user_model.change_password(verif_code, password)  # pyright: ignore
-    return Response({}, status.HTTP_201_CREATED)
 
 
 @request_logging_function_view(logger)

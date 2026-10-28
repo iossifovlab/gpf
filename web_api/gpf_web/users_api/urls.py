@@ -27,7 +27,6 @@ urlpatterns = [
         views.SetPassword.as_view(),
         name="set_password",
     ),
-    re_path(r"^users/change_password/?$", views.change_password),
     re_path(
         r"^users/federation_credentials/?$",
         views.FederationCredentials.as_view(),

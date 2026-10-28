@@ -1,4 +1,13 @@
+from typing import cast
+
+from datasets_api.partial_grants import (
+    families_to_tsv_lines,
+    get_fully_granted_family_ids,
+    get_partial_grant_families,
+    get_partial_grant_studies,
+)
 from datasets_api.permissions import get_permissions_etag
+from django.contrib.auth.models import User
 from django.http.response import StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
@@ -13,7 +22,9 @@ from utils.query_params import parse_query_params
 from common_reports_api.common_reports_helper import (
     BaseCommonReportsHelper,
     CommonReportsHelper,
+    collect_families_by_tags,
 )
+from gpf.pedigrees.families_data import FamiliesData
 
 
 class VariantReportsView(QueryBaseView):
@@ -47,13 +58,19 @@ class VariantReportsFullView(QueryBaseView, DatasetAccessRightsView):
     """Variants report full view class."""
 
     @method_decorator(etag(get_permissions_etag))
-    def get(self, _request: Request, common_report_id: str) -> Response:
+    def get(self, request: Request, common_report_id: str) -> Response:
         """Return full variant report when requested."""
         assert common_report_id
 
         study = self.gpf_instance.get_wdae_wrapper(common_report_id)
         if not study:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if get_partial_grant_studies(
+            self.instance_id, cast(User, request.user), common_report_id,
+        ) is not None:
+            # The full report counts the data of all child studies.
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         common_reports_helper = create_common_reports_helper(
             self.gpf_instance,
@@ -106,6 +123,14 @@ class FamilyCounterListView(QueryBaseView, DatasetAccessRightsView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        families = get_partial_grant_families(
+            self.gpf_instance, cast(User, request.user), common_report_id,
+        )
+        if families is not None:
+            counter_list = get_fully_granted_family_ids(
+                counter_list, families, study.families,
+            )
+
         return Response(counter_list)
 
 
@@ -131,12 +156,30 @@ class FamilyCounterDownloadView(QueryBaseView, DatasetAccessRightsView):
             study,
         )
 
+        families = get_partial_grant_families(
+            self.gpf_instance, cast(User, request.user), study_id,
+        )
+
         try:
-            response = StreamingHttpResponse(
-                common_reports_helper.get_family_counter_tsv(
+            if families is None:
+                lines = common_reports_helper.get_family_counter_tsv(
                     group_name,
                     counter_id,
-                ),
+                )
+            else:
+                family_ids = get_fully_granted_family_ids(
+                    common_reports_helper.get_family_counter_list(
+                        group_name, counter_id,
+                    ),
+                    families,
+                    study.families,
+                )
+                lines = families_to_tsv_lines(FamiliesData.from_families({
+                    family_id: families[family_id]
+                    for family_id in family_ids
+                }))
+            response = StreamingHttpResponse(
+                lines,
                 content_type="text/tab-separated-values",
             )
             response["Content-Disposition"] = (
@@ -157,7 +200,7 @@ class FamiliesDataDownloadView(QueryBaseView, DatasetAccessRightsView):
 
     def get(
         self,
-        _request: Request,
+        request: Request,
         dataset_id: str,
     ) -> Response | StreamingHttpResponse:
         """Return full family data for a specified study."""
@@ -173,8 +216,16 @@ class FamiliesDataDownloadView(QueryBaseView, DatasetAccessRightsView):
             study,
         )
 
+        families = get_partial_grant_families(
+            self.gpf_instance, cast(User, request.user), dataset_id,
+        )
+        if families is None:
+            lines = common_reports_helper.get_family_data_tsv()
+        else:
+            lines = families_to_tsv_lines(families)
+
         response = StreamingHttpResponse(
-            common_reports_helper.get_family_data_tsv(),
+            lines,
             content_type="text/tab-separated-values",
         )
         response["Content-Disposition"] = "attachment; filename=families.ped"
@@ -203,8 +254,20 @@ class FamiliesDataDownloadView(QueryBaseView, DatasetAccessRightsView):
             study,
         )
 
+        families = get_partial_grant_families(
+            self.gpf_instance, cast(User, request.user), dataset_id,
+        )
+
         try:
-            lines = common_reports_helper.get_filtered_family_data_tsv(data)
+            if families is None:
+                lines = common_reports_helper.get_filtered_family_data_tsv(
+                    data)
+            else:
+                query = parse_query_params(data) if "queryData" in data \
+                    else data
+                lines = families_to_tsv_lines(collect_families_by_tags(
+                    families, query.get("tagsQuery"),
+                ))
         except ValueError as err:
             print(err)
             return Response(status=status.HTTP_400_BAD_REQUEST)

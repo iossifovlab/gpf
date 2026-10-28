@@ -1,7 +1,9 @@
 import logging
 from typing import cast
 
+from datasets_api.partial_grants import get_partial_grant_studies
 from datasets_api.permissions import get_instance_timestamp_etag
+from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
 from gpf_instance.gpf_instance import WGPFInstance
@@ -60,6 +62,12 @@ class EnrichmentTestView(QueryBaseView, DatasetAccessRightsView):
         if not dataset:
             return Response(status=status.HTTP_404_NOT_FOUND)
         assert dataset is not None
+
+        if get_partial_grant_studies(
+            self.instance_id, cast(User, request.user), dataset_id,
+        ) is not None:
+            # The statistics count all persons of the dataset.
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         builder = create_enrichment_builder(self.gpf_instance, dataset)
 

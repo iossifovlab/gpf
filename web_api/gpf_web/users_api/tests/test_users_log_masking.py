@@ -5,13 +5,15 @@ import logging
 import pytest
 from django.contrib.auth.models import AnonymousUser
 from django.test.client import Client
+from django.urls import resolve
 from rest_framework import status
 from rest_framework.parsers import JSONParser
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory
 from utils.logger import log_filter
 
-from users_api.models import ResetPasswordCode, WdaeUser
+from users_api import views
+from users_api.models import ResetPasswordCode, SetPasswordCode, WdaeUser
 
 SECRET_DATA = {
     "password": "secret-password-value",
@@ -81,22 +83,26 @@ def test_forgotten_password_log_holds_no_reset_code(
     assert str(code.path) not in caplog.text
 
 
-@pytest.mark.usefixtures("db")
-def test_change_password_log_holds_no_refused_password(
-    client: Client, caplog: pytest.LogCaptureFixture,
+def test_change_password_path_resolves_to_the_user_detail_route() -> None:
+    match = resolve("/api/v3/users/change_password")
+
+    assert getattr(match.func, "cls", None) is views.UserViewSet
+    assert match.kwargs == {"pk": "change_password"}
+
+
+def test_anonymous_change_password_post_is_refused(
+    client: Client, researcher: WdaeUser,
 ) -> None:
-    refused_password = "wkpw-x7q"  # ruff: ignore[hardcoded-password-string]
+    code = SetPasswordCode.create(researcher)
+    new_password = "a-new-valid-Pa55word"  # ruff: ignore[hardcoded-password-string]
 
-    with caplog.at_level(logging.INFO):
-        response = client.post(
-            "/api/v3/users/change_password",
-            json.dumps({
-                "password": refused_password,
-                "verifPath": "some-verif-path",
-            }),
-            content_type="application/json",
-        )
+    response = client.post(
+        "/api/v3/users/change_password",
+        json.dumps({"password": new_password, "verifPath": str(code.path)}),
+        content_type="application/json",
+    )
 
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "Invalid password" in caplog.text
-    assert refused_password not in caplog.text
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    researcher.refresh_from_db()
+    assert researcher.check_password("alabala")
+    assert not researcher.check_password(new_password)

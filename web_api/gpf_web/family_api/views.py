@@ -1,7 +1,11 @@
+from typing import cast
+
+from datasets_api.partial_grants import get_granted_families
 from datasets_api.permissions import (
     get_instance_timestamp_etag,
     get_permissions_etag,
 )
+from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
 from query_base.query_base import DatasetAccessRightsView, QueryBaseView
@@ -29,7 +33,9 @@ class ListFamiliesView(QueryBaseView, DatasetAccessRightsView):
             # Currently this route does not support pheno-only studies
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        families = dataset.genotype_data.families
+        families = get_granted_families(
+            self.gpf_instance, cast(User, request.user), dataset.genotype_data,
+        )
 
         tags_query = request.GET.get("tags")
         if tags_query is None:
@@ -62,11 +68,10 @@ class FamilyDetailsView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request,  # ruff: ignore[unused-method-argument]
+        self, request: Request,
         dataset_id: str,
         family_id: str,
     ) -> Response:
-        # pylint: disable=unused-argument
         """Response to a get request for the details of a specific family."""
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -83,7 +88,9 @@ class FamilyDetailsView(QueryBaseView, DatasetAccessRightsView):
             # Currently this route does not support pheno-only studies
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        families = dataset.genotype_data.families
+        families = get_granted_families(
+            self.gpf_instance, cast(User, request.user), dataset.genotype_data,
+        )
 
         family = families.get(family_id)
 
@@ -112,11 +119,10 @@ class ListMembersView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request,  # ruff: ignore[unused-method-argument]
+        self, request: Request,
         dataset_id: str,
         family_id: str,
     ) -> Response:
-        # pylint: disable=unused-argument
         """Response to get family members."""
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -133,7 +139,9 @@ class ListMembersView(QueryBaseView, DatasetAccessRightsView):
             # Currently this route does not support pheno-only studies
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        families = dataset.genotype_data.families
+        families = get_granted_families(
+            self.gpf_instance, cast(User, request.user), dataset.genotype_data,
+        )
 
         family = families.get(family_id)
 
@@ -151,10 +159,9 @@ class MemberDetailsView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request, dataset_id: str,  # ruff: ignore[unused-method-argument]
+        self, request: Request, dataset_id: str,
         family_id: str, member_id: str,
     ) -> Response:
-        # pylint: disable=unused-argument
         """Response to get request for a person details."""
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -174,7 +181,9 @@ class MemberDetailsView(QueryBaseView, DatasetAccessRightsView):
             # Currently this route does not support pheno-only studies
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        families = dataset.genotype_data.families
+        families = get_granted_families(
+            self.gpf_instance, cast(User, request.user), dataset.genotype_data,
+        )
 
         family = families.get(family_id)
 
@@ -197,11 +206,10 @@ class AllMemberDetailsView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request,  # ruff: ignore[unused-method-argument]
+        self, request: Request,
         dataset_id: str,
         family_id: str,
     ) -> Response:
-        # pylint: disable=unused-argument
         """Response to get request for details of all members of a family."""
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -218,7 +226,9 @@ class AllMemberDetailsView(QueryBaseView, DatasetAccessRightsView):
             # Currently this route does not support pheno-only studies
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        families = dataset.genotype_data.families
+        families = get_granted_families(
+            self.gpf_instance, cast(User, request.user), dataset.genotype_data,
+        )
 
         family = families.get(family_id)
 
@@ -241,10 +251,9 @@ class ListAllDetailsView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request,  # ruff: ignore[unused-method-argument]
+        self, request: Request,
         dataset_id: str,
     ) -> Response:
-        # pylint: disable=unused-argument
         """Response to get request for all families details in a dataset."""
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -258,7 +267,9 @@ class ListAllDetailsView(QueryBaseView, DatasetAccessRightsView):
             # Currently this route does not support pheno-only studies
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        families = dataset.genotype_data.families
+        families = get_granted_families(
+            self.gpf_instance, cast(User, request.user), dataset.genotype_data,
+        )
 
         out = []
 
