@@ -83,6 +83,19 @@ def test_present_on_bioconda_passes(tmp_path: pathlib.Path) -> None:
     )
 
 
+def test_present_on_both_channels_names_bioconda(
+    tmp_path: pathlib.Path,
+) -> None:
+    result = run_probe(tmp_path, bioconda="200", iossifovlab="200")
+
+    assert result.returncode == 0, result.stderr
+    assert (
+        f"Gain conda probe: gain-core {VERSION} present on bioconda"
+        in result.stdout
+    )
+    assert "present on iossifovlab" not in result.stdout
+
+
 def test_present_only_on_iossifovlab_passes(tmp_path: pathlib.Path) -> None:
     result = run_probe(tmp_path, bioconda="404", iossifovlab="200")
 
@@ -100,6 +113,7 @@ def test_absent_on_both_channels_fails(tmp_path: pathlib.Path) -> None:
     assert VERSION in result.stderr
     assert "bioconda" in result.stderr
     assert "iossifovlab" in result.stderr
+    assert "lags a gain release" in result.stderr
 
 
 def test_network_failure_on_both_channels_fails(
