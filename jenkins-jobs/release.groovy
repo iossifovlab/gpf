@@ -61,6 +61,28 @@ pipelineJob('gpf-release') {
             'via manual Jenkins UI trigger; the tag-push ' +
             'dispatcher always leaves it empty.',
         )
+        // FORCE_REPUBLISH and DRY_RUN are also declared here, not
+        // only in Jenkinsfile.release: a stale registration can drop
+        // a parameter that only the Jenkinsfile declares (gpf#918).
+        booleanParam(
+            'FORCE_REPUBLISH',
+            false,
+            'OPTIONAL — bypass the gpf-core wheel + Anaconda.org ' +
+            'artefact checks in the Pre-flight: tag freshness stage ' +
+            'so the SAME TAG_NAME can be re-released after a ' +
+            'transient publish failure. The GAIN_PIN_VERSION probes ' +
+            'are never bypassed. Leave false for normal forward ' +
+            'releases.',
+        )
+        booleanParam(
+            'DRY_RUN',
+            false,
+            'Run every pre-flight (tag checkout, master CI gate, tag ' +
+            'freshness, GAIN_PIN_VERSION probes, credentials) and ' +
+            'stop: nothing is built past the conda-builder image and ' +
+            'nothing is published. An already-published tag is ' +
+            'reported, not rejected.',
+        )
     }
 
     definition {
