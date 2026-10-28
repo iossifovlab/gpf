@@ -47,6 +47,10 @@
 //   - UPSTREAM_PROJECT — multibranch path used to find the master
 //                        CI build whose commit matches the tag
 //                        (default 'iossifovlab/gpf/master').
+//   - GAIN_PIN_VERSION — optional gain-core version to bundle
+//                        instead of the wheel from the master build.
+//   - FORCE_REPUBLISH  — bypass the tag-mutation guards to re-release
+//                        a half-published tag. Default false.
 //   - DRY_RUN          — run every pre-flight, build nothing past
 //                        the conda-builder image, publish nothing.
 //                        An already-published tag is reported, not
@@ -1296,9 +1300,17 @@ EOF
             // BACKEND_REPO/FRONTEND_REPO/BUNDLE_REPO/CONDA_BUILDER/
             // TAG_NAME — empty values turn the rmi into a harmless
             // no-op.
+            //
+            // A dry run builds no release image, so it removes only
+            // CONDA_BUILDER. It must not untag the :${TAG_NAME},
+            // :stable or :latest images of a real release that runs
+            // on the same node (gpf#1130).
             node('builder') {
                 sh '''
                     docker rmi "${CONDA_BUILDER:-}" 2>/dev/null || true
+                    if [ "${DRY_RUN:-false}" = "true" ]; then
+                        exit 0
+                    fi
                     for repo in "${BACKEND_REPO:-}" "${FRONTEND_REPO:-}" "${BUNDLE_REPO:-}"; do
                         [ -z "$repo" ] && continue
                         for tag in "${TAG_NAME:-}" stable; do
