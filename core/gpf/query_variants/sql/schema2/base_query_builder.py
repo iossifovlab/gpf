@@ -498,6 +498,21 @@ class BaseQueryBuilder(ABC):
                 )
         return " AND ".join(query)
 
+    def _string_literal(self, value: str) -> str:
+        """Return the value as a quoted SQL string literal.
+
+        The escape rule follows ``self.dialect.escape_quote_char()``. When
+        it is a single quote, each single quote is doubled. Otherwise, each
+        backslash is doubled and each single quote gets a backslash.
+        """
+        escape = self.dialect.escape_quote_char()
+        if escape == self.QUOTE:
+            escaped = value.replace(self.QUOTE, self.QUOTE * 2)
+        else:
+            escaped = value.replace(escape, escape * 2)
+            escaped = escaped.replace(self.QUOTE, escape + self.QUOTE)
+        return f"{self.QUOTE}{escaped}{self.QUOTE}"
+
     def _build_categorical_attr_where(
         self, categorical_attr_filter: CategoricalAttrFilterType,
     ) -> str:
@@ -521,7 +536,7 @@ class BaseQueryBuilder(ABC):
                 query.append(f"({attr_name} is not null)")
             elif all(isinstance(v, str) for v in values):
                 conditions = [
-                    f"{attr_name} = {self.QUOTE}{v}{self.QUOTE}"
+                    f"{attr_name} = {self._string_literal(str(v))}"
                     for v in values
                 ]
                 query.append(
@@ -554,12 +569,11 @@ class BaseQueryBuilder(ABC):
             assert isinstance(region, Region)
             esc = self.dialect.escape_char()
             end_position = f"COALESCE(sa.{esc}end_position{esc}, -1)"
-            query = "( sa.{esc}chromosome{esc} = {q}{chrom}{q}"
+            query = "( sa.{esc}chromosome{esc} = {chrom}"
             if region.start is None and region.end is None:
                 query += " )"
                 query = query.format(
-                    q=self.QUOTE,
-                    chrom=region.chrom,
+                    chrom=self._string_literal(region.chrom),
                     esc=esc,
                 )
             else:
@@ -580,8 +594,7 @@ class BaseQueryBuilder(ABC):
                 )
 
                 query = query.format(
-                    q=self.QUOTE,
-                    chrom=region.chrom,
+                    chrom=self._string_literal(region.chrom),
                     start=region_start,
                     stop=region_stop,
                     end_position=end_position,
@@ -615,10 +628,7 @@ class BaseQueryBuilder(ABC):
             return f" {column_name} IS NULL"
 
         values = [
-            " {q}{val}{q} ".format(
-                q=self.QUOTE,
-                val=val.replace("'", self.dialect.escape_quote_char() + "'"),
-            )
+            f" {self._string_literal(val)} "
             for val in query_values
         ]
 

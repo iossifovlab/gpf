@@ -4,7 +4,9 @@ import pathlib
 import pandas as pd
 import pytest
 from gain.utils.regions import Region
+from sqlglot import exp, parse_one
 
+from gpf.duckdb_storage.duckdb_variants import DuckDbQueryDialect
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.query_variants.sql.schema2.base_query_builder import (
     BaseQueryBuilder,
@@ -195,3 +197,94 @@ def test_build_query_refuses_real_attr_filter_bound_that_is_a_string(
     with pytest.raises(ValueError, match="bound"):
         family_query_builder.build_query(
             real_attr_filter=[("af_allele_freq", ("0 OR 1 = 1", 1.0))])
+
+
+QUOTED = "o'brien"
+
+
+def _builder(dialect: Dialect, families: FamiliesData) -> SummaryQueryBuilder:
+    return SummaryQueryBuilder(
+        dialect=dialect,
+        db="db",
+        summary_allele_table="summary_alleles",
+        pedigree_table="pedigree",
+        summary_allele_schema=SUMMARY_ALLELE_SCHEMA,
+        partition_config=NO_PARTITIONING_PROPERTIES,
+        pedigree_schema=PEDIGREE_SCHEMA,
+        families=families,
+        gene_models=None,
+    )
+
+
+@pytest.fixture
+def duckdb_builder(families: FamiliesData) -> SummaryQueryBuilder:
+    return _builder(DuckDbQueryDialect(), families)
+
+
+def _string_literals(sql: str, read: str = "duckdb") -> list[str]:
+    parsed = parse_one(sql, read=read)
+    return [
+        lit.this for lit in parsed.find_all(exp.Literal) if lit.is_string]
+
+
+def test_categorical_attr_string_value_with_quote_is_one_literal(
+    duckdb_builder: SummaryQueryBuilder,
+) -> None:
+    where = duckdb_builder._build_categorical_attr_where(
+        [("reference", [QUOTED])])
+
+    assert _string_literals(where) == [QUOTED]
+
+
+@pytest.mark.parametrize("region", [
+    Region("nope' OR '1'='1"),
+    Region("nope' OR '1'='1", 5, 15),
+])
+def test_regions_chromosome_with_quote_is_one_literal(
+    duckdb_builder: SummaryQueryBuilder, region: Region,
+) -> None:
+    where = duckdb_builder._build_regions_where([region])
+
+    assert _string_literals(where) == [region.chrom]
+
+
+@pytest.fixture
+def backslash_builder(families: FamiliesData) -> SummaryQueryBuilder:
+    return _builder(Dialect(), families)
+
+
+@pytest.mark.parametrize("value", ["ends\\", "it's\\", "a\\'b"])
+def test_iterable_string_attr_backslash_dialect_value_is_one_literal(
+    backslash_builder: SummaryQueryBuilder, value: str,
+) -> None:
+    where = backslash_builder._build_iterable_string_attr_where(
+        "sa.reference", [value])
+
+    assert _string_literals(where, read="hive") == [value]
+
+
+def test_categorical_attr_backslash_dialect_value_is_one_literal(
+    backslash_builder: SummaryQueryBuilder,
+) -> None:
+    where = backslash_builder._build_categorical_attr_where(
+        [("reference", ["ends\\"])])
+
+    assert _string_literals(where, read="hive") == ["ends\\"]
+
+
+@pytest.mark.parametrize("dialect", [Dialect(), DuckDbQueryDialect()])
+def test_plain_values_keep_their_sql_text(
+    families: FamiliesData, dialect: Dialect,
+) -> None:
+    builder = _builder(dialect, families)
+    esc = dialect.escape_char()
+
+    categorical = builder._build_categorical_attr_where(
+        [("reference", ["abc", "def"])])
+    regions = builder._build_regions_where([Region("chr1")])
+    iterable = builder._build_iterable_string_attr_where(
+        "sa.reference", ["abc", "def"])
+
+    assert categorical == "sa.reference = 'abc' OR sa.reference = 'def'"
+    assert regions == f"( sa.{esc}chromosome{esc} = 'chr1' )"
+    assert iterable == "(  sa.reference in (  'abc' , 'def'  )  )"

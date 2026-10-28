@@ -9,7 +9,6 @@ from gpf.query_variants.sql.schema2.base_query_builder import (
     Dialect,
     TableSchema,
 )
-from gpf.variants.attributes import Role, Sex, Status
 
 logger = logging.getLogger(__name__)
 
@@ -83,17 +82,6 @@ class FamilyQueryBuilder(BaseQueryBuilder):
             self._add_to_product(
                 self.dialect.build_array_join("sa.effect_gene", "eg"),
             )
-
-    @staticmethod
-    def _pedigree_column_value(source: str, value: str) -> str:
-        if source == "status":
-            return f"{Status.from_name(value).value}"
-        if source == "role":
-            return f"{Role.from_name(value).value}"
-        if source == "sex":
-            return f"{Sex.from_name(value).value}"
-
-        return f"'{value}'"
 
     def _build_from(self) -> None:
         summary_table_name = self.dialect.build_table_name(
