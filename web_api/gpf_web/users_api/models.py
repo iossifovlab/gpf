@@ -22,7 +22,13 @@ from django.core.mail import send_mail
 from django.db import models, transaction
 from django.db.models.signals import m2m_changed, post_delete, pre_delete
 from django.utils import timezone
-from oauth2_provider.models import Application, get_application_model
+from oauth2_provider.models import (
+    Application,
+    get_access_token_model,
+    get_application_model,
+    get_grant_model,
+    get_refresh_token_model,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +136,6 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         logger.info("email sent: to:      <%s>", self.email)
         logger.info("email sent: from:    <%s>", from_email)
         logger.info("email sent: subject:  %s", subject)
-        logger.info("email sent: message:  %s", message)
 
         return mail
 
@@ -157,7 +162,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         all_sessions = Session.objects.all()
         for session in all_sessions:
             session_data = session.get_decoded()
-            if self.pk == session_data.get("_auth_user_id"):
+            if str(self.pk) == session_data.get("_auth_user_id"):
                 session.delete()
 
     def register_preexisting_user(self, name: str | None) -> None:
@@ -191,7 +196,18 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             failed_attempt=0,
         ).save()
 
-        verification_path.delete()
+        # A new password ends every pending verification code of the user,
+        # not only the code that this change used.
+        SetPasswordCode.objects.filter(user=user).delete()
+        ResetPasswordCode.objects.filter(user=user).delete()
+
+        user.deauthenticate()
+        refresh_tokens = get_refresh_token_model().objects.filter(
+            user=user, revoked__isnull=True)
+        for refresh_token in refresh_tokens:
+            refresh_token.revoke()
+        get_access_token_model().objects.filter(user=user).delete()
+        get_grant_model().objects.filter(user=user).delete()
 
         return cast(WdaeUser, user)
 

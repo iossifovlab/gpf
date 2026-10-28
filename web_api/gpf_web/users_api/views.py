@@ -4,11 +4,17 @@ import json
 import logging
 from collections.abc import Generator, Iterator
 from typing import Any, ClassVar, cast
+from urllib.parse import urlsplit
 
 import django.contrib.auth
 from django import forms
 from django.conf import settings
-from django.contrib.auth import authenticate, get_user_model, login
+from django.contrib.auth import (
+    SESSION_KEY,
+    authenticate,
+    get_user_model,
+    login,
+)
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -23,9 +29,13 @@ from django.http.response import (
     StreamingHttpResponse,
 )
 from django.shortcuts import redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.csrf import ensure_csrf_cookie
 from gpf_instance.gpf_instance import permission_update
-from oauth2_provider.models import get_application_model
+from oauth2_provider.models import (
+    get_access_token_model,
+    get_application_model,
+)
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.decorators import (
     action,
@@ -235,7 +245,6 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             user.reset_password()
-            user.deauthenticate()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except user_model.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -294,7 +303,6 @@ class ForgotPassword(views.APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             user.reset_password()
-            user.deauthenticate()
 
             return render(
                 request,  # pyright: ignore
@@ -326,6 +334,8 @@ class BasePasswordView(views.APIView):
     template: str | None = None
     form: forms.Form | None = None
     code_type: str | None = None
+    # True refuses a code whose user is already active.
+    refuse_active_user: bool = False
 
     def _check_request_verification_path(
         self, request: Request,
@@ -357,6 +367,9 @@ class BasePasswordView(views.APIView):
 
         if not is_valid:
             return verif_code, f"Expired {self.code_type} code"
+
+        if self.refuse_active_user and verif_code.user.is_active:
+            return verif_code, f"Invalid {self.code_type} code"
 
         return verif_code, None
 
@@ -422,8 +435,14 @@ class BasePasswordView(views.APIView):
             )
 
         new_password = form.cleaned_data["new_password1"]
+        session_user_id = request.session.get(SESSION_KEY)
         user.change_password(verif_code, new_password)
-        del request.session[f"{self.code_type}_code"]
+        if session_user_id == str(user.pk):
+            # change_password deleted the session row of the user, so a
+            # write to that session raises SessionInterrupted.
+            request.session.flush()
+        else:
+            del request.session[f"{self.code_type}_code"]
         application = get_default_application()
         redirect_uri = application.redirect_uris.split(" ")[0]
         return HttpResponseRedirect(redirect_uri)
@@ -441,6 +460,7 @@ class SetPassword(BasePasswordView):
     template = "users_api/registration/set-password.html"
     form = cast(forms.Form, WdaeRegisterPasswordForm)
     code_type = "set"
+    refuse_active_user = True
 
 
 class RESTLoginView(views.APIView):
@@ -460,6 +480,15 @@ class RESTLoginView(views.APIView):
 
         if not username or not password:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        # Refuse any password during a lockout and log no attempt, as
+        # WdaeLoginForm.confirm_login_allowed does. The lockout therefore
+        # does not grow while it is in force.
+        if AuthenticationLog.is_user_locked_out(username):
+            return Response(
+                AuthenticationLog.get_locked_out_error(username),
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         user = authenticate(
             username=username, password=password,
@@ -481,6 +510,30 @@ class RESTLoginView(views.APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+def _default_redirect_uri() -> str:
+    return cast(str, get_default_application().redirect_uris.split(" ")[0])
+
+
+def _is_allowed_next(request: Request, next_uri: str) -> bool:
+    """Check that ``next_uri`` stays on an allowed host and scheme.
+
+    The allowed hosts are the host of the request and the hosts of the
+    redirect URIs of the default application. The default application is
+    read only when ``next_uri`` names a host.
+    """
+    allowed_hosts = {request.get_host()}
+    if urlsplit(next_uri).netloc:
+        allowed_hosts.update(
+            urlsplit(uri).netloc
+            for uri in get_default_application().redirect_uris.split()
+        )
+    return url_has_allowed_host_and_scheme(
+        next_uri,
+        allowed_hosts=allowed_hosts,
+        require_https=request.is_secure(),
+    )
+
+
 class WdaeLoginView(views.APIView):
     """View for logging in."""
 
@@ -491,8 +544,8 @@ class WdaeLoginView(views.APIView):
     def get(self, request: Request) -> HttpResponse:
         """Render the login form."""
         next_uri = request.GET.get("next")
-        if next_uri is None:
-            next_uri = get_default_application().redirect_uris.split(" ")[0]
+        if next_uri is None or not _is_allowed_next(request, next_uri):
+            next_uri = _default_redirect_uri()
 
         about_uri = next_uri[
             next_uri.find("redirect_uri=") + 13:next_uri.find("login")
@@ -524,8 +577,10 @@ class WdaeLoginView(views.APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         next_uri = data.get("next")
-        if next_uri is None:
-            next_uri = get_default_application().redirect_uris.split(" ")[0]
+        if not isinstance(next_uri, str) or not _is_allowed_next(
+            request, next_uri,
+        ):
+            next_uri = _default_redirect_uri()
 
         response_status = status.HTTP_200_OK
         form = WdaeLoginForm(request, data=data)
@@ -565,8 +620,7 @@ def change_password(request: Request) -> Response:
     if not is_password_valid(password):
         logger.error(log_filter(
             request,
-            "Password change failed: Invalid password: '%s'",
-            str(password),
+            "Password change failed: Invalid password",
         ))
         return Response(
             {"error_msg": ("Invalid password entered. Password is either too"
@@ -654,11 +708,25 @@ def register(request: Request) -> Response:
         logger.warning(
             log_filter(
                 request,
-                "Registration failed: KeyError; %s",
-                str(request.data),
+                "Registration failed: KeyError; keys: %s",
+                sorted(request.data),
             ),
         )
         return Response({}, status=status.HTTP_201_CREATED)
+
+
+def revoke_request_token(request: Request) -> None:
+    """Revoke the access token of the request and its refresh token."""
+    access_token = request.auth
+    if not isinstance(access_token, get_access_token_model()):
+        return
+    try:
+        refresh_token = access_token.refresh_token
+    except ObjectDoesNotExist:
+        access_token.revoke()
+        return
+    # Revoking the refresh token also revokes its access token.
+    refresh_token.revoke()
 
 
 @request_logging_function_view(logger)
@@ -668,6 +736,7 @@ def register(request: Request) -> Response:
     (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF))
 def logout(request: Request) -> Response:
     """Log out the currently logged-in user."""
+    revoke_request_token(request)
     django.contrib.auth.logout(request)  # pyright: ignore
     return Response(status=status.HTTP_204_NO_CONTENT)
 
