@@ -3,6 +3,7 @@
 
 import logging
 import pathlib
+import textwrap
 from collections.abc import Iterator, Sequence
 from datetime import timedelta
 from typing import cast
@@ -22,6 +23,9 @@ from gain.genomic_resources.repository import (
 from gain.genomic_resources.testing import (
     build_inmemory_test_repository,
     convert_to_tab_separated,
+    setup_directories,
+    setup_pedigree,
+    setup_vcf,
 )
 from gpf_instance.feature_flags import reset_feature_flags
 from gpf_instance.gpf_instance import (
@@ -42,7 +46,10 @@ from users_api.models import WdaeUser
 from utils.testing import setup_t4c8_instance, setup_wgpf_instance
 
 from gpf.gpf_instance.gpf_instance import GPFInstance
+from gpf.pheno.build_pheno_browser import main as build_browser
+from gpf.pheno.pheno_import import main as pheno_import
 from gpf.studies.study import GenotypeData
+from gpf.testing.import_helpers import setup_dataset_config, vcf_study
 
 logger = logging.getLogger(__name__)
 
@@ -455,3 +462,168 @@ def t4c8_wgpf(
     )
 
     return wgpf_instance
+
+
+###############################################################################
+# A phenotype group and a genotype dataset that names it
+###############################################################################
+
+def _import_pheno_leaf(
+    root_path: pathlib.Path,
+    pheno_dir: pathlib.Path,
+    pheno_id: str,
+    pedigree: str,
+    instruments: dict[str, str],
+) -> None:
+    ped_path = setup_pedigree(root_path / pheno_id / "in.ped", pedigree)
+    instruments_dir = root_path / pheno_id / "instruments"
+    setup_directories(instruments_dir, instruments)
+    pheno_import([
+        "--pheno-id", pheno_id,
+        "-p", str(ped_path),
+        "-i", str(instruments_dir),
+        "--force",
+        "-j", "1",
+        "--person-column", "personId",
+        "-o", str(pheno_dir / pheno_id),
+        "--task-status-dir", str(root_path / pheno_id / "status"),
+        "--task-log-dir", str(root_path / pheno_id / "log"),
+    ])
+
+
+def _import_genotype_leaf(
+    root_path: pathlib.Path,
+    instance: WGPFInstance,
+    study_id: str,
+    pedigree: str,
+    vcf: str,
+    pheno_id: str,
+) -> None:
+    ped_path = setup_pedigree(
+        root_path / study_id / "pedigree" / "in.ped", pedigree)
+    vcf_path = setup_vcf(root_path / study_id / "vcf" / "in.vcf.gz", vcf)
+    vcf_study(
+        root_path, study_id, ped_path, [vcf_path],
+        gpf_instance=instance,
+        study_config_update={
+            "phenotype_data": pheno_id,
+            # The phenotype columns of the default study configuration
+            # name the measures of ``study_1_pheno``.
+            "genotype_browser": {"enabled": False},
+        },
+    )
+
+
+@pytest.fixture(scope="module")
+def pheno_group_module(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> WGPFInstance:
+    """Build a phenotype group of three leaves and a dataset that names it.
+
+    The phenotype group ``pheno_group`` has the leaves ``study_1_pheno``,
+    ``sibling_pheno`` and ``third_pheno``. The genotype dataset
+    ``pheno_parent`` names ``pheno_group`` under ``phenotype_data``. Its
+    child studies ``t4c8_study_1``, ``sibling_study`` and ``third_study``
+    each name one leaf. Its child study ``t4c8_study_2`` names none.
+    """
+    root_path = tmp_path_factory.mktemp("pheno_group")
+    instance = setup_wgpf_instance(root_path)
+    pheno_dir = pathlib.Path(instance.dae_dir) / "pheno"
+    _import_pheno_leaf(
+        root_path, pheno_dir, "sibling_pheno", """
+familyId personId dadId momId sex status role
+fx.1     momx     0     0     2   1      mom
+fx.1     dadx     0     0     1   1      dad
+fx.1     px       dadx  momx  2   2      prb
+        """, {"sib.csv": "personId,age\nmomx,40\ndadx,42\npx,7\n"})
+    _import_pheno_leaf(
+        root_path, pheno_dir, "third_pheno", """
+familyId personId dadId momId sex status role
+fy.1     momy     0     0     2   1      mom
+fy.1     dady     0     0     1   1      dad
+fy.1     py       dady  momy  1   2      prb
+        """, {"thr.csv": "personId,score\nmomy,13\ndady,17\npy,19\n"})
+    setup_directories(pheno_dir / "pheno_group", {
+        "pheno_group.yaml": textwrap.dedent("""
+            id: pheno_group
+            name: Pheno Group
+            type: group
+            children:
+              - study_1_pheno
+              - sibling_pheno
+              - third_pheno
+        """),
+    })
+    for pheno_id in ("sibling_pheno", "third_pheno", "pheno_group"):
+        build_browser([
+            pheno_id,
+            "--gpf-instance", str(pathlib.Path(instance.dae_dir)
+                                  / "gpf_instance.yaml"),
+            "-j", "1",
+            "--force",
+            "--task-status-dir", str(root_path / pheno_id / "status"),
+            "--task-log-dir", str(root_path / pheno_id / "log"),
+        ])
+    _import_genotype_leaf(
+        root_path, instance, "sibling_study", """
+familyId personId dadId momId sex status role
+fx.1     momx     0     0     2   1      mom
+fx.1     dadx     0     0     1   1      dad
+fx.1     px       dadx  momx  2   2      prb
+        """, """
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=chr1>
+#CHROM POS ID REF ALT QUAL FILTER INFO FORMAT momx dadx px
+chr1   5   .  A   C   .    .      .    GT     0/0  0/0  0/1
+        """, "sibling_pheno")
+    _import_genotype_leaf(
+        root_path, instance, "third_study", """
+familyId personId dadId momId sex status role
+fy.1     momy     0     0     2   1      mom
+fy.1     dady     0     0     1   1      dad
+fy.1     py       dady  momy  1   2      prb
+        """, """
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=chr1>
+#CHROM POS ID REF ALT QUAL FILTER INFO FORMAT momy dady py
+chr1   5   .  A   C   .    .      .    GT     0/0  0/0  0/1
+        """, "third_pheno")
+    setup_dataset_config(
+        instance, "pheno_parent",
+        ["t4c8_study_1", "sibling_study", "third_study", "t4c8_study_2"],
+        dataset_config_update="phenotype_data: pheno_group",
+    )
+    instance.reload()
+    return instance
+
+
+@pytest.fixture
+def pheno_group_instance(
+    pheno_group_module: WGPFInstance,
+    db: None,  # ruff: ignore[unused-function-argument]
+    mocker: pytest_mock.MockFixture,
+) -> WGPFInstance:
+    reload_datasets(pheno_group_module)
+    for target in (
+        "gpf_instance.gpf_instance.get_wgpf_instance",
+        "datasets_api.permissions.get_wgpf_instance",
+        "query_base.query_base.get_wgpf_instance",
+        "utils.expand_gene_set.get_wgpf_instance",
+    ):
+        mocker.patch(target, return_value=pheno_group_module)
+    return pheno_group_module
+
+
+@pytest.fixture
+def grant_on_study_1_pheno(user: User) -> User:
+    add_group_perm_to_user("study_1_pheno", user)
+    return user
+
+
+@pytest.fixture
+def grant_on_t4c8_study_1(user: User) -> User:
+    """Grant the genotype child of ``pheno_parent`` that names study_1_pheno."""
+    add_group_perm_to_user("t4c8_study_1", user)
+    return user

@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import csv
 import io
-import pathlib
-import textwrap
+import json
 from datetime import timedelta
+from typing import Any
 
 import pytest
 import pytest_mock
@@ -11,14 +11,12 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.test.client import Client
 from django.utils import timezone
-from gain.genomic_resources.testing import setup_directories, setup_pedigree
-from gpf_instance.gpf_instance import WGPFInstance, reload_datasets
+from gpf_instance.gpf_instance import WGPFInstance
 from oauth2_provider.models import Application, get_access_token_model
 from rest_framework import status
-from utils.testing import setup_wgpf_instance
 
 from datasets_api.permissions import add_group_perm_to_user
-from gpf.pheno.pheno_import import main as pheno_import
+from gpf.pheno.pheno_data import PhenotypeGroup
 
 
 @pytest.fixture
@@ -88,73 +86,6 @@ def test_pedigree_etag_differs_between_partial_and_full_grant(
     assert partial["ETag"] != full["ETag"]
 
 
-@pytest.fixture(scope="module")
-def pheno_group_module(
-    tmp_path_factory: pytest.TempPathFactory,
-) -> WGPFInstance:
-    """Build a phenotype group of ``study_1_pheno`` and a sibling study."""
-    root_path = tmp_path_factory.mktemp("pheno_group")
-    instance = setup_wgpf_instance(root_path)
-    pheno_dir = pathlib.Path(instance.dae_dir) / "pheno"
-    sibling_ped = setup_pedigree(
-        root_path / "sibling_pheno" / "in.ped", """
-familyId personId dadId momId sex status role
-fx.1     momx     0     0     2   1      mom
-fx.1     dadx     0     0     1   1      dad
-fx.1     px       dadx  momx  2   2      prb
-        """)
-    instruments = root_path / "sibling_pheno" / "instruments"
-    setup_directories(
-        instruments, {
-            "sib.csv": "personId,age\nmomx,40\ndadx,42\npx,7\n",
-        })
-    pheno_import([
-        "--pheno-id", "sibling_pheno",
-        "-p", str(sibling_ped),
-        "-i", str(instruments),
-        "--force",
-        "-j", "1",
-        "--person-column", "personId",
-        "-o", str(pheno_dir / "sibling_pheno"),
-        "--task-status-dir", str(root_path / "sibling_pheno" / "status"),
-        "--task-log-dir", str(root_path / "sibling_pheno" / "log"),
-    ])
-    setup_directories(pheno_dir / "pheno_group", {
-        "pheno_group.yaml": textwrap.dedent("""
-            id: pheno_group
-            name: Pheno Group
-            type: group
-            children:
-              - study_1_pheno
-              - sibling_pheno
-        """),
-    })
-    instance.reload()
-    return instance
-
-
-@pytest.fixture
-def pheno_group_instance(
-    pheno_group_module: WGPFInstance,
-    db: None,  # ruff: ignore[unused-function-argument]
-    mocker: pytest_mock.MockFixture,
-) -> WGPFInstance:
-    reload_datasets(pheno_group_module)
-    for target in (
-        "gpf_instance.gpf_instance.get_wgpf_instance",
-        "datasets_api.permissions.get_wgpf_instance",
-        "query_base.query_base.get_wgpf_instance",
-    ):
-        mocker.patch(target, return_value=pheno_group_module)
-    return pheno_group_module
-
-
-@pytest.fixture
-def grant_on_study_1_pheno(user: User) -> User:
-    add_group_perm_to_user("study_1_pheno", user)
-    return user
-
-
 @pytest.mark.usefixtures("grant_on_study_1_pheno", "pheno_group_instance")
 def test_families_data_of_a_phenotype_group_under_partial_grant(
     user_client: Client,
@@ -186,3 +117,54 @@ def test_families_data_of_a_remote_phenotype_child_is_403(
         "/api/v3/common_reports/families_data/pheno_group")
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def _people_values(client: Client, dataset_id: str, measure_id: str) -> Any:
+    return client.post(
+        "/api/v3/pheno_tool/people_values",
+        json.dumps({"datasetId": dataset_id, "measureIds": [measure_id]}),
+        content_type="application/json",
+    )
+
+
+@pytest.mark.usefixtures("pheno_group_instance")
+def test_phenotype_data_under_a_grant_on_a_child_without_it_is_403(
+    user: User,
+    user_client: Client,
+) -> None:
+    add_group_perm_to_user("t4c8_study_2", user)
+
+    response = _people_values(user_client, "pheno_parent", "i1.age")
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.usefixtures("grant_on_study_1_pheno")
+def test_phenotype_data_of_a_remote_phenotype_child_is_403(
+    user_client: Client,
+    pheno_group_instance: WGPFInstance,
+    mocker: pytest_mock.MockFixture,
+) -> None:
+    child = pheno_group_instance.get_wdae_wrapper("study_1_pheno")
+    mocker.patch.object(child, "is_remote", new=True)
+
+    response = _people_values(user_client, "pheno_group", "i1.age")
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.usefixtures("grant_on_study_1_pheno")
+def test_registry_group_keeps_its_children_after_a_partial_grant_request(
+    user_client: Client,
+    pheno_group_instance: WGPFInstance,
+) -> None:
+    response = _people_values(user_client, "pheno_group", "i1.age")
+
+    group = pheno_group_instance.get_phenotype_data("pheno_group")
+    wrapper = pheno_group_instance.get_wdae_wrapper("pheno_group")
+    assert response.status_code == status.HTTP_200_OK
+    assert isinstance(group, PhenotypeGroup)
+    assert [child.pheno_id for child in group.children] == [
+        "study_1_pheno", "sibling_pheno", "third_pheno"]
+    assert wrapper is not None
+    assert wrapper.phenotype_data is group

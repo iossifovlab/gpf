@@ -1181,3 +1181,58 @@ class PhenotypeGroup(PhenotypeData):
         families: FamiliesData,
     ) -> PersonSetCollection:
         raise NotImplementedError
+
+
+class RestrictedPhenotypeGroup(PhenotypeGroup):
+    """A phenotype group that holds only some leaves of a full group.
+
+    The restricted group keeps the ``pheno_id`` and the configuration of
+    the full group. It answers measure searches and counts from its own
+    leaves, and it never reads the browser DB of the full group, because
+    that DB lists the measures of every leaf of the full group.
+
+    The phenotype registry does not hold restricted groups.
+    """
+
+    def __init__(
+        self,
+        group: PhenotypeGroup,
+        leaves: list[PhenotypeStudy],
+    ) -> None:
+        parents = [set(leaf.parents) for leaf in leaves]
+        super().__init__(group.pheno_id, group.config, list(leaves))
+        # The full group, not the restricted one, is the parent of a leaf.
+        for leaf, leaf_parents in zip(leaves, parents, strict=True):
+            leaf.parents = leaf_parents
+
+    @property
+    def browser(self) -> PhenoBrowser | None:
+        return None
+
+    def search_measures(
+        self,
+        instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,
+        sort_by: str | None = None,
+        order_by: str | None = None,
+    ) -> Generator[dict[str, Any], None, None]:
+        """Yield the measures of the leaves according to filters."""
+        for leaf in self.get_leaves():
+            if instrument and instrument not in leaf.instruments:
+                continue
+            yield from leaf.search_measures(
+                instrument, search_term, page, sort_by, order_by,
+            )
+
+    def count_measures(
+        self,
+        instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,
+    ) -> int:
+        return sum(
+            leaf.count_measures(instrument, search_term, page)
+            for leaf in self.get_leaves()
+            if not instrument or instrument in leaf.instruments
+        )

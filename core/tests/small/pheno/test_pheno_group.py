@@ -4,7 +4,11 @@ import pandas as pd
 import pytest
 
 from gpf.pheno.common import MeasureType
-from gpf.pheno.pheno_data import PhenotypeGroup
+from gpf.pheno.pheno_data import (
+    PhenotypeGroup,
+    PhenotypeStudy,
+    RestrictedPhenotypeGroup,
+)
 from gpf.pheno.registry import PhenoRegistry
 from gpf.variants.attributes import Role, Sex, Status
 
@@ -245,3 +249,39 @@ def test_pheno_group_i1_i2_get_values(
     out = next(res)
     assert out["person_id"] == "f1.p1"
     assert out["i5.iq"] == pytest.approx(86.41, abs=1e-2)
+
+
+def test_restricted_pheno_group_searches_only_its_leaves(
+    fake_pheno_db: PhenoRegistry,
+) -> None:
+    group = fake_pheno_db.get_phenotype_data("fake_group")
+    assert isinstance(group, PhenotypeGroup)
+    fake2 = fake_pheno_db.get_phenotype_data("fake2")
+    assert isinstance(fake2, PhenotypeStudy)
+
+    restricted = RestrictedPhenotypeGroup(group, [fake2])
+
+    assert restricted.pheno_id == "fake_group"
+    assert sorted(
+        m["measure"]["measure_id"]
+        for m in restricted.search_measures(None, None)
+    ) == sorted(fake2.measures)
+    assert restricted.count_measures(None, None) == len(fake2.measures)
+    assert sorted(restricted.measures) == sorted(fake2.measures)
+
+
+def test_restricted_pheno_group_leaves_the_full_group_unchanged(
+    fake_pheno_db: PhenoRegistry,
+) -> None:
+    group = fake_pheno_db.get_phenotype_data("fake_group")
+    assert isinstance(group, PhenotypeGroup)
+    fake2 = fake_pheno_db.get_phenotype_data("fake2")
+    assert isinstance(fake2, PhenotypeStudy)
+    parents = set(fake2.parents)
+
+    RestrictedPhenotypeGroup(group, [fake2])
+
+    assert [child.pheno_id for child in group.children] == [
+        "fake", "fake_subgroup"]
+    assert len(group.measures) == 27
+    assert fake2.parents == parents

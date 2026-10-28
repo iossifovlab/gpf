@@ -3,6 +3,7 @@ from typing import Any, cast
 
 import numpy as np
 import pandas as pd
+from datasets_api.partial_grants import get_granted_phenotype_data
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
@@ -268,9 +269,13 @@ class PhenoMeasurePartitionsView(QueryBaseView, DatasetAccessRightsView):
         assert "measure" in data
         pheno_measure = cast(str, data["measure"])
 
-        assert dataset.phenotype_data.has_measure(pheno_measure)
+        phenotype_data = get_granted_phenotype_data(
+            self.gpf_instance, request.user, dataset,
+        )
+        if not phenotype_data.has_measure(pheno_measure):
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-        df = dataset.phenotype_data.get_people_measure_values_df(
+        df = phenotype_data.get_people_measure_values_df(
             [pheno_measure],
         )
 

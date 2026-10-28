@@ -1,5 +1,6 @@
 import logging
 
+from datasets_api.partial_grants import get_granted_phenotype_data
 from datasets_api.permissions import (
     get_instance_timestamp_etag,
     get_permissions_etag,
@@ -11,10 +12,12 @@ from gpf_instance.feature_flags import FeatureFlagMixin
 from gpf_instance.gpf_instance import WGPFInstance
 from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.request import Request
 from rest_framework.response import Response
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 
+from gpf.pheno.pheno_data import PhenotypeData
 from pheno_browser_api.pheno_browser_helper import (
     BasePhenoBrowserHelper,
     CountError,
@@ -185,7 +188,7 @@ class PhenoMeasuresDownload(
 
     feature_flag = "pheno_browser_download"
 
-    @method_decorator(etag(get_instance_timestamp_etag))
+    @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
         """Return a CSV file stream for measures."""
         data = request.query_params
@@ -200,8 +203,9 @@ class PhenoMeasuresDownload(
             logger.info("Study not found")
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        pheno_browser_helper = create_pheno_browser_helper(
+        pheno_browser_helper = _create_granted_pheno_browser_helper(
             self.gpf_instance,
+            request,
             study,
         )
 
@@ -224,7 +228,7 @@ class PhenoMeasuresDownload(
         response["Expires"] = "0"
         return response
 
-    @method_decorator(etag(get_instance_timestamp_etag))
+    @method_decorator(etag(get_permissions_etag))
     #  pylint:disable=method-hidden
     def head(self, request: Request) -> Response:
         """Return a status code validating if measures can be downloaded."""
@@ -241,8 +245,9 @@ class PhenoMeasuresDownload(
             logger.info("Study not found")
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        pheno_browser_helper = create_pheno_browser_helper(
+        pheno_browser_helper = _create_granted_pheno_browser_helper(
             self.gpf_instance,
+            request,
             study,
         )
         try:
@@ -267,7 +272,7 @@ class PhenoMeasuresDownload(
 class PhenoMeasuresCount(QueryBaseView, DatasetAccessRightsView):
     """Phenotype measure search count view."""
 
-    @method_decorator(etag(get_instance_timestamp_etag))
+    @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
         """Return a CSV file stream for measures."""
         data = request.query_params
@@ -282,8 +287,9 @@ class PhenoMeasuresCount(QueryBaseView, DatasetAccessRightsView):
             logger.info("Study not found")
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        pheno_browser_helper = create_pheno_browser_helper(
+        pheno_browser_helper = _create_granted_pheno_browser_helper(
             self.gpf_instance,
+            request,
             study,
         )
 
@@ -339,19 +345,47 @@ class PhenoImagesView(QueryBaseView, DatasetAccessRightsView):
 
 
 def create_pheno_browser_helper(
-    gpf_instance: WGPFInstance, study: WDAEAbstractStudy,
+    gpf_instance: WGPFInstance,
+    study: WDAEAbstractStudy,
+    phenotype_data: PhenotypeData | None = None,
 ) -> BasePhenoBrowserHelper:
-    """Create an pheno browser helper for the given dataset."""
+    """Create an pheno browser helper for the given dataset.
+
+    ``phenotype_data`` is the phenotype data that the user may see. When
+    it is not the phenotype data of the study, the helper reads it in
+    place of the phenotype data of the study. A helper of an extension
+    cannot read it, so the function then raises ``PermissionDenied``.
+    """
+    restricted = phenotype_data is not None and (
+        not study.has_pheno_data or phenotype_data is not study.phenotype_data
+    )
     for ext_name, extension in gpf_instance.extensions.items():
         pheno_browser_helper = extension.get_tool(study, "pheno_browser_helper")
         if pheno_browser_helper is not None:
             if not isinstance(pheno_browser_helper, BasePhenoBrowserHelper):
                 raise ValueError(
                     f"{ext_name} returned an invalid pheno browser helper!")
+            if restricted:
+                raise PermissionDenied
             return pheno_browser_helper
 
     if not isinstance(study, WDAEStudy):
         raise ValueError(  # ruff: ignore[type-check-without-type-error]
             f"Pheno browser helper for {study.study_id} is missing!")
 
-    return PhenoBrowserHelper(study)
+    return PhenoBrowserHelper(
+        study, phenotype_data if restricted else None)
+
+
+def _create_granted_pheno_browser_helper(
+    gpf_instance: WGPFInstance,
+    request: Request,
+    study: WDAEAbstractStudy,
+) -> BasePhenoBrowserHelper:
+    """Create a pheno browser helper of the data that the user may see."""
+    phenotype_data = None
+    if study.has_pheno_data:
+        phenotype_data = get_granted_phenotype_data(
+            gpf_instance, request.user, study,
+        )
+    return create_pheno_browser_helper(gpf_instance, study, phenotype_data)

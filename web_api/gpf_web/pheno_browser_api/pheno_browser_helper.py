@@ -8,6 +8,8 @@ from typing import Any
 from gpf_instance.extension import GPFTool
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 
+from gpf.pheno.pheno_data import PhenotypeData
+
 logger = logging.getLogger(__name__)
 
 
@@ -69,9 +71,22 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
     def __init__(
         self,
         study: WDAEStudy,
+        phenotype_data: PhenotypeData | None = None,
     ) -> None:
+        """Wrap the study.
+
+        ``phenotype_data`` replaces the phenotype data of the study when
+        the user may see only a part of it.
+        """
         super().__init__()
         self.study = study
+        self._phenotype_data = phenotype_data
+
+    @property
+    def phenotype_data(self) -> PhenotypeData:
+        if self._phenotype_data is not None:
+            return self._phenotype_data
+        return self.study.phenotype_data
 
     @staticmethod
     def make_tool(study: WDAEAbstractStudy) -> GPFTool | None:
@@ -82,26 +97,26 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
             raise ValueError(
                 f"Study {self.study.study_id} has no phenotype data.",
             )
-        return sorted(self.study.phenotype_data.get_instruments())
+        return sorted(self.phenotype_data.get_instruments())
 
     def get_measures_info(self) -> dict[str, Any]:
         if not self.study.has_pheno_data:
             raise ValueError(
                 f"Study {self.study.study_id} has no phenotype data.",
             )
-        return self.study.phenotype_data.get_measures_info()
+        return self.phenotype_data.get_measures_info()
 
     def get_measure_description(self, measure_id: str) -> dict[str, Any]:
         if not self.study.has_pheno_data:
             raise ValueError(
                 f"Study {self.study.study_id} has no phenotype data.",
             )
-        if not self.study.phenotype_data.has_measure(measure_id):
+        if not self.phenotype_data.has_measure(measure_id):
             raise KeyError(
                 f"Study {self.study.study_id} phenotype data "
                 f"has no measure with id {measure_id}",
             )
-        return self.study.phenotype_data.get_measure_description(measure_id)
+        return self.phenotype_data.get_measure_description(measure_id)
 
     def search_measures(
         self,
@@ -123,7 +138,7 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
                 f"{self.study.study_id} phenotype data.",
             )
 
-        measures = self.study.phenotype_data.search_measures(
+        measures = self.phenotype_data.search_measures(
             instrument,
             search_term,
         )
@@ -144,10 +159,10 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
 
         if (instrument is not None
                 and instrument != ""
-                and instrument not in self.study.phenotype_data.instruments):
+                and instrument not in self.phenotype_data.instruments):
             raise KeyError
 
-        measures = self.study.phenotype_data.search_measures(
+        measures = self.phenotype_data.search_measures(
             instrument, search_term,
         )
         measure_ids = [
@@ -157,13 +172,10 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
         if len(measure_ids) > 1900:
             raise CountError
 
-        return self._csv_value_iterator(
-            self.study, measure_ids,
-        )
+        return self._csv_value_iterator(measure_ids)
 
     def _csv_value_iterator(
         self,
-        dataset: WDAEStudy,
         measure_ids: list[str],
     ) -> Generator[str, None, None]:
         """Create CSV content for people measures data."""
@@ -175,14 +187,16 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
         buffer.seek(0)
         buffer.truncate(0)
 
-        values_iterator = dataset.phenotype_data.get_people_measure_values(
+        values_iterator = self.phenotype_data.get_people_measure_values(
             measure_ids)
 
         for values_dict in values_iterator:
             output = [values_dict[header[0]]]
             all_null = True
             for col in header[1:]:
-                value = values_dict[col]
+                # A row of a phenotype group holds only the measures of
+                # the leaf that the person belongs to.
+                value = values_dict.get(col)
                 if value is not None:
                     all_null = False
                 output.append(value)
@@ -218,10 +232,10 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
 
         if (instrument is not None
                 and instrument != ""
-                and instrument not in self.study.phenotype_data.instruments):
+                and instrument not in self.phenotype_data.instruments):
             raise KeyError
 
-        return self.study.phenotype_data.count_measures(
+        return self.phenotype_data.count_measures(
             instrument, search_term,
         )
 
@@ -236,14 +250,14 @@ class PhenoBrowserHelper(BasePhenoBrowserHelper):
 
         if (instrument is not None
                 and instrument != ""
-                and instrument not in self.study.phenotype_data.instruments):
+                and instrument not in self.phenotype_data.instruments):
             raise KeyError
 
-        return self.study.phenotype_data.count_measures(
+        return self.phenotype_data.count_measures(
             instrument, search_term,
         )
 
     def get_image(self, image_path: str) -> tuple[bytes | None, str | None]:
         if not self.study.has_pheno_data:
             raise KeyError
-        return self.study.phenotype_data.get_image(image_path)
+        return self.phenotype_data.get_image(image_path)

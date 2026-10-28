@@ -15,11 +15,13 @@ from box import Box
 from gain.utils.fs_utils import find_directory_with_a_file
 from gain.utils.helpers import to_response_json
 from pheno_tool_api.adapter import PhenoToolAdapter, PhenoToolAdapterBase
+from rest_framework.exceptions import PermissionDenied
 from studies.query_transformer import make_query_transformer
 from studies.response_transformer import make_response_transformer
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy, WDAEStudyGroup
 
 from gpf.gpf_instance.gpf_instance import GPFInstance
+from gpf.pheno.pheno_data import PhenotypeData
 from gpf_instance.extension import GPFExtensionBase
 
 logger = logging.getLogger(__name__)
@@ -119,16 +121,33 @@ class WGPFInstance(GPFInstance):
             self.extensions[entry.name] = extension_class(self)
 
     def get_pheno_tool_adapter(
-        self, study: WDAEAbstractStudy,
+        self,
+        study: WDAEAbstractStudy,
+        phenotype_data: PhenotypeData | None = None,
     ) -> PhenoToolAdapterBase:
-        """Get pheno tool adapter using tool framework."""
+        """Get pheno tool adapter using tool framework.
+
+        ``phenotype_data`` is the phenotype data that the user may see.
+        When it is not the phenotype data of the study, the adapter reads
+        it in place of the phenotype data of the study. An adapter of an
+        extension cannot read it, so the method then raises
+        ``PermissionDenied``.
+        """
+        restricted = phenotype_data is not None and (
+            not study.has_pheno_data
+            or phenotype_data is not study.phenotype_data
+        )
         for ext_name, extension in self.extensions.items():
             pheno_tool_adapter = extension.get_tool(study, "pheno_tool")
             if pheno_tool_adapter is not None:
                 if not isinstance(pheno_tool_adapter, PhenoToolAdapterBase):
                     raise ValueError(
                         f"{ext_name} returned an invalid pheno tool adapter!")
+                if restricted:
+                    raise PermissionDenied
                 return pheno_tool_adapter
+        if restricted and isinstance(study, WDAEStudy):
+            return PhenoToolAdapter(study, phenotype_data)
         return cast(PhenoToolAdapter, PhenoToolAdapter.make_tool(study))
 
     @staticmethod
