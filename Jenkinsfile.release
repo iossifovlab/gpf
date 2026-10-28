@@ -369,6 +369,7 @@ pipeline {
             // docker-build cost, instead of letting the
             // `Fetch upstream artefacts` curl fail downstream.
             steps {
+                script {
                 sh '''
                     # FORCE_REPUBLISH bypasses the two tag-mutation
                     # guards below (wheel index + Anaconda.org). It is
@@ -452,7 +453,24 @@ pipeline {
                                  "GAIN_PIN_VERSION." >&2
                             exit 1
                         fi
+                    fi
+                '''
 
+                    // The same version must exist as a gain-core conda
+                    // package. scripts/gain_core_conda_probe.sh probes
+                    // bioconda and then the iossifovlab channel through
+                    // the public anaconda.org API (gpf#1071).
+                    //
+                    // This file comes from master, but the workspace is
+                    // the tag checkout. A tag cut before gpf#1071 has no
+                    // scripts/gain_core_conda_probe.sh, so the stage runs
+                    // the old `anaconda show` probe of the iossifovlab
+                    // channel for that tag.
+                    if (params.GAIN_PIN_VERSION) {
+                        if (fileExists('scripts/gain_core_conda_probe.sh')) {
+                            sh 'bash scripts/gain_core_conda_probe.sh'
+                        } else {
+                            sh '''
                         # The same version must exist as a gain-core
                         # conda package: the gpf-core / gpf-web
                         # recipes pin `gain-core ==GAIN_PIN_VERSION`
@@ -477,8 +495,10 @@ pipeline {
                         echo "Gain conda probe: gain-core" \
                              "${GAIN_PIN_VERSION} present on" \
                              "Anaconda.org/${ANACONDA_USER}"
-                    fi
-                '''
+                            '''
+                        }
+                    }
+                }
             }
         }
 
