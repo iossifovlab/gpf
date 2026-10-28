@@ -57,7 +57,6 @@ from utils.logger import (
     request_logging,
     request_logging_function_view,
 )
-from utils.password_requirements import is_password_valid
 from utils.streaming_response_util import convert
 
 from .forms import (
@@ -617,38 +616,6 @@ class WdaeLoginView(views.APIView):
             },
             status=response_status,
         )
-
-
-@request_logging_function_view(logger)
-@api_view(["POST"])
-@authentication_classes_decorator((
-    ReadOnlyDBAuthentication,
-))
-def change_password(request: Request) -> Response:
-    """Change the password for a user."""
-    data = request.data
-    if not isinstance(data, dict):
-        return Response(
-            {"error": "Invalid data format"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-    password = cast(str, data["password"])
-    verif_code = data["verifPath"]
-
-    if not is_password_valid(password):
-        logger.error(log_filter(
-            request,
-            "Password change failed: Invalid password",
-        ))
-        return Response(
-            {"error_msg": ("Invalid password entered. Password is either too"
-                           " short (<10 symbols) or too weak.")},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    user_model = get_user_model()
-    user_model.change_password(verif_code, password)  # pyright: ignore
-    return Response({}, status.HTTP_201_CREATED)
 
 
 @request_logging_function_view(logger)
