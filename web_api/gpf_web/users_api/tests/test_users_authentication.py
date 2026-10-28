@@ -7,7 +7,7 @@ from typing import cast
 from django.http import HttpResponse
 from django.test.client import Client
 from django.utils import timezone
-from oauth2_provider.models import AccessToken
+from oauth2_provider.models import AccessToken, Application
 from rest_framework import status
 
 from users_api.models import (
@@ -396,16 +396,22 @@ def test_authentication_logging(
 
 
 def test_login_page_template_data(
+    db: None,  # ruff: ignore[unused-function-argument]
     client: Client,
+    oauth_app: Application,
 ) -> None:
-    url = "/accounts/login/?next=authstuffredirect_uri=http://frontend/login"
+    oauth_app.redirect_uris = (
+        "http://localhost:4200/datasets http://frontend/login"
+    )
+    oauth_app.save()
+    url = "/accounts/login/?next=/o/authorize/?redirect_uri=http://frontend/login"
 
     response = client.get(
         url, content_type="application/json", format="json",
     )
 
     assert response.context["next"] == (
-        "authstuffredirect_uri=http://frontend/login"
+        "/o/authorize/?redirect_uri=http://frontend/login"
     )
     assert response.context["about"] == "http://frontend/about"
 
