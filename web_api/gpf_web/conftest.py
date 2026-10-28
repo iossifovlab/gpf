@@ -10,8 +10,9 @@ from typing import cast
 import pytest
 import pytest_mock
 from datasets_api.models import Dataset
+from datasets_api.permissions import add_group_perm_to_user
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractUser, Group
+from django.contrib.auth.models import AbstractUser, Group, User
 from django.test import Client
 from django.utils import timezone
 from gain.genomic_resources.repository import (
@@ -258,6 +259,28 @@ def user(
     new_user.save()
 
     return new_user
+
+
+@pytest.fixture
+def partial_grant(user: User) -> User:
+    """Grant the user one of the two child studies of t4c8_dataset."""
+    add_group_perm_to_user("t4c8_study_2", user)
+    return user
+
+
+@pytest.fixture
+def all_children_grant(user: User) -> User:
+    """Grant the user both child studies of t4c8_dataset."""
+    add_group_perm_to_user("t4c8_study_1", user)
+    add_group_perm_to_user("t4c8_study_2", user)
+    return user
+
+
+@pytest.fixture
+def full_grant(user: User) -> User:
+    """Grant the user t4c8_dataset itself."""
+    add_group_perm_to_user("t4c8_dataset", user)
+    return user
 
 
 @pytest.fixture

@@ -153,29 +153,37 @@ class CommonReportsHelper(BaseCommonReportsHelper):
         tags_query: dict[str, Any] | None,
     ) -> FamiliesData:
         """Collect and filter families by tags."""
-        if tags_query is None:
-            return study_families
+        return collect_families_by_tags(study_families, tags_query)
 
-        or_mode = tags_query.get("orMode")
-        if or_mode is None or not isinstance(or_mode, bool):
-            raise ValueError("Invalid mode or none specified")
-        include_tags = tags_query.get("includeTags")
-        if include_tags is None or not isinstance(include_tags, list):
-            raise ValueError("Invalid include or none specified")
-        include_tags = {FamilyTag.from_label(label) for label in include_tags}
-        exclude_tags = tags_query.get("excludeTags")
-        if exclude_tags is None or not isinstance(exclude_tags, list):
-            raise ValueError("Invalid exclude or none specified")
-        exclude_tags = {FamilyTag.from_label(label) for label in exclude_tags}
 
-        result = {
-            family_id: family
-            for family_id, family in study_families.items()
-            if check_family_tags_query(
-                family, or_mode=or_mode,
-                include_tags=include_tags,
-                exclude_tags=exclude_tags,
-            )
-        }
+def collect_families_by_tags(
+    study_families: FamiliesData,
+    tags_query: dict[str, Any] | None,
+) -> FamiliesData:
+    """Collect and filter families by tags."""
+    if tags_query is None:
+        return study_families
 
-        return FamiliesData.from_families(result)
+    or_mode = tags_query.get("orMode")
+    if or_mode is None or not isinstance(or_mode, bool):
+        raise ValueError("Invalid mode or none specified")
+    include_tags = tags_query.get("includeTags")
+    if include_tags is None or not isinstance(include_tags, list):
+        raise ValueError("Invalid include or none specified")
+    include_tags = {FamilyTag.from_label(label) for label in include_tags}
+    exclude_tags = tags_query.get("excludeTags")
+    if exclude_tags is None or not isinstance(exclude_tags, list):
+        raise ValueError("Invalid exclude or none specified")
+    exclude_tags = {FamilyTag.from_label(label) for label in exclude_tags}
+
+    result = {
+        family_id: family
+        for family_id, family in study_families.items()
+        if check_family_tags_query(
+            family, or_mode=or_mode,
+            include_tags=include_tags,
+            exclude_tags=exclude_tags,
+        )
+    }
+
+    return FamiliesData.from_families(result)

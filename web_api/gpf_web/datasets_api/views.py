@@ -20,6 +20,7 @@ from rest_framework.response import Response
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 from users_api.models import WdaeUser
 
+from datasets_api.partial_grants import get_granted_families
 from datasets_api.permissions import (
     IsDatasetAllowed,
     get_instance_timestamp_etag,
@@ -159,9 +160,8 @@ class DatasetView(QueryBaseView):
 class DatasetPedigreeView(QueryBaseView, DatasetAccessRightsView):
     """Provide pedigree data for a given dataset."""
 
-    @method_decorator(etag(get_instance_timestamp_etag))
-    def get(self, _request: Request, dataset_id: str, column: str) -> Response:
-        # pylint: disable=unused-argument
+    @method_decorator(etag(get_permissions_etag))
+    def get(self, request: Request, dataset_id: str, column: str) -> Response:
         """Return response for a pedigree get request for pedigree column."""
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
 
@@ -171,14 +171,17 @@ class DatasetPedigreeView(QueryBaseView, DatasetAccessRightsView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if column not in genotype_data.families.ped_df.columns:
+        families = get_granted_families(
+            self.gpf_instance, cast(User, request.user), genotype_data,
+        )
+        if column not in families.ped_df.columns:
             return Response(
                 {"error": f"No such column {column}"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
         values_domain = list(
-            map(str, genotype_data.families.ped_df[column].unique()),
+            map(str, families.ped_df[column].unique()),
         )
 
         return Response(
