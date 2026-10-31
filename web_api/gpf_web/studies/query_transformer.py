@@ -17,6 +17,7 @@ from gpf.person_sets import PSCQuery
 from gpf.person_sets.person_sets import (
     AttributeQueriesUnsupportedException,
 )
+from gpf.pheno.pheno_data import PhenotypeData
 from gpf.query_variants.attribute_queries import (
     update_attribute_query_with_compounds,
 )
@@ -282,13 +283,16 @@ class QueryTransformer(QueryTransformerProtocol):
     def _transform_filters_to_ids(
         self, filters: list[dict],
         study_wrapper: WDAEAbstractStudy,
+        phenotype_data: PhenotypeData | None = None,
     ) -> set[str]:
+        if phenotype_data is None:
+            phenotype_data = study_wrapper.phenotype_data
         result = []
         for filter_conf in filters:
             roles = filter_conf.get("role") if "role" in filter_conf else None
             if filter_conf["from"] == "phenodb":
                 ids = make_pheno_filter(
-                    filter_conf, study_wrapper.phenotype_data,
+                    filter_conf, phenotype_data,
                 ).apply(study_wrapper.families, roles)
             else:
                 ids = make_pedigree_filter(filter_conf).apply(
@@ -300,12 +304,15 @@ class QueryTransformer(QueryTransformerProtocol):
     def _transform_pheno_filters_to_ids(
         self, filters: list[dict],
         study_wrapper: WDAEAbstractStudy,
+        phenotype_data: PhenotypeData | None = None,
     ) -> set[str]:
+        if phenotype_data is None:
+            phenotype_data = study_wrapper.phenotype_data
         result = []
         for filter_conf in filters:
             roles = filter_conf.get("roles") if "roles" in filter_conf else None
             ids = make_pheno_filter_beta(
-                filter_conf, study_wrapper.phenotype_data,
+                filter_conf, phenotype_data,
             ).apply(study_wrapper.families, roles)
 
             result.append(ids)

@@ -969,7 +969,14 @@ class PhenotypeGroup(PhenotypeData):
         config: dict | None,
         children: list[PhenotypeData],
         cache_path: Path | None = None,
+        *,
+        add_to_parents: bool = True,
     ) -> None:
+        """Merge the instruments and the measures of the children.
+
+        When ``add_to_parents`` is true, the group adds its id to
+        ``parents`` of each child.
+        """
         super().__init__(pheno_id, config, cache_path=cache_path)
         self.children = children
         instruments, measures = self._merge_instruments(
@@ -978,8 +985,9 @@ class PhenotypeGroup(PhenotypeData):
         self._instruments.update(instruments)
 
         self._measures.update(measures)
-        for child in self.children:
-            child.parents.add(self.pheno_id)
+        if add_to_parents:
+            for child in self.children:
+                child.parents.add(self.pheno_id)
 
     @property
     def is_group(self) -> bool:
@@ -1181,3 +1189,74 @@ class PhenotypeGroup(PhenotypeData):
         families: FamiliesData,
     ) -> PersonSetCollection:
         raise NotImplementedError
+
+
+class RestrictedPhenotypeGroup(PhenotypeGroup):
+    """A phenotype group that holds only some leaves of a full group.
+
+    The restricted group keeps the ``pheno_id`` and the configuration of
+    the full group. It answers measure searches and counts from its own
+    leaves, and it never reads the browser DB of the full group, because
+    that DB lists the measures of every leaf of the full group.
+
+    The phenotype registry does not hold restricted groups.
+    """
+
+    def __init__(
+        self,
+        group: PhenotypeGroup,
+        leaves: list[PhenotypeStudy],
+    ) -> None:
+        # The full group, not the restricted one, is the parent of a leaf.
+        # The registry shares the leaves, so the restricted group does not
+        # change their parents.
+        super().__init__(
+            group.pheno_id, group.config, list(leaves),
+            add_to_parents=False,
+        )
+
+    @property
+    def browser(self) -> PhenoBrowser | None:
+        return None
+
+    def search_measures(
+        self,
+        instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,
+        sort_by: str | None = None,
+        order_by: str | None = None,
+    ) -> Generator[dict[str, Any], None, None]:
+        """Yield the measures of the leaves according to filters.
+
+        The leaves answer one by one, so the group cannot page or sort
+        across them. It raises ``NotImplementedError`` for ``page``,
+        ``sort_by`` and ``order_by``.
+        """
+        if page is not None or sort_by is not None or order_by is not None:
+            raise NotImplementedError(
+                "a restricted phenotype group cannot page or sort measures")
+        for leaf in self.get_leaves():
+            if instrument and instrument not in leaf.instruments:
+                continue
+            yield from leaf.search_measures(instrument, search_term)
+
+    def count_measures(
+        self,
+        instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,
+    ) -> int:
+        """Count the measures of the leaves according to filters.
+
+        The group cannot page across the leaves. It raises
+        ``NotImplementedError`` for ``page``.
+        """
+        if page is not None:
+            raise NotImplementedError(
+                "a restricted phenotype group cannot page measures")
+        return sum(
+            leaf.count_measures(instrument, search_term)
+            for leaf in self.get_leaves()
+            if not instrument or instrument in leaf.instruments
+        )

@@ -6,11 +6,13 @@ itself nor all of its child studies. Under a partial grant, a route
 serves only the data of the allowed child studies.
 """
 from collections.abc import Iterable
+from typing import cast
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework.exceptions import PermissionDenied
+from studies.study_wrapper import WDAEAbstractStudy
 
 from datasets_api.models import DatasetHierarchy
 from datasets_api.permissions import (
@@ -22,6 +24,12 @@ from datasets_api.permissions import (
 from gpf.pedigrees.families_data import FamiliesData
 from gpf.pedigrees.loader import FamiliesLoader
 from gpf.person_sets.person_sets import PersonSetCollection
+from gpf.pheno.pheno_data import (
+    PhenotypeData,
+    PhenotypeGroup,
+    PhenotypeStudy,
+    RestrictedPhenotypeGroup,
+)
 from gpf.studies.study import GenotypeData
 
 
@@ -201,3 +209,86 @@ def get_granted_person_set_collection(
         collections,
         _combine_families([study.families for study in studies]),
     )
+
+
+def _phenotype_leaves(pheno: PhenotypeData) -> list[PhenotypeStudy]:
+    if isinstance(pheno, PhenotypeGroup):
+        return pheno.get_leaves()
+    return [cast(PhenotypeStudy, pheno)]
+
+
+def _is_remote(gpf_instance: WGPFInstance, data_id: str) -> bool:
+    wrapper = gpf_instance.get_wdae_wrapper(data_id)
+    if wrapper is None:
+        return False
+    return bool(getattr(wrapper, "is_remote", False)) or (
+        wrapper.is_genotype and wrapper.genotype_data.is_remote
+    )
+
+
+def _allowed_pheno_ids(
+    gpf_instance: WGPFInstance, allowed: Iterable[str],
+) -> set[str]:
+    """Map the allowed child studies to the phenotype data they reach.
+
+    An allowed phenotype child reaches itself. An allowed genotype child
+    reaches the phenotype data that its own configuration names.
+    """
+    pheno_ids: set[str] = set()
+    for study_id in allowed:
+        if _is_remote(gpf_instance, study_id):
+            # The phenotype data of a remote child is not available here.
+            raise PermissionDenied
+        genotype_data = gpf_instance.get_genotype_data(study_id)
+        if genotype_data is not None:
+            pheno_id = genotype_data.config.get("phenotype_data")
+            if pheno_id:
+                pheno_ids.add(str(pheno_id))
+        elif gpf_instance.has_phenotype_data(study_id):
+            pheno_ids.add(study_id)
+    return pheno_ids
+
+
+def get_granted_phenotype_data(
+    gpf_instance: WGPFInstance,
+    user: User,
+    study: WDAEAbstractStudy,
+) -> PhenotypeData:
+    """Return the phenotype data of the study that the user may see.
+
+    Return the phenotype data of the study when the user has no partial
+    grant. Under a partial grant, return a new object that holds only
+    the phenotype leaves that the allowed child studies reach. Raise
+    ``PermissionDenied`` when no leaf remains or when a child is remote.
+    """
+    phenotype_data = study.phenotype_data
+    allowed = get_partial_grant_studies(
+        gpf_instance.instance_id, user, study.study_id,
+    )
+    if allowed is None:
+        return phenotype_data
+    if getattr(study, "is_remote", False):
+        raise PermissionDenied
+
+    allowed_leaf_ids: set[str] = set()
+    for pheno_id in _allowed_pheno_ids(gpf_instance, allowed):
+        if _is_remote(gpf_instance, pheno_id):
+            raise PermissionDenied
+        if not gpf_instance.has_phenotype_data(pheno_id):
+            continue
+        allowed_leaf_ids.update(
+            leaf.pheno_id for leaf in _phenotype_leaves(
+                gpf_instance.get_phenotype_data(pheno_id)))
+
+    all_leaves = _phenotype_leaves(phenotype_data)
+    leaves = [
+        leaf for leaf in all_leaves if leaf.pheno_id in allowed_leaf_ids
+    ]
+    if not leaves:
+        raise PermissionDenied
+    if len(leaves) == len(all_leaves):
+        return phenotype_data
+    if len(leaves) == 1:
+        return leaves[0]
+    assert isinstance(phenotype_data, PhenotypeGroup)
+    return RestrictedPhenotypeGroup(phenotype_data, leaves)

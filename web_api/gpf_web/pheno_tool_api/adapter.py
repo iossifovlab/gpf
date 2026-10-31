@@ -11,6 +11,7 @@ from studies.query_transformer import (
 )
 from studies.study_wrapper import WDAEAbstractStudy, WDAEStudy
 
+from gpf.pheno.pheno_data import PhenotypeData
 from gpf.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
 from gpf.variants.attributes import Sex
 
@@ -42,15 +43,26 @@ class PhenoToolAdapterBase(GPFTool):
 class PhenoToolAdapter(PhenoToolAdapterBase):
     """Adapter for PhenoTool class."""
 
-    def __init__(self, study: WDAEStudy) -> None:
+    def __init__(
+        self,
+        study: WDAEStudy,
+        phenotype_data: PhenotypeData | None = None,
+    ) -> None:
+        """Build the pheno tool of the study.
+
+        ``phenotype_data`` replaces the phenotype data of the study when
+        the user may see only a part of it.
+        """
         super().__init__()
         if not (study.has_genotype_data and study.has_pheno_data):
             raise ValueError(
                 f"Study {study.study_id} does not support pheno tool")
         self.study = study
-        self.pheno_tool = PhenoTool(study.phenotype_data)
-        self.helper = PhenoToolHelper(
-            study.genotype_data, study.phenotype_data)
+        if phenotype_data is None:
+            phenotype_data = study.phenotype_data
+        self.phenotype_data = phenotype_data
+        self.pheno_tool = PhenoTool(phenotype_data)
+        self.helper = PhenoToolHelper(study.genotype_data, phenotype_data)
 
     @staticmethod
     def make_tool(study: WDAEAbstractStudy) -> GPFTool | None:
@@ -78,6 +90,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
                 ._transform_filters_to_ids(
                     query_data["familyFilters"],
                     self.study,
+                    self.phenotype_data,
                 ),
             )
         if query_data.get("familyPhenoFilters") is not None:
@@ -86,6 +99,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
                 ._transform_pheno_filters_to_ids(
                     query_data["familyPhenoFilters"],
                     self.study,
+                    self.phenotype_data,
                 ),
             )
 
