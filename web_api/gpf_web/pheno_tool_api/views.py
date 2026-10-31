@@ -138,11 +138,8 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
         phenotype_data = get_granted_phenotype_data(
             self.gpf_instance, request.user, study_wrapper,
         )
-        if not phenotype_data.has_measure(str(data["measureId"])):
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if not all(
-            map(phenotype_data.has_measure, _pheno_filter_measures(data)),
-        ):
+        measure_ids = [str(data["measureId"]), *_pheno_filter_measures(data)]
+        if not all(map(phenotype_data.has_measure, measure_ids)):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         adapter = cast(
