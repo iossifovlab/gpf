@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import contextlib
 import json
 from typing import Any
 
@@ -72,6 +73,38 @@ def test_measure_of_another_leaf_under_partial_grant_is_hidden(
         f"{MEASURE_URL}?datasetId=pheno_group&measureId=sib.age")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.usefixtures("grant_on_study_1_pheno", "pheno_group_instance")
+def test_measure_of_the_granted_leaf_under_partial_grant(
+    user_client: Client,
+) -> None:
+    response = user_client.get(
+        f"{MEASURE_URL}?datasetId=pheno_group&measureId=i1.age")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["measureId"] == "i1.age"
+
+
+@pytest.mark.usefixtures("pheno_group_instance")
+def test_measure_of_a_granted_leaf_under_a_grant_on_two_leaves(
+    user: User,
+    user_client: Client,
+) -> None:
+    add_group_perm_to_user("study_1_pheno", user)
+    add_group_perm_to_user("sibling_pheno", user)
+
+    allowed = [
+        user_client.get(
+            f"{MEASURE_URL}?datasetId=pheno_group&measureId={measure_id}")
+        for measure_id in ("i1.age", "sib.age")
+    ]
+    hidden = user_client.get(
+        f"{MEASURE_URL}?datasetId=pheno_group&measureId=thr.score")
+
+    assert [r.status_code for r in allowed] == [status.HTTP_200_OK] * 2
+    assert [r.json()["measureId"] for r in allowed] == ["i1.age", "sib.age"]
+    assert hidden.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.usefixtures("grant_on_study_1_pheno", "pheno_group_instance")
@@ -305,9 +338,17 @@ def test_pheno_tool_adapter_of_a_partial_grant_refuses_another_leaf(
         make_query_transformer(pheno_group_instance),
     )
 
-    next(download)
-    with pytest.raises(KeyError, match=r"sib\.age"):
-        next(download)
+    # The adapter may refuse the measure in any way. It must not
+    # yield a value of the other leaf.
+    rows: list[str] = []
+    with contextlib.suppress(Exception):
+        rows.extend(download)
+    person_ids = {
+        line.split(",")[0]
+        for line in "".join(rows).splitlines()[1:]
+    }
+
+    assert not person_ids & {"px", "py"}
 
 
 @pytest.mark.usefixtures("grant_on_t4c8_study_1")

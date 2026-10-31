@@ -1227,13 +1227,19 @@ class RestrictedPhenotypeGroup(PhenotypeGroup):
         sort_by: str | None = None,
         order_by: str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
-        """Yield the measures of the leaves according to filters."""
+        """Yield the measures of the leaves according to filters.
+
+        The leaves answer one by one, so the group cannot page or sort
+        across them. It raises ``NotImplementedError`` for ``page``,
+        ``sort_by`` and ``order_by``.
+        """
+        if page is not None or sort_by is not None or order_by is not None:
+            raise NotImplementedError(
+                "a restricted phenotype group cannot page or sort measures")
         for leaf in self.get_leaves():
             if instrument and instrument not in leaf.instruments:
                 continue
-            yield from leaf.search_measures(
-                instrument, search_term, page, sort_by, order_by,
-            )
+            yield from leaf.search_measures(instrument, search_term)
 
     def count_measures(
         self,
@@ -1241,8 +1247,16 @@ class RestrictedPhenotypeGroup(PhenotypeGroup):
         search_term: str | None,
         page: int | None = None,
     ) -> int:
+        """Count the measures of the leaves according to filters.
+
+        The group cannot page across the leaves. It raises
+        ``NotImplementedError`` for ``page``.
+        """
+        if page is not None:
+            raise NotImplementedError(
+                "a restricted phenotype group cannot page measures")
         return sum(
-            leaf.count_measures(instrument, search_term, page)
+            leaf.count_measures(instrument, search_term)
             for leaf in self.get_leaves()
             if not instrument or instrument in leaf.instruments
         )
