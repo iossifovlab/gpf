@@ -155,9 +155,13 @@ def test_phenotype_data_of_a_remote_phenotype_child_is_403(
 
 @pytest.mark.usefixtures("grant_on_study_1_pheno")
 def test_registry_group_keeps_its_children_after_a_partial_grant_request(
+    user: User,
     user_client: Client,
     pheno_group_instance: WGPFInstance,
 ) -> None:
+    # A grant on two of the three leaves builds a restricted group.
+    add_group_perm_to_user("sibling_pheno", user)
+
     response = _people_values(user_client, "pheno_group", "i1.age")
 
     group = pheno_group_instance.get_phenotype_data("pheno_group")

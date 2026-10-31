@@ -99,6 +99,23 @@ class PhenoToolView(QueryBaseView):
         return Response(result)
 
 
+def _pheno_filter_measures(data: dict[str, Any]) -> list[str]:
+    """Return the measure ids that the phenotype filters of a query name."""
+    filters = [
+        *(data.get("personFilters") or []),
+        *(data.get("familyFilters") or []),
+    ]
+    measures = [
+        str(f["source"]) for f in filters if f.get("from") == "phenodb"
+    ]
+    beta_filters = [
+        *(data.get("personFiltersBeta") or []),
+        *(data.get("familyPhenoFilters") or []),
+    ]
+    measures.extend(str(f["source"]) for f in beta_filters)
+    return measures
+
+
 class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
     """Pheno tool download view."""
 
@@ -122,6 +139,10 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
             self.gpf_instance, request.user, study_wrapper,
         )
         if not phenotype_data.has_measure(str(data["measureId"])):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if not all(
+            map(phenotype_data.has_measure, _pheno_filter_measures(data)),
+        ):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         adapter = cast(

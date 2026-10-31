@@ -1,19 +1,25 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import csv
 import io
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from datetime import timedelta
-from typing import cast
+from typing import Any, cast
 
 import pytest
+import pytest_mock
 from datasets_api.permissions import add_group_perm_to_user
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.http import StreamingHttpResponse
 from django.test import Client, override_settings
 from django.utils import timezone
+from gpf_instance.extension import GPFTool
+from gpf_instance.gpf_instance import WGPFInstance
 from oauth2_provider.models import Application, get_access_token_model
 from rest_framework import status
+from studies.study_wrapper import WDAEAbstractStudy
+
+from pheno_browser_api.pheno_browser_helper import BasePhenoBrowserHelper
 
 MEASURES_COUNT_URL = "/api/v3/pheno_browser/measures_count"
 DOWNLOAD_URL = "/api/v3/pheno_browser/download"
@@ -182,3 +188,76 @@ def test_browser_routes_under_a_grant_on_the_parent(
     assert {"sib.age", "thr.score"} <= set(rows[0])
     assert {"px", "py"} <= {row["person_id"] for row in rows}
     assert head.status_code == status.HTTP_200_OK
+
+
+@override_settings(FEATURE_FLAGS={"pheno_browser_download": True})
+@pytest.mark.parametrize("method", ["get", "head"])
+@pytest.mark.usefixtures(
+    "grant_on_study_1_pheno", "pheno_group_instance", "reset_flags")
+def test_download_etag_differs_between_partial_and_full_grant(
+    user_client: Client,
+    group_granted_client: Client,
+    method: str,
+) -> None:
+    data = {"dataset_id": "pheno_group", "instrument": "i1"}
+
+    partial = getattr(user_client, method)(DOWNLOAD_URL, data)
+    full = getattr(group_granted_client, method)(DOWNLOAD_URL, data)
+
+    assert partial.status_code == status.HTTP_200_OK
+    assert full.status_code == status.HTTP_200_OK
+    assert partial["ETag"] != full["ETag"]
+
+
+class _StubPhenoBrowserHelper(BasePhenoBrowserHelper):
+    """A pheno browser helper of an extension that answers plain values."""
+
+    @staticmethod
+    def make_tool(study: WDAEAbstractStudy) -> GPFTool | None:
+        raise NotImplementedError
+
+    def get_instruments(self) -> list[str]:
+        raise NotImplementedError
+
+    def get_measures_info(self) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def get_measure_description(self, measure_id: str) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def search_measures(
+        self, data: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        raise NotImplementedError
+
+    def get_measure_ids(
+        self, data: dict[str, Any],
+    ) -> Generator[str, None, None]:
+        raise NotImplementedError
+
+    def measures_count_status(self, data: dict[str, Any]) -> str:
+        raise NotImplementedError
+
+    def get_count(self, data: dict[str, Any]) -> int:
+        del data
+        return 0
+
+    def get_image(self, image_path: str) -> tuple[bytes | None, str | None]:
+        raise NotImplementedError
+
+
+@pytest.mark.usefixtures("grant_on_study_1_pheno")
+def test_measures_count_with_an_extension_helper_under_partial_grant_is_403(
+    user_client: Client,
+    pheno_group_instance: WGPFInstance,
+    mocker: pytest_mock.MockFixture,
+) -> None:
+    # A real helper, not a Mock: DRF renders a Mock attribute by calling
+    # its ``tolist`` without end, so a regression would exhaust memory.
+    extension = mocker.Mock()
+    extension.get_tool.return_value = _StubPhenoBrowserHelper()
+    mocker.patch.dict(pheno_group_instance.extensions, {"fake": extension})
+
+    response = user_client.get(f"{MEASURES_COUNT_URL}?dataset_id=pheno_group")
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN

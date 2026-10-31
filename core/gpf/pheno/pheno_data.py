@@ -969,7 +969,14 @@ class PhenotypeGroup(PhenotypeData):
         config: dict | None,
         children: list[PhenotypeData],
         cache_path: Path | None = None,
+        *,
+        add_to_parents: bool = True,
     ) -> None:
+        """Merge the instruments and the measures of the children.
+
+        When ``add_to_parents`` is true, the group adds its id to
+        ``parents`` of each child.
+        """
         super().__init__(pheno_id, config, cache_path=cache_path)
         self.children = children
         instruments, measures = self._merge_instruments(
@@ -978,8 +985,9 @@ class PhenotypeGroup(PhenotypeData):
         self._instruments.update(instruments)
 
         self._measures.update(measures)
-        for child in self.children:
-            child.parents.add(self.pheno_id)
+        if add_to_parents:
+            for child in self.children:
+                child.parents.add(self.pheno_id)
 
     @property
     def is_group(self) -> bool:
@@ -1199,11 +1207,13 @@ class RestrictedPhenotypeGroup(PhenotypeGroup):
         group: PhenotypeGroup,
         leaves: list[PhenotypeStudy],
     ) -> None:
-        parents = [set(leaf.parents) for leaf in leaves]
-        super().__init__(group.pheno_id, group.config, list(leaves))
         # The full group, not the restricted one, is the parent of a leaf.
-        for leaf, leaf_parents in zip(leaves, parents, strict=True):
-            leaf.parents = leaf_parents
+        # The registry shares the leaves, so the restricted group does not
+        # change their parents.
+        super().__init__(
+            group.pheno_id, group.config, list(leaves),
+            add_to_parents=False,
+        )
 
     @property
     def browser(self) -> PhenoBrowser | None:

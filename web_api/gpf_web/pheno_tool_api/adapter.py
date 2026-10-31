@@ -90,6 +90,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
                 ._transform_filters_to_ids(
                     query_data["familyFilters"],
                     self.study,
+                    self.phenotype_data,
                 ),
             )
         if query_data.get("familyPhenoFilters") is not None:
@@ -98,6 +99,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
                 ._transform_pheno_filters_to_ids(
                     query_data["familyPhenoFilters"],
                     self.study,
+                    self.phenotype_data,
                 ),
             )
 

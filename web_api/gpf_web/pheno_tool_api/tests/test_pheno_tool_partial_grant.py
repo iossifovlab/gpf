@@ -1,13 +1,17 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-from typing import Any
+from typing import Any, cast
 
 import pytest
+import pytest_mock
+from datasets_api.partial_grants import get_granted_phenotype_data
 from datasets_api.permissions import add_group_perm_to_user
 from django.contrib.auth.models import User
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
+
+from pheno_tool_api.adapter import PhenoToolAdapter, PhenoToolAdapterBase
 
 PEOPLE_VALUES_URL = "/api/v3/pheno_tool/people_values"
 MEASURE_URL = "/api/v3/pheno_tool/measure"
@@ -184,3 +188,94 @@ def test_pheno_tool_routes_under_a_grant_on_the_parent(
     assert measure.status_code == status.HTTP_200_OK
     assert {m["measureId"] for m in measures.json()} >= OTHER_LEAF_MEASURES
     assert {"i1", "sib", "thr"} <= set(instruments.json())
+
+
+@pytest.mark.parametrize(
+    "filter_key", ["familyPhenoFilters", "personFiltersBeta"])
+@pytest.mark.usefixtures("grant_on_t4c8_study_1", "pheno_group_instance")
+def test_download_filter_on_a_measure_of_another_leaf_is_hidden(
+    user_client: Client,
+    filter_key: str,
+) -> None:
+    query = {
+        "datasetId": "pheno_parent",
+        "measureId": "i1.m1",
+        "normalizeBy": [],
+        "effectTypes": ["missense"],
+        filter_key: [{
+            "source": "sib.age",
+            "histogramType": "continuous",
+            "min": 0,
+            "max": 100,
+            "isFamily": True,
+        }],
+    }
+    response = user_client.post(
+        DOWNLOAD_URL,
+        json.dumps({"queryData": json.dumps(query)}),
+        content_type="application/json",
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.usefixtures("grant_on_t4c8_study_1", "pheno_group_instance")
+def test_download_phenodb_family_filter_on_another_leaf_is_hidden(
+    user_client: Client,
+) -> None:
+    query = {
+        "datasetId": "pheno_parent",
+        "measureId": "i1.m1",
+        "normalizeBy": [],
+        "effectTypes": ["missense"],
+        "familyFilters": [{
+            "from": "phenodb",
+            "source": "sib.age",
+            "sourceType": "continuous",
+            "selection": {"min": 0, "max": 100},
+            "role": "prb",
+        }],
+    }
+    response = user_client.post(
+        DOWNLOAD_URL,
+        json.dumps({"queryData": json.dumps(query)}),
+        content_type="application/json",
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.usefixtures("grant_on_t4c8_study_1")
+def test_pheno_tool_adapter_reads_the_granted_phenotype_data(
+    user: User,
+    pheno_group_instance: WGPFInstance,
+) -> None:
+    parent = pheno_group_instance.get_wdae_wrapper("pheno_parent")
+    assert parent is not None
+    granted = get_granted_phenotype_data(pheno_group_instance, user, parent)
+
+    adapter = cast(
+        PhenoToolAdapter,
+        pheno_group_instance.get_pheno_tool_adapter(parent, granted),
+    )
+
+    assert granted is not parent.phenotype_data
+    assert adapter.pheno_tool.phenotype_data is granted
+    assert adapter.helper.phenotype_data is granted
+
+
+@pytest.mark.usefixtures("grant_on_t4c8_study_1")
+def test_download_with_an_extension_adapter_under_partial_grant_is_403(
+    user_client: Client,
+    pheno_group_instance: WGPFInstance,
+    mocker: pytest_mock.MockFixture,
+) -> None:
+    extension = mocker.Mock()
+    adapter = mocker.Mock(spec=PhenoToolAdapterBase)
+    adapter.produce_download.return_value = iter(())
+    extension.get_tool.return_value = adapter
+    mocker.patch.dict(pheno_group_instance.extensions, {"fake": extension})
+
+    response = _download(user_client, "i1.m1")
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
