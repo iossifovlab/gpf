@@ -7,6 +7,7 @@ from typing import Any, cast
 
 import pytest
 import pytest_mock
+from datasets_api.partial_grants import get_partial_grant_studies
 from datasets_api.permissions import add_group_perm_to_user
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
@@ -191,6 +192,28 @@ def test_browser_routes_under_a_grant_on_the_parent(
 
 
 @override_settings(FEATURE_FLAGS={"pheno_browser_download": True})
+@pytest.mark.usefixtures(
+    "grant_on_every_phenotype_child", "reset_flags")
+def test_browser_routes_under_a_grant_on_every_phenotype_child(
+    user: User,
+    user_client: Client,
+    pheno_group_instance: WGPFInstance,
+) -> None:
+    assert get_partial_grant_studies(
+        pheno_group_instance.instance_id, user, "pheno_parent") is not None
+
+    count = user_client.get(f"{MEASURES_COUNT_URL}?dataset_id=pheno_parent")
+    rows = _download(user_client, {"dataset_id": "pheno_parent"})
+    head = user_client.head(
+        DOWNLOAD_URL, {"dataset_id": "pheno_parent", "instrument": "thr"})
+
+    assert count.json()["count"] == STUDY_1_PHENO_MEASURE_COUNT + 2
+    assert {"sib.age", "thr.score"} <= set(rows[0])
+    assert {"px", "py"} <= {row["person_id"] for row in rows}
+    assert head.status_code == status.HTTP_200_OK
+
+
+@override_settings(FEATURE_FLAGS={"pheno_browser_download": True})
 @pytest.mark.parametrize("method", ["get", "head"])
 @pytest.mark.usefixtures(
     "grant_on_study_1_pheno", "pheno_group_instance", "reset_flags")
@@ -261,3 +284,22 @@ def test_measures_count_with_an_extension_helper_under_partial_grant_is_403(
     response = user_client.get(f"{MEASURES_COUNT_URL}?dataset_id=pheno_group")
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.usefixtures("grant_on_every_phenotype_child")
+def test_measures_count_with_an_extension_helper_under_a_grant_on_every_leaf(
+    user: User,
+    user_client: Client,
+    pheno_group_instance: WGPFInstance,
+    mocker: pytest_mock.MockFixture,
+) -> None:
+    extension = mocker.Mock()
+    extension.get_tool.return_value = _StubPhenoBrowserHelper()
+    mocker.patch.dict(pheno_group_instance.extensions, {"fake": extension})
+    assert get_partial_grant_studies(
+        pheno_group_instance.instance_id, user, "pheno_parent") is not None
+
+    response = user_client.get(f"{MEASURES_COUNT_URL}?dataset_id=pheno_parent")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["count"] == 0

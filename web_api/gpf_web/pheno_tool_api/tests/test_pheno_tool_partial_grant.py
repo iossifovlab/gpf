@@ -4,7 +4,10 @@ from typing import Any
 
 import pytest
 import pytest_mock
-from datasets_api.partial_grants import get_granted_phenotype_data
+from datasets_api.partial_grants import (
+    get_granted_phenotype_data,
+    get_partial_grant_studies,
+)
 from datasets_api.permissions import add_group_perm_to_user
 from django.contrib.auth.models import User
 from django.test.client import Client
@@ -322,3 +325,24 @@ def test_download_with_an_extension_adapter_under_partial_grant_is_403(
     response = _download(user_client, "i1.m1")
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.usefixtures("grant_on_every_phenotype_child")
+def test_download_with_an_extension_adapter_under_a_grant_on_every_leaf(
+    user: User,
+    user_client: Client,
+    pheno_group_instance: WGPFInstance,
+    mocker: pytest_mock.MockFixture,
+) -> None:
+    extension = mocker.Mock()
+    adapter = mocker.Mock(spec=PhenoToolAdapterBase)
+    adapter.produce_download.return_value = iter([b"extension\n"])
+    extension.get_tool.return_value = adapter
+    mocker.patch.dict(pheno_group_instance.extensions, {"fake": extension})
+    assert get_partial_grant_studies(
+        pheno_group_instance.instance_id, user, "pheno_parent") is not None
+
+    response = _download(user_client, "i1.m1")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert b"".join(response.streaming_content) == b"extension\n"

@@ -15,7 +15,10 @@ from gpf_instance.gpf_instance import WGPFInstance
 from oauth2_provider.models import Application, get_access_token_model
 from rest_framework import status
 
-from datasets_api.partial_grants import get_granted_phenotype_data
+from datasets_api.partial_grants import (
+    get_granted_phenotype_data,
+    get_partial_grant_studies,
+)
 from datasets_api.permissions import add_group_perm_to_user
 from gpf.pheno.pheno_data import PhenotypeGroup
 
@@ -175,16 +178,15 @@ def test_registry_group_keeps_its_children_after_a_partial_grant_request(
     assert wrapper.phenotype_data is group
 
 
-@pytest.mark.usefixtures("grant_on_t4c8_study_1")
+@pytest.mark.usefixtures("grant_on_every_phenotype_child")
 def test_phenotype_data_under_a_grant_that_reaches_every_leaf_is_unchanged(
     user: User,
     pheno_group_instance: WGPFInstance,
 ) -> None:
-    # ``t4c8_study_2`` names no phenotype data, so the grant stays partial.
-    add_group_perm_to_user("sibling_study", user)
-    add_group_perm_to_user("third_study", user)
     parent = pheno_group_instance.get_wdae_wrapper("pheno_parent")
     assert parent is not None
+    assert get_partial_grant_studies(
+        pheno_group_instance.instance_id, user, "pheno_parent") is not None
 
     granted = get_granted_phenotype_data(pheno_group_instance, user, parent)
 

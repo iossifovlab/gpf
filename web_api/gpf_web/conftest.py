@@ -627,3 +627,14 @@ def grant_on_t4c8_study_1(user: User) -> User:
     """Grant the genotype child of ``pheno_parent`` that names study_1_pheno."""
     add_group_perm_to_user("t4c8_study_1", user)
     return user
+
+
+@pytest.fixture
+def grant_on_every_phenotype_child(user: User) -> User:
+    """Grant each genotype child of ``pheno_parent`` that names a leaf.
+
+    The grant stays partial, because ``t4c8_study_2`` stays ungranted.
+    """
+    for study_id in ("t4c8_study_1", "sibling_study", "third_study"):
+        add_group_perm_to_user(study_id, user)
+    return user
