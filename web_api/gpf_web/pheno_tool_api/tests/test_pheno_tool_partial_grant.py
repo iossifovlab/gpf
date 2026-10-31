@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-from typing import Any, cast
+from typing import Any
 
 import pytest
 import pytest_mock
@@ -10,8 +10,9 @@ from django.contrib.auth.models import User
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
+from studies.query_transformer import make_query_transformer
 
-from pheno_tool_api.adapter import PhenoToolAdapter, PhenoToolAdapterBase
+from pheno_tool_api.adapter import PhenoToolAdapterBase
 
 PEOPLE_VALUES_URL = "/api/v3/pheno_tool/people_values"
 MEASURE_URL = "/api/v3/pheno_tool/measure"
@@ -245,23 +246,65 @@ def test_download_phenodb_family_filter_on_another_leaf_is_hidden(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
+@pytest.mark.parametrize("filter_conf", [
+    {
+        "familyFilters": [{
+            "from": "phenodb",
+            "source": "i1.age",
+            "sourceType": "continuous",
+            "selection": {"min": 100, "max": 200},
+            "role": "prb",
+        }],
+    },
+    {
+        "familyPhenoFilters": [{
+            "source": "i1.age",
+            "histogramType": "continuous",
+            "min": 100,
+            "max": 200,
+            "isFamily": True,
+        }],
+    },
+])
+@pytest.mark.usefixtures("grant_on_t4c8_study_1", "pheno_group_instance")
+def test_download_filter_on_an_allowed_measure_under_partial_grant(
+    user_client: Client,
+    filter_conf: dict[str, Any],
+) -> None:
+    # The proband p1 has i1.age 166. The proband p3 has i1.age 68.
+    query = {
+        "datasetId": "pheno_parent",
+        "measureId": "i1.m1",
+        "normalizeBy": [],
+        "effectTypes": ["missense"],
+        **filter_conf,
+    }
+    response = user_client.post(
+        DOWNLOAD_URL,
+        json.dumps({"queryData": json.dumps(query)}),
+        content_type="application/json",
+    )
+
+    assert _download_person_ids(response) == {"p1"}
+
+
 @pytest.mark.usefixtures("grant_on_t4c8_study_1")
-def test_pheno_tool_adapter_reads_the_granted_phenotype_data(
+def test_pheno_tool_adapter_of_a_partial_grant_refuses_another_leaf(
     user: User,
     pheno_group_instance: WGPFInstance,
 ) -> None:
     parent = pheno_group_instance.get_wdae_wrapper("pheno_parent")
     assert parent is not None
     granted = get_granted_phenotype_data(pheno_group_instance, user, parent)
-
-    adapter = cast(
-        PhenoToolAdapter,
-        pheno_group_instance.get_pheno_tool_adapter(parent, granted),
+    adapter = pheno_group_instance.get_pheno_tool_adapter(parent, granted)
+    download = adapter.produce_download(
+        {"measureId": "sib.age", "normalizeBy": [], "effectTypes": []},
+        make_query_transformer(pheno_group_instance),
     )
 
-    assert granted is not parent.phenotype_data
-    assert adapter.pheno_tool.phenotype_data is granted
-    assert adapter.helper.phenotype_data is granted
+    next(download)
+    with pytest.raises(KeyError, match=r"sib\.age"):
+        next(download)
 
 
 @pytest.mark.usefixtures("grant_on_t4c8_study_1")

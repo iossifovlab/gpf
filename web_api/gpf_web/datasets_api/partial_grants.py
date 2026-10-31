@@ -280,12 +280,14 @@ def get_granted_phenotype_data(
             leaf.pheno_id for leaf in _phenotype_leaves(
                 gpf_instance.get_phenotype_data(pheno_id)))
 
+    all_leaves = _phenotype_leaves(phenotype_data)
     leaves = [
-        leaf for leaf in _phenotype_leaves(phenotype_data)
-        if leaf.pheno_id in allowed_leaf_ids
+        leaf for leaf in all_leaves if leaf.pheno_id in allowed_leaf_ids
     ]
     if not leaves:
         raise PermissionDenied
+    if len(leaves) == len(all_leaves):
+        return phenotype_data
     if len(leaves) == 1:
         return leaves[0]
     assert isinstance(phenotype_data, PhenotypeGroup)
