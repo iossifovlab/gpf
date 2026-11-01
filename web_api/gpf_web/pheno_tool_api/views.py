@@ -2,6 +2,7 @@ import logging
 import math
 from typing import Any, cast
 
+from datasets_api.partial_grants import get_granted_phenotype_data
 from datasets_api.permissions import (
     get_permissions_etag,
     user_has_permission,
@@ -98,6 +99,23 @@ class PhenoToolView(QueryBaseView):
         return Response(result)
 
 
+def _pheno_filter_measures(data: dict[str, Any]) -> list[str]:
+    """Return the measure ids that the phenotype filters of a query name."""
+    filters = [
+        *(data.get("personFilters") or []),
+        *(data.get("familyFilters") or []),
+    ]
+    measures = [
+        str(f["source"]) for f in filters if f.get("from") == "phenodb"
+    ]
+    beta_filters = [
+        *(data.get("personFiltersBeta") or []),
+        *(data.get("familyPhenoFilters") or []),
+    ]
+    measures.extend(str(f["source"]) for f in beta_filters)
+    return measures
+
+
 class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
     """Pheno tool download view."""
 
@@ -117,13 +135,19 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
         if study_wrapper.is_phenotype:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        phenotype_data = get_granted_phenotype_data(
+            self.gpf_instance, request.user, study_wrapper,
+        )
+        measure_ids = [str(data["measureId"]), *_pheno_filter_measures(data)]
+        if not all(map(phenotype_data.has_measure, measure_ids)):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
         adapter = cast(
             PhenoToolAdapter,
             self.gpf_instance.get_pheno_tool_adapter(
-                study_wrapper,
+                study_wrapper, phenotype_data,
             ),
         )
-        print("adapter finished")
 
         if not adapter:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -151,7 +175,12 @@ class PhenoToolPeopleValues(QueryBaseView, DatasetAccessRightsView):
         if not dataset or not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        phenotype_data = get_granted_phenotype_data(
+            self.gpf_instance, request.user, dataset,
+        )
         measure_ids = [str(m) for m in data["measureIds"]]
+        if not all(map(phenotype_data.has_measure, measure_ids)):
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         person_ids = data.get("personIds", None)
         if person_ids is not None:
@@ -164,7 +193,7 @@ class PhenoToolPeopleValues(QueryBaseView, DatasetAccessRightsView):
         roles = data.get("roles", None)
         if roles is not None:
             roles = [Role.from_name(str(r)) for r in roles]
-        df = dataset.phenotype_data.get_people_measure_values_df(
+        df = phenotype_data.get_people_measure_values_df(
             measure_ids,
             person_ids,
             family_ids,
@@ -196,10 +225,13 @@ class PhenoToolMeasure(QueryBaseView, DatasetAccessRightsView):
         if not measure_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        if not dataset.phenotype_data.has_measure(measure_id):
+        phenotype_data = get_granted_phenotype_data(
+            self.gpf_instance, request.user, dataset,
+        )
+        if not phenotype_data.has_measure(measure_id):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        result = dataset.phenotype_data.get_measure(
+        result = phenotype_data.get_measure(
             measure_id,
         )
 
@@ -220,16 +252,19 @@ class PhenoToolMeasures(QueryBaseView, DatasetAccessRightsView):
         if not dataset or not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        phenotype_data = get_granted_phenotype_data(
+            self.gpf_instance, request.user, dataset,
+        )
         instrument = params.get("instrument", None)
 
-        if instrument and instrument not in dataset.phenotype_data.instruments:
+        if instrument and instrument not in phenotype_data.instruments:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         measure_type = params.get("measureType", None)
         if measure_type is not None:
             measure_type = MeasureType.from_str(measure_type)
 
-        result = dataset.phenotype_data.get_measures(
+        result = phenotype_data.get_measures(
             instrument,
             measure_type,
         )
@@ -268,7 +303,9 @@ class PhenoToolInstruments(QueryBaseView, DatasetAccessRightsView):
         if not dataset or not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        instruments = dataset.phenotype_data.instruments
+        instruments = get_granted_phenotype_data(
+            self.gpf_instance, request.user, dataset,
+        ).instruments
 
         result = {}
 
