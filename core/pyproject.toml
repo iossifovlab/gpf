@@ -126,6 +126,7 @@ samocha_enrichment_background = "gpf.enrichment_tool.resource_implementations.en
 [dependency-groups]
 dev = [
     "coverage",
+    "import-linter>=2.15",
     "mypy==1.15.0",
     "packaging",
     "pandas-stubs",

@@ -9,6 +9,7 @@ dependencies:
   - python>=3.12
   # gpf-core (core/pyproject.toml [dependency-groups.dev])
   - coverage
+  - import-linter>=2.15
   - mypy==1.15.0
   - packaging
   - pandas-stubs
