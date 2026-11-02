@@ -42,3 +42,127 @@ forbidden_modules =
     user_queries
     users_api
     utils
+
+[importlinter:contract:gpf-subpackages-form-no-import-cycle]
+name = the direct subpackages of gpf form no new import cycle
+type = acyclic_siblings
+ancestors =
+    gpf
+depth = 0
+# The baseline of the import cycles of today. Each entry is one cycle
+# breaker that this command prints in core/:
+#   python -c 'import grimp; print(sorted(
+#       grimp.build_graph("gpf").nominate_cycle_breakers("gpf")))'
+# The groups follow the package pairs. The comment of a group gives the
+# import count of the group and one cycle that the group breaks.
+# A fix of a cycle deletes the imports and their entries: an entry with
+# no import makes the contract fail. Never add an entry.
+ignore_imports =
+    # gene_sets -> studies: 2 imports.
+    # Cycle: gene_sets -> studies -> query_variants -> utils -> gpf_instance -> gene_sets
+    gpf.gene_sets.denovo_gene_set_collection -> gpf.studies.study
+    gpf.gene_sets.denovo_gene_set_helpers -> gpf.studies.study
+    # genotype_storage -> query_variants: 3 imports.
+    # Cycle: genotype_storage -> query_variants -> inmemory_storage -> genotype_storage
+    gpf.genotype_storage.genotype_storage -> gpf.query_variants.base_query_variants
+    gpf.genotype_storage.genotype_storage -> gpf.query_variants.query_runners
+    gpf.genotype_storage.genotype_storage_registry -> gpf.query_variants.query_runners
+    # gpf_instance -> duckdb_storage: 1 import.
+    # Cycle: gpf_instance -> duckdb_storage -> import_tools -> gpf_instance
+    gpf.gpf_instance.adjustments.adjust_duckdb_storage -> gpf.duckdb_storage.duckdb_storage_config
+    # gpf_instance -> gene_profile: 2 imports.
+    # Cycle: gpf_instance -> gene_profile -> gpf_instance
+    gpf.gpf_instance.gpf_instance -> gpf.gene_profile.db
+    gpf.gpf_instance.gpf_instance -> gpf.gene_profile.statistic
+    # gpf_instance -> pheno: 3 imports.
+    # Cycle: gpf_instance -> pheno -> gpf_instance
+    gpf.gpf_instance.gpf_instance -> gpf.pheno.pheno_data
+    gpf.gpf_instance.gpf_instance -> gpf.pheno.registry
+    gpf.gpf_instance.gpf_instance -> gpf.pheno.storage
+    # gpf_instance -> studies: 2 imports.
+    # Cycle: gpf_instance -> studies -> query_variants -> utils -> gpf_instance
+    gpf.gpf_instance.gpf_instance -> gpf.studies.study
+    gpf.gpf_instance.gpf_instance -> gpf.studies.variants_db
+    # import_tools -> parquet: 1 import.
+    # Cycle: import_tools -> parquet -> schema2_storage -> import_tools
+    gpf.import_tools.import_tools -> gpf.parquet.partition_descriptor
+    # import_tools -> variants_loaders: 10 imports.
+    # Cycle: import_tools -> variants_loaders -> parquet -> schema2_storage -> import_tools
+    gpf.import_tools.import_config -> gpf.variants_loaders.cnv.loader
+    gpf.import_tools.import_config -> gpf.variants_loaders.dae.loader
+    gpf.import_tools.import_config -> gpf.variants_loaders.parquet.loader
+    gpf.import_tools.import_config -> gpf.variants_loaders.raw.loader
+    gpf.import_tools.import_config -> gpf.variants_loaders.vcf.loader
+    gpf.import_tools.import_tools -> gpf.variants_loaders.cnv.loader
+    gpf.import_tools.import_tools -> gpf.variants_loaders.dae.loader
+    gpf.import_tools.import_tools -> gpf.variants_loaders.parquet.loader
+    gpf.import_tools.import_tools -> gpf.variants_loaders.raw.loader
+    gpf.import_tools.import_tools -> gpf.variants_loaders.vcf.loader
+    # parquet -> variants_loaders: 2 imports.
+    # Cycle: parquet -> variants_loaders -> parquet
+    gpf.parquet.schema2.processing_pipeline -> gpf.variants_loaders.raw.loader
+    gpf.parquet.schema2.variants_parquet_writer -> gpf.variants_loaders.raw.loader
+    # parquet_storage -> duckdb_storage: 1 import.
+    # Cycle: parquet_storage -> duckdb_storage -> parquet -> utils -> tools -> parquet_storage
+    gpf.parquet_storage.storage -> gpf.duckdb_storage.duckdb_import_storage
+    # parquet_storage -> inmemory_storage: 1 import.
+    # Cycle: parquet_storage -> inmemory_storage -> query_variants -> utils -> tools -> parquet_storage
+    gpf.parquet_storage.storage -> gpf.inmemory_storage.raw_variants
+    # parquet_storage -> parquet: 1 import.
+    # Cycle: parquet_storage -> parquet -> utils -> tools -> parquet_storage
+    gpf.parquet_storage.storage -> gpf.parquet.schema2.loader
+    # parquet_storage -> query_variants: 1 import.
+    # Cycle: parquet_storage -> query_variants -> utils -> tools -> parquet_storage
+    gpf.parquet_storage.storage -> gpf.query_variants.base_query_variants
+    # pedigrees -> variants_loaders: 1 import.
+    # Cycle: pedigrees -> variants_loaders -> pedigrees
+    gpf.pedigrees.loader -> gpf.variants_loaders.raw.loader
+    # person_sets -> pedigrees: 2 imports.
+    # Cycle: person_sets -> pedigrees -> variants -> utils -> pheno -> person_sets
+    gpf.person_sets.person_sets -> gpf.pedigrees.families_data
+    gpf.person_sets.person_sets -> gpf.pedigrees.family
+    # query_variants -> inmemory_storage: 1 import.
+    # Cycle: query_variants -> inmemory_storage -> query_variants
+    gpf.query_variants.sql.schema2.base_variants -> gpf.inmemory_storage.raw_variants
+    # schema2_storage -> gpf_instance: 1 import.
+    # Cycle: schema2_storage -> gpf_instance -> duckdb_storage -> schema2_storage
+    gpf.schema2_storage.schema2_import_storage -> gpf.gpf_instance.gpf_instance
+    # schema2_storage -> import_tools: 1 import.
+    # Cycle: schema2_storage -> import_tools -> parquet -> schema2_storage
+    gpf.schema2_storage.schema2_import_storage -> gpf.import_tools.import_tools
+    # schema2_storage -> parquet: 8 imports.
+    # Cycle: schema2_storage -> parquet -> schema2_storage
+    gpf.schema2_storage.schema2_import_storage -> gpf.parquet.parquet_writer
+    gpf.schema2_storage.schema2_import_storage -> gpf.parquet.partition_descriptor
+    gpf.schema2_storage.schema2_import_storage -> gpf.parquet.schema2.annotate_schema2_parquet
+    gpf.schema2_storage.schema2_import_storage -> gpf.parquet.schema2.loader
+    gpf.schema2_storage.schema2_import_storage -> gpf.parquet.schema2.merge_parquet
+    gpf.schema2_storage.schema2_import_storage -> gpf.parquet.schema2.processing_pipeline
+    gpf.schema2_storage.schema2_import_storage -> gpf.parquet.schema2.serializers
+    gpf.schema2_storage.schema2_import_storage -> gpf.parquet.schema2.variants_parquet_writer
+    # studies -> query_variants: 2 imports.
+    # Cycle: studies -> query_variants -> utils -> studies
+    gpf.studies.study -> gpf.query_variants.base_query_variants
+    gpf.studies.study -> gpf.query_variants.sql.schema2.sql_query_builder
+    # utils -> gpf_instance: 1 import.
+    # Cycle: utils -> gpf_instance -> gene_profile -> utils
+    gpf.utils.testing -> gpf.gpf_instance.gpf_instance
+    # utils -> pheno: 1 import.
+    # Cycle: utils -> pheno -> utils
+    gpf.utils.testing -> gpf.pheno.pheno_import
+    # utils -> studies: 1 import.
+    # Cycle: utils -> studies -> query_variants -> utils
+    gpf.utils.testing -> gpf.studies.study
+    # utils -> testing: 2 imports.
+    # Cycle: utils -> testing -> configuration -> variants -> utils
+    gpf.utils.testing -> gpf.testing.import_helpers
+    gpf.utils.testing -> gpf.testing.setup_helpers
+    # utils -> tools: 1 import.
+    # Cycle: utils -> tools -> utils
+    gpf.utils.testing -> gpf.tools.generate_denovo_gene_sets
+    # variants -> pedigrees: 1 import.
+    # Cycle: variants -> pedigrees -> variants
+    gpf.variants.family_variant -> gpf.pedigrees.family
+    # variants -> utils: 1 import.
+    # Cycle: variants -> utils -> variants
+    gpf.variants.family_variant -> gpf.utils.variant_utils

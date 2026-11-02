@@ -401,10 +401,17 @@ gain  ←  gpf  ←  gpf_web
 ```
 
 The `gpf` package must **never** import from `gpf_web`.
-The import-linter contract in `core/.importlinter` enforces
-that rule, and `core/tests/small/test_import_contracts.py`
-runs the contract under pytest. The contract lists every
+The import-linter contract
+`gpf-core-imports-nothing-from-gpf-web` in
+`core/.importlinter` enforces that rule, and
+`core/tests/small/test_import_contracts.py` runs each
+contract of the file under pytest. The
+`gpf-core-imports-nothing-from-gpf-web` contract lists every
 top-level package of `web_api/gpf_web`: add a new app there.
+A second contract, of type `acyclic_siblings`, stops a new
+import cycle among the direct subpackages of `gpf`. Its
+`ignore_imports` list is the baseline of the cycles of
+today: a fix of a cycle deletes entries, and nobody adds one.
 `gain` must **never** import from `gpf` or `gpf_web` —
 that rule is enforced by pytestarch tests in the gain
 repository.
