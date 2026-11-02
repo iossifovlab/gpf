@@ -1,7 +1,10 @@
 """The import-linter contracts of ``core/.importlinter`` are kept.
 
-The contracts fence gpf core off from the gpf_web apps. The CI gates the
-build on the exit code of pytest only, so this test runs the contracts.
+The ``forbidden`` contract fences gpf core off from the gpf_web apps. The
+``acyclic_siblings`` contract stops a new import cycle among the direct
+subpackages of ``gpf``. Its ``ignore_imports`` list is the baseline of the
+cycles of today. The CI gates the build on the exit code of pytest only, so
+this test runs the contracts.
 """
 import logging
 import pathlib
