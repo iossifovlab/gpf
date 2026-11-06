@@ -808,7 +808,15 @@ pipeline {
                                                     --custom-formatter \\
                                                     stylelint-checkstyle-formatter \\
                                                     --output-file /reports/css-lint-report.xml \\
-                                                    "**/*.css"
+                                                    "**/*.css" \\
+                                                    2> /tmp/stylelint.log
+                                                # Stylelint also writes the whole
+                                                # report to stderr. Print stderr
+                                                # only when stylelint fails.
+                                                stylelint_exit=\$?
+                                                if [ \$stylelint_exit -ne 0 ]; then
+                                                    cat /tmp/stylelint.log >&2
+                                                fi
                                                 JEST_JUNIT_OUTPUT_DIR=/reports \\
                                                 JEST_JUNIT_OUTPUT_NAME=jest.xml \\
                                                     npx jest --ci \\
