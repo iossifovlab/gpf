@@ -61,7 +61,7 @@ requirements:
     - matplotlib-base >=3.8
     - networkx >=3.6
     - numpy >=2.2,<3
-    - pandas >=2.2,<3
+    - pandas >=3.1
     - psutil
     - pyarrow >=18
     - pybigwig >=0.3

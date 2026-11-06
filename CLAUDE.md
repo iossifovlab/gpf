@@ -662,7 +662,7 @@ repository.
 - **Python 3.12**, Django 5.2, DRF 3.16
 - **DuckDB 1.5** — primary embedded storage
 - **dask** — parallel computing
-- **pandas 2.2**, **numpy 2.2**, **pyarrow >=18** — data
+- **pandas 3.1**, **numpy 2.2**, **pyarrow >=18** — data
   analysis
 - **pysam 0.23** — SAM/BAM file handling
 - **pydantic 2.8** — data validation

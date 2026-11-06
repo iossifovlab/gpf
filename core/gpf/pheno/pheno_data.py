@@ -858,6 +858,13 @@ class PhenotypeStudy(PhenotypeData):
 
     def _load_instruments(self) -> dict[str, Instrument]:
         df = self.db.get_measures_df()
+        # pandas 3 stores a missing string as NaN; Measure expects None.
+        for col in df.columns:
+            if pd.api.types.is_string_dtype(df[col]):
+                df[col] = pd.Series(
+                    [None if pd.isna(v) else v for v in df[col]],
+                    index=df.index, dtype=object,
+                )
 
         instruments = {}
         instrument_names = list(df.instrument_name.unique())

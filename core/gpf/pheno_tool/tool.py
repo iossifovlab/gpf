@@ -268,7 +268,12 @@ class PhenoTool:
         merged_df = pheno_df.merge(
             persons_variants, how="left", on=["person_id"],
         )
-        return merged_df.fillna(0)
+        merged_df = merged_df.fillna(0)
+        # An empty Counter gives an object column; pandas 3 no longer
+        # downcasts it in fillna.
+        merged_df["variant_count"] = \
+            merged_df["variant_count"].astype(np.float64)
+        return merged_df
 
     @staticmethod
     def _normalize_df(
