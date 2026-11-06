@@ -28,7 +28,6 @@ dependencies = [
     "gain-core",
     "gpf-core",
     "gunicorn>=22",
-    "importlib-metadata>=8.6",
     "requests>=2.32",
     "requests-oauthlib>=2",
 ]

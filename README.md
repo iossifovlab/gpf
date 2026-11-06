@@ -26,7 +26,7 @@ effect annotation, task graph, gene scores/sets) lives in
 its own repository at
 <https://github.com/iossifovlab/gain>.
 
-Primary stack: Python 3.12, Django 5.2, dask, pandas,
+Primary stack: Python 3.12, Django 5.2, pandas,
 pyarrow, duckdb, pysam, pytest, mypy, ruff.
 
 Release notes live in `docs/changes.rst`.

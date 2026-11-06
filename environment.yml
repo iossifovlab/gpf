@@ -10,47 +10,34 @@ channels:
 dependencies:
   - python>=3.12
   # gpf-core (core/pyproject.toml [project.dependencies])
-  - apsw>=3.52
   - cerberus>=1.3
-  - dask-core>=2026.1
-  - dask-jobqueue>=0.9
   - deprecation>=2.1
-  - distributed>=2026.1
-  - docker-py>=7.1
-  - filelock>=3.19
   - fsspec>=2026.2
-  - intervaltree
   - jinja2>=3.1
   - lark>=1.2
-  - markdown2>=2.4
   - matplotlib-base>=3.8
   - networkx>=3.6
   - numpy>=2.2,<3
   - pandas>=3.1
-  - psutil
   - pyarrow>=18
-  - pybigwig>=0.3
   - pydantic>=2.8,<3
-  - pyliftover>=0.4
   - pysam>=0.23
   - python-box>=7.1
   - python-duckdb>=1.5,<2
   - pyyaml>=6
-  - requests>=2.32
   - s3fs>=2026.2
   - scikit-learn>=1.5
   - scipy>=1.15
   - seaborn>=0.13
   - sqlglot>=28,<29
   - toml>=0.10
-  - toolz>=0.12
   # gpf-web (web_api/pyproject.toml [project.dependencies])
   - django>=5.2,<5.3
   - django-cors-headers>=4.7
   - django-oauth-toolkit>=3
   - djangorestframework>=3.16
   - gunicorn>=22
-  - importlib-metadata>=8.6
+  - requests>=2.32
   - requests-oauthlib>=2
   # gpf-federation (federation/pyproject.toml [project.dependencies])
   - ijson>=3.2
