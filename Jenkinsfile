@@ -803,12 +803,12 @@ pipeline {
                                                 mkdir -p /reports/coverage
                                                 npx eslint "**/*.{html,ts}" \\
                                                     --format checkstyle \\
-                                                    > /reports/ts-lint-report.xml
+                                                    --output-file /reports/ts-lint-report.xml
                                                 npx stylelint \\
                                                     --custom-formatter \\
                                                     stylelint-checkstyle-formatter \\
-                                                    "**/*.css" \\
-                                                    > /reports/css-lint-report.xml
+                                                    --output-file /reports/css-lint-report.xml \\
+                                                    "**/*.css"
                                                 JEST_JUNIT_OUTPUT_DIR=/reports \\
                                                 JEST_JUNIT_OUTPUT_NAME=jest.xml \\
                                                     npx jest --ci \\
@@ -829,12 +829,27 @@ pipeline {
                                                     /reports/coverage.xml \\
                                                     2>/dev/null || true
                                                 chmod -R a+rw /reports
-                                                # Propagate jest's exit code so test
-                                                # failures fail the build (mirrors the
-                                                # python projects' pytest gating).
-                                                # eslint / stylelint failures don't
-                                                # gate; they surface through their
-                                                # report XMLs only.
+                                                # A missing or empty lint report
+                                                # fails the stage, for example when
+                                                # a formatter is not installed.
+                                                # Lint findings do not fail the
+                                                # stage: they go to the reports.
+                                                # Otherwise the script exits with
+                                                # the jest exit code, so a jest
+                                                # failure fails the stage.
+                                                lint_exit=0
+                                                for report in \\
+                                                    /reports/ts-lint-report.xml \\
+                                                    /reports/css-lint-report.xml
+                                                do
+                                                    if [ ! -s "\$report" ]; then
+                                                        echo "missing or empty lint report: \$report" >&2
+                                                        lint_exit=1
+                                                    fi
+                                                done
+                                                if [ \$lint_exit -ne 0 ]; then
+                                                    exit \$lint_exit
+                                                fi
                                                 exit \$jest_exit
                                             '
                                     """
