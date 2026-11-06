@@ -40,18 +40,13 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 CHANNELS = (
     "conda-forge",
-    # pybigwig, pyliftover and pysam are packaged only on bioconda.
+    # pysam is packaged only on bioconda.
     "bioconda",
 )
 
 #: Canonical PyPI name -> conda package name, for the packages whose
 #: conda name differs. Every other package keeps its canonical PyPI name.
 CONDA_NAMES: Mapping[str, str] = MappingProxyType({
-    # Plain `dask` on conda-forge is a metapackage that also pulls in
-    # bokeh, pyarrow, lz4 and cytoolz; bokeh registers its own TRACE
-    # level name on import (gain#1569). dask-core is PyPI's `dask`.
-    "dask": "dask-core",
-    "docker": "docker-py",
     "duckdb": "python-duckdb",
     "matplotlib": "matplotlib-base",
 })

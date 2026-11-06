@@ -36,17 +36,8 @@ requirements:
   # gain-core are compared by name only; every other row exactly.
   run:
     - python >=3.12
-    - apsw >=3.52
     - cerberus >=1.3
-    # dask-core, not the `dask` metapackage: that one also pulls in
-    # bokeh, which registers its own TRACE log level on import
-    # (gain#1569). gpf uses no dask dashboard.
-    - dask-core >=2026.1
-    - dask-jobqueue >=0.9
     - deprecation >=2.1
-    - distributed >=2026.1
-    - docker-py >=7.1
-    - filelock >=3.19
     - fsspec >=2026.2
     # Pinned to the gain release the gpf release was cut against when
     # gpf-release passes GAIN_CORE_SPEC (e.g. "==2026.9.2", derived from
@@ -54,32 +45,25 @@ requirements:
     # renders as a bare `gain-core`. NB: `env.get(...) | default(...)`
     # raises on a missing variable; only the `default=` kwarg form works.
     - gain-core ${{ env.get("GAIN_CORE_SPEC", default="") }}
-    - intervaltree
     - jinja2 >=3.1
     - lark >=1.2
-    - markdown2 >=2.4
     - matplotlib-base >=3.8
     - networkx >=3.6
     - numpy >=2.2,<3
     - pandas >=3.1
-    - psutil
     - pyarrow >=18
-    - pybigwig >=0.3
     - pydantic >=2.8,<3
-    - pyliftover >=0.4
     - pysam >=0.23
     - python-box >=7.1
     # python-duckdb is the conda-forge name of PyPI's `duckdb`.
     - python-duckdb >=1.5,<2
     - pyyaml >=6
-    - requests >=2.32
     - s3fs >=2026.2
     - scikit-learn >=1.5
     - scipy >=1.15
     - seaborn >=0.13
     - sqlglot >=28,<29
     - toml >=0.10
-    - toolz >=0.12
 
 about:
   homepage: https://github.com/iossifovlab/gpf
