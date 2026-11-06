@@ -1,3 +1,4 @@
+import io
 import logging
 import os
 from collections import OrderedDict
@@ -184,7 +185,8 @@ class RemotePhenotypeData(PhenotypeData):
             measure_ids=measure_ids,
             roles=roles_names,
         )
-        return pd.read_json(measure_values, orient="split")
+        # pandas 3 reads a str argument as a path, not as JSON text.
+        return pd.read_json(io.StringIO(measure_values), orient="split")
 
     def get_person_roles(self) -> list[str]:
         return cast(list[str], self.rest_client.get_pheno_roles(
