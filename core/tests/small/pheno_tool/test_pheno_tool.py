@@ -205,6 +205,27 @@ def test_join_pheno_df_with_variants() -> None:
     assert pd.DataFrame.equals(joined, expected)
 
 
+def test_join_pheno_df_with_variants_empty_counter_gives_int_zeros() -> None:
+    # The pheno tool download writes this column, and an empty effect
+    # type must read "0", not "0.0".
+    pheno_df = pd.DataFrame(
+        [
+            {"person_id": "p1", "measure_value": 10.5},
+            {"person_id": "p2", "measure_value": 20.5},
+        ],
+        columns=["person_id", "measure_value"],
+    )
+    joined = PhenoTool.join_pheno_df_with_variants(pheno_df, Counter())
+
+    assert joined["variant_count"].dtype == np.int64
+    assert joined["variant_count"].tolist() == [0, 0]
+    assert joined.to_csv(index=False).splitlines() == [
+        "person_id,measure_value,variant_count",
+        "p1,10.5,0",
+        "p2,20.5,0",
+    ]
+
+
 def test_join_pheno_df_with_variants_non_counter_variants() -> None:
     with pytest.raises(AssertionError):
         PhenoTool.join_pheno_df_with_variants(

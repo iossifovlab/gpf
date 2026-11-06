@@ -269,10 +269,10 @@ class PhenoTool:
             persons_variants, how="left", on=["person_id"],
         )
         merged_df = merged_df.fillna(0)
-        # An empty Counter gives an object column; pandas 3 no longer
-        # downcasts it in fillna.
+        # An empty Counter gives an object column. pandas 2 downcast it to
+        # int64 in fillna, and pandas 3 does not, so infer the type here.
         merged_df["variant_count"] = \
-            merged_df["variant_count"].astype(np.float64)
+            merged_df["variant_count"].infer_objects()
         return merged_df
 
     @staticmethod
