@@ -153,25 +153,24 @@ def _load_annotation_file(
     sep: str = "\t",
 ) -> pd.DataFrame:
     assert os.path.exists(annotation_filename)
-    with open(annotation_filename, "r", encoding="utf8") as infile:
-        annot_df = pd.read_csv(
-            infile,
-            sep=sep,
-            index_col=False,
-            dtype={
-                "chrom": str,
-                "position": np.int32,
-            },
-            converters={
-                "cshl_variant": _convert_string,
-                "effects": _convert_string,
-                "effect_gene_genes": _convert_array_of_strings,
-                "effect_gene_types": _convert_array_of_strings,
-                "effect_details_transcript_ids": _convert_array_of_strings,
-                "effect_details_details": _convert_array_of_strings,
-            },
-            encoding="utf-8",
-        ).replace({np.nan: None})
+    annot_df = pd.read_csv(
+        annotation_filename,
+        sep=sep,
+        index_col=False,
+        dtype={
+            "chrom": str,
+            "position": np.int32,
+        },
+        converters={
+            "cshl_variant": _convert_string,
+            "effects": _convert_string,
+            "effect_gene_genes": _convert_array_of_strings,
+            "effect_gene_types": _convert_array_of_strings,
+            "effect_details_transcript_ids": _convert_array_of_strings,
+            "effect_details_details": _convert_array_of_strings,
+        },
+        encoding="utf-8",
+    ).replace({np.nan: None})
     special_columns = set(annot_df.columns) & {
         "alternative", "effect_type",
     }

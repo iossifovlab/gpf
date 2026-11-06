@@ -655,9 +655,8 @@ def test_draw_violinplot(
 ) -> None:
 
     df = fake_phenotype_data.get_people_measure_values_df(["i1.m5", "i1.m6"])
-    for i in range(len(df)):
-        df.loc[i, "i1.m5"] = i
-        df.loc[i, "i1.m6"] = i * 2
+    df["i1.m5"] = range(len(df))
+    df["i1.m6"] = range(0, 2 * len(df), 2)
 
     violinplot(
         data=df,
@@ -682,9 +681,8 @@ def test_draw_stripplot(
 ) -> None:
 
     df = fake_phenotype_data.get_people_measure_values_df(["i1.m5", "i1.m6"])
-    for i in range(len(df)):
-        df.loc[i, "i1.m5"] = i
-        df.loc[i, "i1.m6"] = i * 2
+    df["i1.m5"] = range(len(df))
+    df["i1.m6"] = range(0, 2 * len(df), 2)
 
     stripplot(
         data=df,
