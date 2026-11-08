@@ -48,11 +48,10 @@ gpf-rest-client = { workspace = true }
 # follow README's "Editable gain for local development" section.
 
 [tool.pytest.ini_options]
-# Scope: this root pyproject.toml is the configfile of every pytest run
-# whose test files have no pytest.ini of their own: docs_e2e,
-# web_api/gpf_web_tests, rest_client, impala_storage and gcp_storage.
-# The suites core, federation, impala2_storage and web_api/gpf_web carry
-# their own pytest.ini and resolve their own rootdir, so they are
+# Scope: this root pyproject.toml is the configfile only for pytest runs
+# rooted at the repo root — in practice just the docs_e2e suite
+# (`pytest docs_e2e/`). The package suites (core/, web_api/, federation/)
+# carry their own pytest.ini and resolve their own rootdir, so they are
 # unaffected by these options.
 #
 # A per-test wall under the docs-e2e Jenkins build's 1 h timeout: the
@@ -65,10 +64,6 @@ gpf-rest-client = { workspace = true }
 # would merely dump stacks while the subprocess ran on to its own timeout.
 timeout = 2400
 timeout_method = "signal"
-
-# Keep only the tmp_path dirs of failed tests: the kept dirs of passing
-# runs exhausted the inodes of the tmpfs /tmp on pooh (seqpipe/infra#435).
-tmp_path_retention_policy = "failed"
 
 [dependency-groups]
 # Sphinx toolchain for `docs/build_docs.sh`. Members mirror the
