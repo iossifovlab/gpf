@@ -1,6 +1,7 @@
 # pylint: disable=redefined-outer-name,C0114,C0116
 import logging
 import pathlib
+from collections.abc import Generator
 
 import pyarrow.parquet as pq
 import pytest
@@ -56,9 +57,12 @@ def _build_two_family(
 
 
 @pytest.fixture
-def two_family_gpf(tmp_path: pathlib.Path) -> GPFInstance:
+def two_family_gpf(
+    tmp_path: pathlib.Path,
+) -> Generator[GPFInstance, None, None]:
     gpf, _ = _build_two_family(tmp_path)
-    return gpf
+    yield gpf
+    gpf.shutdown()
 
 
 def _storage_base(gpf: GPFInstance) -> pathlib.Path:
@@ -134,32 +138,37 @@ def test_genotype_query_after_withdrawal_is_inaccessible(
     # instance (which re-reads the trimmed pedigree) returns only f2's
     # variants and does NOT raise, even though f1's rows remain on disk.
     gpf, storage_config = _build_two_family(tmp_path)
-
-    baseline = list(gpf.get_genotype_data("two_fam_study").query_variants())
-    assert {v.family_id for v in baseline} == {"f1", "f2"}
-
-    main(["two_fam_study", "f1"], gpf_instance=gpf)
-
-    gpf2 = GPFInstance.build(
-        str(tmp_path / "gpf" / "gpf_instance" / "gpf_instance.yaml"))
     try:
-        gpf2.genotype_storages.register_default_storage(
-            get_genotype_storage_factory("duckdb_parquet")(storage_config))
-        study2 = gpf2.get_genotype_data("two_fam_study")
-        assert set(study2.families.keys()) == {"f2"}
+        baseline = list(
+            gpf.get_genotype_data("two_fam_study").query_variants())
+        assert {v.family_id for v in baseline} == {"f1", "f2"}
 
-        with caplog.at_level(logging.WARNING):
-            variants = list(study2.query_variants())
+        main(["two_fam_study", "f1"], gpf_instance=gpf)
 
-        assert {v.family_id for v in variants} == {"f2"}
-        # f1's variant rows on disk were skipped, with a single warning.
-        f1_warnings = [
-            r for r in caplog.records
-            if r.levelno == logging.WARNING and "'f1'" in r.getMessage()
-        ]
-        assert len(f1_warnings) == 1, "expected exactly one warn-once for f1"
+        gpf2 = GPFInstance.build(
+            str(tmp_path / "gpf" / "gpf_instance" / "gpf_instance.yaml"))
+        try:
+            gpf2.genotype_storages.register_default_storage(
+                get_genotype_storage_factory("duckdb_parquet")(
+                    storage_config))
+            study2 = gpf2.get_genotype_data("two_fam_study")
+            assert set(study2.families.keys()) == {"f2"}
+
+            with caplog.at_level(logging.WARNING):
+                variants = list(study2.query_variants())
+
+            assert {v.family_id for v in variants} == {"f2"}
+            # f1's variant rows on disk were skipped, with a single warning.
+            f1_warnings = [
+                r for r in caplog.records
+                if r.levelno == logging.WARNING and "'f1'" in r.getMessage()
+            ]
+            assert len(f1_warnings) == 1, (
+                "expected exactly one warn-once for f1")
+        finally:
+            gpf2.shutdown()
     finally:
-        gpf2.shutdown()
+        gpf.shutdown()
 
 
 def test_genotype_resolves_pedigree_from_config_not_hardcoded(

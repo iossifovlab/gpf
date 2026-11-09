@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
+from collections.abc import Generator
 from pathlib import Path
 from typing import cast
 
@@ -106,11 +107,12 @@ def duckdb_storage_fixture(
 def foobar_gpf_fixture(
     tmp_path_factory: pytest.TempPathFactory,
     duckdb_storage_fixture: DuckDbLegacyStorage,
-) -> tuple[Path, GPFInstance]:
+) -> Generator[tuple[Path, GPFInstance], None, None]:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{duckdb_storage_fixture.storage_id}")
     gpf_instance = foobar_gpf(root_path, duckdb_storage_fixture)
-    return root_path, gpf_instance
+    yield root_path, gpf_instance
+    gpf_instance.shutdown()
 
 
 @pytest.fixture(scope="module")
