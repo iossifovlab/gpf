@@ -56,24 +56,26 @@ def test_read_variants_dae_style(
 ) -> None:
 
     gpf = alla_gpf(tmp_path)
+    try:
+        loader = DenovoLoader(
+            denovo_families, str(denovo_dae_style),
+            genome=gpf.reference_genome,
+            params={
+                "denovo_location": "location",
+                "denovo_variant": "variant",
+                "denovo_family_id": "familyId",
+                "denovo_best_state": "bestState",
+            })
+        res_df = loader.flexible_denovo_load(
+            str(denovo_dae_style),
+            gpf.reference_genome,
+            families=denovo_families,
+            denovo_location="location",
+            denovo_variant="variant",
+            denovo_family_id="familyId",
+            denovo_best_state="bestState",
+        )
 
-    loader = DenovoLoader(
-        denovo_families, str(denovo_dae_style),
-        genome=gpf.reference_genome,
-        params={
-            "denovo_location": "location",
-            "denovo_variant": "variant",
-            "denovo_family_id": "familyId",
-            "denovo_best_state": "bestState",
-        })
-    res_df = loader.flexible_denovo_load(
-        str(denovo_dae_style),
-        gpf.reference_genome,
-        families=denovo_families,
-        denovo_location="location",
-        denovo_variant="variant",
-        denovo_family_id="familyId",
-        denovo_best_state="bestState",
-    )
-
-    assert len(res_df) == 4
+        assert len(res_df) == 4
+    finally:
+        gpf.shutdown()

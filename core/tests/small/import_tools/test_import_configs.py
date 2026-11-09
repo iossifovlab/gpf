@@ -2,6 +2,7 @@
 
 import os
 import pathlib
+from collections.abc import Generator
 from glob import glob
 from typing import Any
 
@@ -17,9 +18,13 @@ from gpf.testing.alla_import import alla_gpf
 
 
 @pytest.fixture
-def gpf_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
+def gpf_instance(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp(__name__)
-    return alla_gpf(root_path)
+    instance = alla_gpf(root_path)
+    yield instance
+    instance.shutdown()
 
 
 @pytest.mark.parametrize("config_dir", ["denovo_import", "vcf_import",

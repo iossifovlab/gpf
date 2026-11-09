@@ -141,7 +141,7 @@ def grr() -> GenomicResourceRepo:
 def t4c8_fixture(
     tmp_path: pathlib.Path,
     grr: GenomicResourceRepo,
-) -> GPFInstance:
+) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path
 
     t4c8_genes(root_path / "grr")
@@ -184,11 +184,13 @@ def t4c8_fixture(
     grr = GenomicResourceGroupRepo(
         [grr, local_grr], "enrichment_testing_repo",
     )
-    return setup_gpf_instance(
+    instance = setup_gpf_instance(
         root_path / "gpf_instance",
         reference_genome_id="t4c8_genome",
         gene_models_id="t4c8_genes",
         grr=grr)
+    yield instance
+    instance.shutdown()
 
 
 @pytest.fixture(scope="session")

@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+from collections.abc import Generator
 
 import pytest
 import yaml
@@ -19,10 +20,14 @@ from studies.study_wrapper import WDAEStudy
 
 
 @pytest.fixture
-def gpf_fixture(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
+def gpf_fixture(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp(
         "genotype_browser_columns_config")
-    return alla_gpf(root_path)
+    instance = alla_gpf(root_path)
+    yield instance
+    instance.shutdown()
 
 
 @pytest.fixture

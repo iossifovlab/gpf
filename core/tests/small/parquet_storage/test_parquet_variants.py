@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from collections.abc import Generator
 
 import pytest
 from gain.genomic_resources.testing import (
@@ -96,7 +97,7 @@ def parquet_storage_fixture_without_dir() -> ParquetGenotypeStorage:
 def imported_study(
     tmp_path_factory: pytest.TempPathFactory,
     parquet_storage_fixture: ParquetGenotypeStorage,
-) -> GenotypeData:
+) -> Generator[GenotypeData, None, None]:
     root_path = tmp_path_factory.mktemp("test_gpf_instance")
     gpf_instance = t4c8_gpf(root_path, storage=parquet_storage_fixture)
     ped_path = setup_pedigree(
@@ -113,14 +114,15 @@ def imported_study(
     assert pathlib.Path(parquet_storage_fixture.data_dir).exists()
     assert pathlib.Path(parquet_storage_fixture.data_dir, "study").exists()
     assert study is not None
-    return study
+    yield study
+    gpf_instance.shutdown()
 
 
 @pytest.fixture(scope="module")
 def imported_study_dirless_storage(
     tmp_path_factory: pytest.TempPathFactory,
     parquet_storage_fixture_without_dir: ParquetGenotypeStorage,
-) -> GenotypeData:
+) -> Generator[GenotypeData, None, None]:
     root_path = tmp_path_factory.mktemp("test_gpf_instance")
     gpf_instance = t4c8_gpf(
         root_path, storage=parquet_storage_fixture_without_dir)
@@ -136,7 +138,8 @@ def imported_study_dirless_storage(
     )
     assert parquet_storage_fixture_without_dir.data_dir is None
     assert study is not None
-    return study
+    yield study
+    gpf_instance.shutdown()
 
 
 def test_query_all_variants(imported_study: GenotypeData) -> None:

@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from typing import Any
 
 import pytest
@@ -21,7 +21,7 @@ def study_2p(
     request: pytest.FixtureRequest,
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
-) -> GenotypeData:
+) -> Generator[GenotypeData, None, None]:
     param = request.param
     study_id = f"test_queries_on_partitioning_{param}"
     root_path = tmp_path_factory.mktemp(study_id)
@@ -86,12 +86,13 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
         },
     }
 
-    return vcf_study(
+    yield vcf_study(
         root_path,
         study_id, ped_path, [vcf_path1],
         gpf_instance=t4c8_instance,
         project_config_update=project_config_update,
     )
+    t4c8_instance.shutdown()
 
 
 @pytest.mark.no_gs_impala

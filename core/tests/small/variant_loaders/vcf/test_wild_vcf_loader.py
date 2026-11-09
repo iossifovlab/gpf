@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from collections.abc import Generator
+
 import pytest
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
 
@@ -10,9 +12,12 @@ from gpf.variants_loaders.vcf.loader import VcfLoader
 
 @pytest.fixture
 def gpf_instance(
-        tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp("instance")
-    return acgt_gpf(root_path)
+    instance = acgt_gpf(root_path)
+    yield instance
+    instance.shutdown()
 
 
 @pytest.fixture

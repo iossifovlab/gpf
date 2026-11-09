@@ -27,7 +27,10 @@ def test_dae_config(
     t4c8_instance: GPFInstance,
 ) -> None:
     instance = setup_gpf_instance(tmp_path, grr=t4c8_instance.grr)
-    assert instance.dae_config.conf_dir == str(tmp_path)
+    try:
+        assert instance.dae_config.conf_dir == str(tmp_path)
+    finally:
+        instance.shutdown()
 
 
 def test_variants_db(t4c8_instance: GPFInstance) -> None:
@@ -54,10 +57,13 @@ def test_grr_from_config(tmp_path: pathlib.Path) -> None:
     """))
 
     instance = GPFInstance.build(config_path, grr=None)
-    grr = instance.grr
+    try:
+        grr = instance.grr
 
-    assert grr is not None
-    assert grr.repo_id == "config_grr"
+        assert grr is not None
+        assert grr.repo_id == "config_grr"
+    finally:
+        instance.shutdown()
 
 
 def test_grr_from_env_variable(
@@ -79,10 +85,13 @@ def test_grr_from_env_variable(
     config_path.write_text("instance_id: test_instance\n")
 
     instance = GPFInstance.build(config_path, grr=None)
-    grr = instance.grr
+    try:
+        grr = instance.grr
 
-    assert grr is not None
-    assert grr.repo_id == "env_grr"
+        assert grr is not None
+        assert grr.repo_id == "env_grr"
+    finally:
+        instance.shutdown()
 
 
 def test_grr_default_definition(
@@ -98,7 +107,10 @@ def test_grr_default_definition(
     config_path.write_text("instance_id: test_instance\n")
 
     instance = GPFInstance.build(config_path, grr=None)
-    grr = instance.grr
+    try:
+        grr = instance.grr
 
-    assert grr is not None
-    assert grr.repo_id == "default_gpf_grr"
+        assert grr is not None
+        assert grr.repo_id == "default_gpf_grr"
+    finally:
+        instance.shutdown()

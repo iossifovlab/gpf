@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pathlib
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 
 import pytest
 from gain.genomic_resources.testing import (
@@ -25,7 +25,10 @@ from gpf.testing.t4c8_import import t4c8_gpf
 def vcf_import_data(
     tmp_path: pathlib.Path,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
-) -> tuple[pathlib.Path, GPFInstance, GenotypeStorage, StudyInputLayout]:
+) -> Generator[
+    tuple[pathlib.Path, GPFInstance, GenotypeStorage, StudyInputLayout],
+    None, None,
+]:
     root_path = tmp_path
     genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = t4c8_gpf(root_path, genotype_storage)
@@ -54,8 +57,9 @@ chr1   129 .  T   C   .    .      .    GT     0/1 0/1 0/1 0/0 0/0 0/1
 chr1   143 .  C   A   .    .      .    GT     0/0 0/0 0/1 0/1 0/0 0/1
         """)
 
-    return root_path, gpf_instance, genotype_storage, StudyInputLayout(
+    yield root_path, gpf_instance, genotype_storage, StudyInputLayout(
         "vcf_fixture", ped_path, [vcf_path], [], [], [])
+    gpf_instance.shutdown()
 
 
 @pytest.fixture
@@ -149,7 +153,10 @@ def test_vcf_import_coding_bin_queries(
 def denovo_import_data(
     tmp_path: pathlib.Path,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
-) -> tuple[pathlib.Path, GPFInstance, GenotypeStorage, StudyInputLayout]:
+) -> Generator[
+    tuple[pathlib.Path, GPFInstance, GenotypeStorage, StudyInputLayout],
+    None, None,
+]:
     root_path = tmp_path
     genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = t4c8_gpf(root_path, genotype_storage)
@@ -175,8 +182,9 @@ def denovo_import_data(
         chr1   143  C    A    p2
         """)
 
-    return root_path, gpf_instance, genotype_storage, StudyInputLayout(
+    yield root_path, gpf_instance, genotype_storage, StudyInputLayout(
         "denovo_fixture", ped_path, [], [denovo_path], [], [])
+    gpf_instance.shutdown()
 
 
 @pytest.fixture

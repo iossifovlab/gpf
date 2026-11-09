@@ -409,6 +409,7 @@ def setup_wgpf_instance(root_path: pathlib.Path) -> WGPFInstance:
     t4c8_grr = t4c8_instance.grr
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     instance_filename = str(root_path / "gpf_instance.yaml")
+    t4c8_instance.shutdown()
     return WGPFInstance.build(instance_filename, grr=t4c8_grr)
 
 

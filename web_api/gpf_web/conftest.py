@@ -4,7 +4,7 @@
 import logging
 import pathlib
 import textwrap
-from collections.abc import Iterator, Sequence
+from collections.abc import Generator, Iterator, Sequence
 from datetime import timedelta
 from typing import cast
 
@@ -318,9 +318,11 @@ def anonymous_client(
 @pytest.fixture(scope="session")
 def t4c8_instance(
     tmp_path_factory: pytest.TempPathFactory,
-) -> GPFInstance:
+) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp("t4c8_wgpf_instance")
-    return setup_t4c8_instance(root_path)
+    instance = setup_t4c8_instance(root_path)
+    yield instance
+    instance.shutdown()
 
 
 @pytest.fixture(scope="session")
@@ -368,9 +370,11 @@ def t4c8_study_2_wrapper(
 @pytest.fixture(scope="session")
 def session_t4c8_wgpf_instance(
     t4c8_instance: GPFInstance,
-) -> WGPFInstance:
+) -> Generator[WGPFInstance, None, None]:
     root_path = pathlib.Path(t4c8_instance.dae_dir)
-    return setup_wgpf_instance(root_path)
+    wgpf_instance = setup_wgpf_instance(root_path)
+    yield wgpf_instance
+    wgpf_instance.shutdown()
 
 
 @pytest.fixture
@@ -444,7 +448,7 @@ def t4c8_wgpf(
     tmp_path: pathlib.Path,
     db: None,  # ruff: ignore[unused-function-argument]
     mocker: pytest_mock.MockFixture,
-) -> WGPFInstance:
+) -> Generator[WGPFInstance, None, None]:
     wgpf_instance = setup_wgpf_instance(tmp_path)
 
     reload_datasets(wgpf_instance)
@@ -461,7 +465,8 @@ def t4c8_wgpf(
         return_value=wgpf_instance,
     )
 
-    return wgpf_instance
+    yield wgpf_instance
+    wgpf_instance.shutdown()
 
 
 ###############################################################################
@@ -517,7 +522,7 @@ def _import_genotype_leaf(
 @pytest.fixture(scope="module")
 def pheno_group_module(
     tmp_path_factory: pytest.TempPathFactory,
-) -> WGPFInstance:
+) -> Generator[WGPFInstance, None, None]:
     """Build a phenotype group of three leaves and a dataset that names it.
 
     The phenotype group ``pheno_group`` has the leaves ``study_1_pheno``,
@@ -596,7 +601,8 @@ chr1   5   .  A   C   .    .      .    GT     0/0  0/0  0/1
         dataset_config_update="phenotype_data: pheno_group",
     )
     instance.reload()
-    return instance
+    yield instance
+    instance.shutdown()
 
 
 @pytest.fixture

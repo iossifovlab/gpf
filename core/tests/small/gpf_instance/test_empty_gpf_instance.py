@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from collections.abc import Generator
+
 import pytest
 from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
@@ -13,7 +15,9 @@ from gpf.testing.setup_helpers import setup_gpf_instance
 
 
 @pytest.fixture
-def alla_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
+def alla_instance(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Generator[GPFInstance, None, None]:
     # Given
     root_path = tmp_path_factory.mktemp("internal_storage_test")
 
@@ -31,12 +35,14 @@ def alla_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
         "type": "directory",
         "directory": str(root_path / "alla_gpf"),
     })
-    return setup_gpf_instance(
+    instance = setup_gpf_instance(
         root_path / "gpf_instance",
         reference_genome_id="genome",
         gene_models_id="empty_gene_models",
         grr=local_repo,
     )
+    yield instance
+    instance.shutdown()
 
 
 def test_empty_gene_scores(alla_instance: GPFInstance) -> None:

@@ -1,5 +1,7 @@
 """Tests genotype study without genotype data."""
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from collections.abc import Generator
+
 import pytest
 from gain.genomic_resources.testing import setup_pedigree
 
@@ -11,7 +13,8 @@ from gpf.testing.import_helpers import StudyInputLayout, setup_import_project
 
 @pytest.fixture(scope="module")
 def no_variants_study(
-        tmp_path_factory: pytest.TempPathFactory) -> GenotypeData:
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Generator[GenotypeData, None, None]:
     root_path = tmp_path_factory.mktemp(
         "person_set_collection_test_study")
     gpf_instance = acgt_gpf(root_path)
@@ -31,7 +34,8 @@ f3       ch3      dad3  mom3  2   2      prb
     run_with_project(project)
 
     gpf_instance.reload()
-    return gpf_instance.get_genotype_data(layout.study_id)
+    yield gpf_instance.get_genotype_data(layout.study_id)
+    gpf_instance.shutdown()
 
 
 def test_study_simple(no_variants_study: GenotypeData) -> None:

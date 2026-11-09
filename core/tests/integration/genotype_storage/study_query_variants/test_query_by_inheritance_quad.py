@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from typing import cast
 
 import pytest
@@ -22,7 +22,7 @@ from gpf.variants.family_variant import FamilyAllele
 def quad_study(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
-) -> GenotypeData:
+) -> Generator[GenotypeData, None, None]:
     root_path = tmp_path_factory.mktemp("test_query_by_inheritance_quad")
     genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = alla_gpf(root_path, genotype_storage)
@@ -55,7 +55,7 @@ chr1   10  .  A   G     .    .      .    GT     0/0  0/0  0/0 0/1
 chr1   11  .  A   G     .    .      .    GT     1/1  1/1  1/0 1/1
         """)
 
-    return vcf_study(
+    yield vcf_study(
         root_path,
         "test_query_by_inheritance_quad", pathlib.Path(ped_path),
         [vcf_path],
@@ -74,6 +74,7 @@ chr1   11  .  A   G     .    .      .    GT     1/1  1/1  1/0 1/1
                 "include_reference": True,
             },
         })
+    gpf_instance.shutdown()
 
 
 @pytest.mark.parametrize(

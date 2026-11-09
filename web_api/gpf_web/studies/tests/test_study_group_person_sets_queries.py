@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
+from collections.abc import Generator
 from typing import Any, cast
 
 import pytest
@@ -28,7 +29,7 @@ GENOTYPE_STORAGE_REGISTRY = GenotypeStorageRegistry()
 def gpf_fixture(
     request: pytest.FixtureRequest,
     tmp_path_factory: pytest.TempPathFactory,
-) -> GPFInstance:
+) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp(
         "study_group_person_set_queries_genotype_storages")
 
@@ -60,17 +61,21 @@ def gpf_fixture(
 
     root_path = tmp_path_factory.mktemp(
         "study_group_person_set_queries")
-    return acgt_gpf(root_path, storage=genotype_storage)
+    instance = acgt_gpf(root_path, storage=genotype_storage)
+    yield instance
+    instance.shutdown()
 
 
 @pytest.fixture(scope="module")
 def wgpf_fixture(
     gpf_fixture: GPFInstance,
-) -> WGPFInstance:
+) -> Generator[WGPFInstance, None, None]:
     grr = gpf_fixture.grr
     root_path = pathlib.Path(gpf_fixture.dae_dir)
     instance_filename = str(root_path / "gpf_instance.yaml")
-    return WGPFInstance.build(instance_filename, grr=grr)
+    wgpf_instance = WGPFInstance.build(instance_filename, grr=grr)
+    yield wgpf_instance
+    wgpf_instance.shutdown()
 
 
 @pytest.fixture(scope="module")

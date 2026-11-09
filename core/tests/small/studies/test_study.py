@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from collections.abc import Generator
+
 import pytest
 from gain.genomic_resources.testing import (
     setup_pedigree,
@@ -11,7 +13,9 @@ from gpf.testing.import_helpers import vcf_study
 
 
 @pytest.fixture(scope="module")
-def quads_f1_study(tmp_path_factory: pytest.TempPathFactory) -> GenotypeData:
+def quads_f1_study(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Generator[GenotypeData, None, None]:
     root_path = tmp_path_factory.mktemp(
         "quads_f1")
     gpf_instance = acgt_gpf(root_path)
@@ -45,11 +49,12 @@ chr3   1   .  A   C   .    .      .    GT     0/0  0/1  0/0  0/1
             },
         },
     }
-    return vcf_study(
+    yield vcf_study(
         root_path,
         "quads_f1", ped_path, [vcf_path],
         gpf_instance=gpf_instance,
         project_config_update=project_config_update)
+    gpf_instance.shutdown()
 
 
 def test_can_get_test_study(quads_f1_study: GenotypeData) -> None:

@@ -573,45 +573,48 @@ def test_denovo_loader_new(
     variants: str, params: dict[str, str],
 ) -> None:
     gpf = alla_gpf(tmp_path)
-    denovo_path = setup_denovo(tmp_path / "variants.tsv", variants)
+    try:
+        denovo_path = setup_denovo(tmp_path / "variants.tsv", variants)
 
-    variants_loader = DenovoLoader(
-        families_fixture, str(denovo_path),
-        genome=gpf.reference_genome, params=params,
-        sort=False,
-    )
+        variants_loader = DenovoLoader(
+            families_fixture, str(denovo_path),
+            genome=gpf.reference_genome, params=params,
+            sort=False,
+        )
 
-    vs = list(variants_loader.full_variants_iterator())
-    print(vs)
-    assert len(vs) == 3
+        vs = list(variants_loader.full_variants_iterator())
+        print(vs)
+        assert len(vs) == 3
 
-    def falt_allele(index: int) -> FamilyAllele:
-        return cast(FamilyAllele, vs[index][1][0].alt_alleles[0])
+        def falt_allele(index: int) -> FamilyAllele:
+            return cast(FamilyAllele, vs[index][1][0].alt_alleles[0])
 
-    fa = falt_allele(0)
-    assert fa.inheritance_in_members == [
-        Inheritance.unknown,
-        Inheritance.unknown,
-        Inheritance.denovo,
-        Inheritance.missing,
-        Inheritance.denovo,
-    ]
-    assert mat2str(fa.best_state) == "22121/00101"
+        fa = falt_allele(0)
+        assert fa.inheritance_in_members == [
+            Inheritance.unknown,
+            Inheritance.unknown,
+            Inheritance.denovo,
+            Inheritance.missing,
+            Inheritance.denovo,
+        ]
+        assert mat2str(fa.best_state) == "22121/00101"
 
-    fa = falt_allele(1)
-    assert fa.inheritance_in_members == [
-        Inheritance.unknown,
-        Inheritance.unknown,
-        Inheritance.missing,
-        Inheritance.denovo,
-    ]
-    assert mat2str(fa.best_state) == "2221/0001"
+        fa = falt_allele(1)
+        assert fa.inheritance_in_members == [
+            Inheritance.unknown,
+            Inheritance.unknown,
+            Inheritance.missing,
+            Inheritance.denovo,
+        ]
+        assert mat2str(fa.best_state) == "2221/0001"
 
-    fa = falt_allele(2)
-    assert fa.inheritance_in_members == [
-        Inheritance.denovo,
-    ]
-    assert mat2str(fa.best_state) == "1/1"
+        fa = falt_allele(2)
+        assert fa.inheritance_in_members == [
+            Inheritance.denovo,
+        ]
+        assert mat2str(fa.best_state) == "1/1"
+    finally:
+        gpf.shutdown()
 
 
 def test_denovo_loader_avoids_duplicates(

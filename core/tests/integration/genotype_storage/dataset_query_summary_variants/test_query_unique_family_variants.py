@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from typing import Any
 
 import pytest
@@ -23,7 +23,7 @@ from gpf.testing.import_helpers import (
 def dataset(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
-) -> GenotypeDataGroup:
+) -> Generator[GenotypeDataGroup, None, None]:
     root_path = tmp_path_factory.mktemp(
         "test_unique_family_variants")
     gpf_instance = alla_gpf(root_path, genotype_storage_factory(root_path))
@@ -83,12 +83,13 @@ chr1   2   .  A   C     .    .      .    GT     0/1  0/0  0/0 0/1  0/0 0/1
 
     (root_path / "dataset").mkdir(exist_ok=True)
 
-    return setup_dataset(
+    yield setup_dataset(
         "ds1", gpf_instance, study1, study2,
         dataset_config_update=textwrap.dedent(f"""
             conf_dir: {root_path / "dataset"}
         """),
     )
+    gpf_instance.shutdown()
 
 
 @pytest.mark.parametrize(

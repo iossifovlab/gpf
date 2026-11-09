@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
 import textwrap
+from collections.abc import Generator
 
 import pytest
 from gain.genomic_resources.repository_factory import (
@@ -16,7 +17,9 @@ from gpf_web_tests.integration.testing import setup_wgpf_instance
 
 
 @pytest.fixture
-def wgpf_fixture(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
+def wgpf_fixture(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Generator[WGPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp("wgpf_command")
 
     setup_directories(root_path / "gpf_instance", {
@@ -38,9 +41,11 @@ def wgpf_fixture(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
         "type": "directory",
         "directory": str(root_path / "alla_gpf"),
     })
-    return setup_wgpf_instance(
+    wgpf_instance = setup_wgpf_instance(
         root_path / "gpf_instance",
         reference_genome_id="genome",
         gene_models_id="empty_gene_models",
         grr=local_repo,
     )
+    yield wgpf_instance
+    wgpf_instance.shutdown()

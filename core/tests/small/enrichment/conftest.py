@@ -137,7 +137,7 @@ def grr() -> GenomicResourceRepo:
 def t4c8_fixture(
     tmp_path: pathlib.Path,
     grr: GenomicResourceRepo,
-) -> GPFInstance:
+) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path
 
     t4c8_genes(root_path / "grr")
@@ -180,11 +180,13 @@ def t4c8_fixture(
     grr = GenomicResourceGroupRepo(
         [grr, local_grr], "enrichment_testing_repo",
     )
-    return setup_gpf_instance(
+    instance = setup_gpf_instance(
         root_path / "gpf_instance",
         reference_genome_id="t4c8_genome",
         gene_models_id="t4c8_genes",
         grr=grr)
+    yield instance
+    instance.shutdown()
 
 
 @pytest.fixture(scope="session")
@@ -344,7 +346,7 @@ def f1_trio(
     psc_config: dict,
     grr: GenomicResourceRepo,
     mocker: pytest_mock.MockerFixture,
-) -> GenotypeData:
+) -> Generator[GenotypeData, None, None]:
 
     setup_genome(
         tmp_path / "alla_gpf" / "genome" / "allChr.fa",
@@ -387,4 +389,5 @@ def f1_trio(
         "query_variants",
         return_value=f1_trio_variants(study.families),
     )
-    return study
+    yield study
+    gpf_instance.shutdown()

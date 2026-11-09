@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from collections.abc import Generator
 from typing import Any
 
 import pytest
@@ -10,8 +11,10 @@ from gpf.testing.alla_import import alla_gpf
 
 
 @pytest.fixture
-def gpf_fixture(tmp_path: pathlib.Path) -> GPFInstance:
-    return alla_gpf(tmp_path)
+def gpf_fixture(tmp_path: pathlib.Path) -> Generator[GPFInstance, None, None]:
+    instance = alla_gpf(tmp_path)
+    yield instance
+    instance.shutdown()
 
 
 def test_import_project_denovo_loader(

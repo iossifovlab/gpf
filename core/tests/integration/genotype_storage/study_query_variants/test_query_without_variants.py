@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 
 import pytest
 from gain.genomic_resources.testing import (
@@ -17,7 +17,7 @@ from gpf.testing.import_helpers import vcf_study
 def imported_vcf_study(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
-) -> GenotypeData:
+) -> Generator[GenotypeData, None, None]:
     root_path = tmp_path_factory.mktemp("test_query_without_variants")
     genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = alla_gpf(root_path, genotype_storage)
@@ -33,10 +33,11 @@ def imported_vcf_study(
         f2        ch2       dad2   mom2   2    2       prb
         """)
 
-    return vcf_study(
+    yield vcf_study(
         root_path,
         "test_query_without_variants", ped_path, [],
         gpf_instance=gpf_instance)
+    gpf_instance.shutdown()
 
 
 def test_query_family_variants(

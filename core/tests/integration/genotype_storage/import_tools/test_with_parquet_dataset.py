@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pathlib
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 
 import pytest
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
@@ -18,7 +18,10 @@ from gpf.testing.import_helpers import StudyInputLayout, vcf_import
 def vcf_import_data(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
-) -> tuple[pathlib.Path, GPFInstance, GenotypeStorage, StudyInputLayout]:
+) -> Generator[
+    tuple[pathlib.Path, GPFInstance, GenotypeStorage, StudyInputLayout],
+    None, None,
+]:
     root_path = tmp_path_factory.mktemp("test_with_parquet_dataset")
     genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = alla_gpf(root_path, genotype_storage)
@@ -42,10 +45,11 @@ def vcf_import_data(
         chr1   2   .  A   G   .    .      .    GT     0/0 0/1 0/1
         """)
 
-    return (
+    yield (
         root_path, gpf_instance, genotype_storage,
         StudyInputLayout(
             "with_parquet_dataset", ped_path, [vcf_path], [], [], []))
+    gpf_instance.shutdown()
 
 
 @pytest.fixture(scope="module")

@@ -2,6 +2,7 @@
 
 import pathlib
 import shutil
+from collections.abc import Generator
 
 import pytest
 import pytest_mock
@@ -14,9 +15,13 @@ from gpf.testing.alla_import import alla_gpf
 
 
 @pytest.fixture
-def gpf_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
+def gpf_instance(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp(__name__)
-    return alla_gpf(root_path)
+    instance = alla_gpf(root_path)
+    yield instance
+    instance.shutdown()
 
 
 @pytest.fixture

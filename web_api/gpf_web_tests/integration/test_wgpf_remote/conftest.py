@@ -24,7 +24,9 @@ from gpf_web_tests.integration.testing import LiveServer, setup_wgpf_instance
 
 
 @pytest.fixture
-def alla_wgpf(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
+def alla_wgpf(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Generator[WGPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp("alla_wgpf_instance")
 
     setup_directories(root_path / "gpf_instance", {
@@ -75,7 +77,8 @@ def alla_wgpf(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
         "study", ped_path, [vcf_path],
         gpf_instance=gpf)
 
-    return gpf
+    yield gpf
+    gpf.shutdown()
 
 
 @pytest.fixture

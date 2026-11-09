@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from collections.abc import Generator
+
 import pyarrow.parquet as pq
 import pytest
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
@@ -14,7 +16,7 @@ from gpf.testing.import_helpers import vcf_study
 @pytest.fixture(scope="module")
 def import_data(
     tmp_path_factory: pytest.TempPathFactory,
-) -> Schema2DatasetLayout:
+) -> Generator[Schema2DatasetLayout, None, None]:
     root_path = tmp_path_factory.mktemp("import_data")
     gpf_instance = acgt_gpf(root_path)
     ped_path = setup_pedigree(
@@ -44,7 +46,8 @@ chr3   1    .  A   G,TA .    .      .    GT     0/1  0/1  0/0
         gpf_instance=gpf_instance,
         project_config_overwrite={"destination": {"storage_type": "schema2"}},
     )
-    return create_schema2_dataset_layout(f"{root_path}/work_dir/study")
+    yield create_schema2_dataset_layout(f"{root_path}/work_dir/study")
+    gpf_instance.shutdown()
 
 
 def test_schema2_import_metadata(import_data: Schema2DatasetLayout) -> None:

@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,C0415,
 
 import textwrap
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager
 
 import pytest
@@ -21,7 +21,9 @@ from gpf_web_tests.integration.testing import LiveServer, setup_wgpf_instance
 
 
 @pytest.fixture
-def wgpf_fixture(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
+def wgpf_fixture(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Generator[WGPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp("eager_loading_wgpf_instance")
 
     setup_directories(root_path / "gpf_instance", {
@@ -44,12 +46,14 @@ def wgpf_fixture(tmp_path_factory: pytest.TempPathFactory) -> WGPFInstance:
         "directory": str(root_path / "alla_gpf"),
     })
 
-    return setup_wgpf_instance(
+    wgpf_instance = setup_wgpf_instance(
         root_path / "gpf_instance",
         reference_genome_id="genome",
         gene_models_id="empty_gene_models",
         grr=local_repo,
     )
+    yield wgpf_instance
+    wgpf_instance.shutdown()
 
 
 def test_eager_loading(

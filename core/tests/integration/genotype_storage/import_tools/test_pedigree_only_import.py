@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 
 import pytest
 from gain.genomic_resources.testing import setup_pedigree
@@ -17,7 +17,7 @@ from gpf.testing.import_helpers import StudyInputLayout, pedigree_import
 def pedigree_only_import_data(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
-) -> tuple[pathlib.Path, GPFInstance, StudyInputLayout]:
+) -> Generator[tuple[pathlib.Path, GPFInstance, StudyInputLayout], None, None]:
     root_path = tmp_path_factory.mktemp("test_pedigree_only_import")
 
     gpf_instance = alla_gpf(root_path, genotype_storage_factory(root_path))
@@ -31,8 +31,9 @@ def pedigree_only_import_data(
         f1       p1       d1     m1     1   2      prb
         """)
 
-    return root_path, gpf_instance, StudyInputLayout(
+    yield root_path, gpf_instance, StudyInputLayout(
         "pedigree_dataset", ped_path, [], [], [], [])
+    gpf_instance.shutdown()
 
 
 @pytest.fixture(scope="module")

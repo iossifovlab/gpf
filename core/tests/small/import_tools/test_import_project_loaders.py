@@ -1,6 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 
+from collections.abc import Generator
+
 import pytest
 from gain.genomic_resources.testing import (
     setup_denovo,
@@ -14,7 +16,9 @@ from gpf.testing.import_helpers import StudyInputLayout, setup_import_project
 
 
 @pytest.fixture
-def project_fixture(tmp_path_factory: pytest.TempPathFactory) -> ImportProject:
+def project_fixture(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Generator[ImportProject, None, None]:
     root_path = tmp_path_factory.mktemp("import_project_tests")
     gpf_instance = acgt_gpf(root_path)
 
@@ -43,11 +47,12 @@ def project_fixture(tmp_path_factory: pytest.TempPathFactory) -> ImportProject:
           chr2   11   A    G    p1
         """,
     )
-    return setup_import_project(
+    yield setup_import_project(
         root_path / "project",
         StudyInputLayout(
             "mixed", ped_path, [vcf_path], [denovo_path], [], []),
         gpf_instance)
+    gpf_instance.shutdown()
 
 
 def test_import_project_chromosomes_simple(
