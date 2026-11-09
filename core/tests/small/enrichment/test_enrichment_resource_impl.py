@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116
+from typing import Any
+
 import pytest
 from gain.genomic_resources.repository import GR_CONF_FILE_NAME
 from gain.genomic_resources.testing import (
@@ -6,9 +8,12 @@ from gain.genomic_resources.testing import (
     convert_to_tab_separated,
 )
 
-from gpf.enrichment_tool.resource_implementations.enrichment_resource_impl import (  # ruff: ignore[line-too-long]
-    EnrichmentBackgroundResourceImplementation,
-    build_gene_weights_enrichment_background,
+from gpf.enrichment_tool.resource_implementations import (
+    enrichment_resource_impl,
+)
+
+EnrichmentBackgroundResourceImplementation = (
+    enrichment_resource_impl.EnrichmentBackgroundResourceImplementation
 )
 
 
@@ -26,14 +31,17 @@ def impl() -> EnrichmentBackgroundResourceImplementation:
             B      20
         """),
     })
-    return build_gene_weights_enrichment_background(res)
+    return enrichment_resource_impl.build_gene_weights_enrichment_background(
+        res)
 
 
 def test_create_statistics_build_tasks_rejects_unknown_keyword(
     impl: EnrichmentBackgroundResourceImplementation,
 ) -> None:
+    misspelled: dict[str, Any] = {"region_sise": 10}
+
     with pytest.raises(TypeError, match="region_sise"):
-        impl.create_statistics_build_tasks(region_sise=10)  # type: ignore[call-arg]
+        impl.create_statistics_build_tasks(**misspelled)
 
 
 def test_create_statistics_build_tasks_accepts_base_keywords(
