@@ -59,9 +59,13 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # hard-fails when any of them is missing.
 # tests/small/test_gain_core_conda_probe.py runs
 # scripts/gain_core_conda_probe.sh and hard-fails when it is missing.
+# tests/small/test_mypy_guides_match_jenkinsfile.py holds the mypy
+# commands in CLAUDE.md and README.md to the mypyTarget values in the
+# Jenkinsfile and hard-fails when any of the three files is missing.
 COPY environment.yml dev-environment.yml ./
 COPY scripts/conda_env.py ./scripts/
 COPY scripts/gain_core_conda_probe.sh ./scripts/
+COPY Jenkinsfile CLAUDE.md README.md ./
 COPY web_api/conda-recipe/recipe.yaml ./web_api/conda-recipe/
 COPY federation/conda-recipe/recipe.yaml ./federation/conda-recipe/
 COPY rest_client/conda-recipe/recipe.yaml ./rest_client/conda-recipe/
