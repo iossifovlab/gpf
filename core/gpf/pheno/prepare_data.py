@@ -488,7 +488,23 @@ class PreparePhenoBrowserBase:
             configurations_dir=pheno_dir,
             browser_cache_path=Path(cache_dir),
         )
-        pheno_data = registry.get_phenotype_data(pheno_id)
+        try:
+            return cls._build_measure(
+                pheno_id, registry.get_phenotype_data(pheno_id),
+                measure, images_dir, regression_measures,
+            )
+        finally:
+            registry.shutdown()
+
+    @classmethod
+    def _build_measure(
+        cls,
+        pheno_id: str,
+        pheno_data: PhenotypeData,
+        measure: Measure,
+        images_dir: str,
+        regression_measures: dict[str, tuple[Box, Measure]],
+    ) -> tuple[dict[str, Any], list[dict[str, Any]] | None]:
         df = pheno_data.get_people_measure_values_df(
             [measure.measure_id],
         )
