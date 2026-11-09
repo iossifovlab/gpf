@@ -885,6 +885,13 @@ pipeline {
                                             allowEmptyResults: true,
                                             testResults: 'reports/web_ui/jest.xml',
                                         )
+                                        // The NEW gate below compares with a
+                                        // reference build. Without one, every
+                                        // finding counts as outstanding and the
+                                        // gate never fires. The reference is the
+                                        // latest master build that shares a
+                                        // commit with this branch.
+                                        discoverGitReferenceBuild()
                                         recordIssues(
                                             enabledForFailure: true,
                                             aggregatingResults: false,
@@ -900,7 +907,7 @@ pipeline {
                                                     id: 'web_ui-stylelint',
                                                     name: 'web_ui Stylelint'),
                                             ],
-                                            qualityGates: [[threshold: 1, type: 'DELTA', unstable: true]]
+                                            qualityGates: [[threshold: 1, type: 'NEW', unstable: true]]
                                         )
                                     }
                                 }
