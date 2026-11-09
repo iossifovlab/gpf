@@ -354,6 +354,18 @@ class GPFInstance:
             os.path.join(self.dae_dir, db_name),
         )
 
+    def shutdown(self) -> None:
+        """Shut down the registries that this instance already built.
+
+        Closes the DuckDB connections of the genotype storages and of
+        the phenotype data. A registry that the instance has not built
+        yet stays unbuilt. A second call does not raise.
+        """
+        if "genotype_storages" in self.__dict__:
+            self.genotype_storages.shutdown()
+        if "_pheno_registry" in self.__dict__:
+            self._pheno_registry.shutdown()
+
     def reload(self) -> None:
         """Reload GPF instance studies, de Novo gene sets, etc."""
         self._variants_db.reload()

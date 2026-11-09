@@ -2,6 +2,7 @@
 import os
 import pathlib
 import textwrap
+from collections.abc import Generator
 
 import pytest
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
@@ -22,10 +23,12 @@ from gpf.tools.generate_denovo_gene_sets import (
 @pytest.fixture(scope="module")
 def t4c8_instance(
     tmp_path_factory: pytest.TempPathFactory,
-) -> GPFInstance:
+) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp(
         "study_group_person_set_queries")
-    return t4c8_gpf(root_path)
+    instance = t4c8_gpf(root_path)
+    yield instance
+    instance.shutdown()
 
 
 @pytest.fixture(scope="module")

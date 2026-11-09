@@ -2,6 +2,7 @@
 """Extended tests for import_tools module."""
 import pathlib
 import sys
+from collections.abc import Generator
 from typing import Any
 
 import pytest
@@ -23,8 +24,10 @@ from gpf.testing.foobar_import import foobar_gpf
 
 
 @pytest.fixture
-def gpf_fixture(tmp_path: pathlib.Path) -> GPFInstance:
-    return alla_gpf(tmp_path)
+def gpf_fixture(tmp_path: pathlib.Path) -> Generator[GPFInstance, None, None]:
+    instance = alla_gpf(tmp_path)
+    yield instance
+    instance.shutdown()
 
 
 def test_bucket_str_representation() -> None:

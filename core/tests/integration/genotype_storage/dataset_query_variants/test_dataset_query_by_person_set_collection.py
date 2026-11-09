@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 
 import pytest
 from gain.genomic_resources.testing import (
@@ -22,7 +22,7 @@ from gpf.testing.import_helpers import (
 def dataset(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
-) -> GenotypeDataGroup:
+) -> Generator[GenotypeDataGroup, None, None]:
     root_path = tmp_path_factory.mktemp(
         "test_dataset_query_by_person_set_collection")
     gpf_instance = alla_gpf(root_path, genotype_storage_factory(root_path))
@@ -177,7 +177,7 @@ chr1   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
 
     (root_path / "dataset").mkdir(exist_ok=True)
 
-    return setup_dataset(
+    yield setup_dataset(
         "ds1", gpf_instance, study1, study2,
         dataset_config_update=textwrap.dedent(f"""
             conf_dir: {root_path / "dataset "}
@@ -216,6 +216,7 @@ chr1   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
                 selected_person_set_collections:
                 - phenotype"""),
     )
+    gpf_instance.shutdown()
 
 
 def test_dataset_build_person_set_collection(

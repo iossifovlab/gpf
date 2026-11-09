@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 
 import pytest
 from gain.genomic_resources.repository import GenomicResourceRepo
@@ -16,21 +16,27 @@ from gpf.testing.setup_helpers import setup_gpf_instance
 def gpf_fixture(
     t4c8_grr: GenomicResourceRepo,
     tmp_path_factory: pytest.TempPathFactory,
-) -> Callable:
+) -> Generator[Callable, None, None]:
+    instances: list[GPFInstance] = []
+
     def builder(instance_config: dict) -> GPFInstance:
         root_path = tmp_path_factory.mktemp("genomic_scores_db")
         setup_directories(
             root_path / "gpf_instance",
             instance_config,
         )
-        return setup_gpf_instance(
+        instance = setup_gpf_instance(
             root_path / "gpf_instance",
             reference_genome_id="t4c8_genome",
             gene_models_id="t4c8_genes",
             grr=t4c8_grr,
         )
+        instances.append(instance)
+        return instance
 
-    return builder
+    yield builder
+    for instance in instances:
+        instance.shutdown()
 
 
 def test_genomic_scores_db_with_config(gpf_fixture: Callable) -> None:

@@ -2,6 +2,7 @@
 import io
 import pathlib
 import textwrap
+from collections.abc import Generator
 from contextlib import redirect_stdout
 from datetime import datetime
 from glob import glob
@@ -30,7 +31,7 @@ pytestmark = pytest.mark.usefixtures("clean_genomic_context")
 
 
 @pytest.fixture
-def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
+def t4c8_instance(tmp_path: pathlib.Path) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path
     setup_directories(
         root_path,
@@ -126,7 +127,9 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
     setup_denovo(root_path / "one" / "data.txt", one_content)
     setup_denovo(root_path / "two" / "data.txt", two_content)
     setup_denovo(root_path / "three" / "data.txt", three_content)
-    return t4c8_gpf(root_path)
+    instance = t4c8_gpf(root_path)
+    yield instance
+    instance.shutdown()
 
 
 @pytest.fixture

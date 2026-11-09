@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import time
+from collections.abc import Generator
 
 import pytest
 from gain.genomic_resources.testing import setup_pedigree, setup_vcf
@@ -10,7 +11,9 @@ from gpf.testing.import_helpers import setup_dataset, vcf_study
 
 
 @pytest.fixture(scope="module")
-def svmergingdataset(tmp_path_factory: pytest.TempPathFactory) -> GenotypeData:
+def svmergingdataset(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Generator[GenotypeData, None, None]:
     root_path = tmp_path_factory.mktemp(
         "svnmergindataset")
     gpf_instance = acgt_gpf(root_path)
@@ -71,10 +74,11 @@ chr1   4   .  T   A   .    .      .    GT     0/0  0/0  0/0 0/1  0/0  0/0
         gpf_instance=gpf_instance,
         project_config_update=project_config_update)
 
-    return setup_dataset(
+    yield setup_dataset(
         "ds1", gpf_instance, study1, study2,
         dataset_config_update=f"conf_dir: {root_path}",
     )
+    gpf_instance.shutdown()
 
 
 def test_summary_variant_merging(svmergingdataset: GenotypeData) -> None:

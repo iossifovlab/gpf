@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 
 import pytest
 from gain.genomic_resources.testing import (
@@ -20,7 +20,7 @@ from gpf.variants.attributes import Status
 def imported_dataset(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
-) -> GenotypeData:
+) -> Generator[GenotypeData, None, None]:
     root_path = tmp_path_factory.mktemp(
         "test_summary_variants_seen_in_status")
     gpf_instance = alla_gpf(root_path, genotype_storage_factory(root_path))
@@ -81,10 +81,11 @@ def imported_dataset(
         "study_2", ped_path2, [vcf_path2],
         gpf_instance=gpf_instance)
 
-    return setup_dataset(
+    yield setup_dataset(
         "ds1", gpf_instance, study1, study2,
         dataset_config_update=f"conf_dir: {root_path}",
     )
+    gpf_instance.shutdown()
 
 
 @pytest.mark.parametrize("region,seen_in_status", [

@@ -2,6 +2,7 @@
 
 import pathlib
 import textwrap
+from collections.abc import Generator
 from typing import cast
 
 import pytest
@@ -169,14 +170,16 @@ def build_scores_gpf_instance(
 def annotation_gpf(
     scores_repo: GenomicResourceProtocolRepo,
     tmp_path_factory: pytest.TempPathFactory,
-) -> GPFInstance:
-    return build_scores_gpf_instance(
+) -> Generator[GPFInstance, None, None]:
+    instance = build_scores_gpf_instance(
         tmp_path_factory.mktemp("genomic_scores_db_gpf"),
         scores_repo,
         textwrap.dedent("""
         - position_score: phastCons
         """),
     )
+    yield instance
+    instance.shutdown()
 
 
 def test_genomic_scores_db_with_annotation(
@@ -538,14 +541,16 @@ def allele_scores_repo() -> GenomicResourceProtocolRepo:
 def allele_score_gpf(
     allele_scores_repo: GenomicResourceProtocolRepo,
     tmp_path_factory: pytest.TempPathFactory,
-) -> GPFInstance:
-    return build_scores_gpf_instance(
+) -> Generator[GPFInstance, None, None]:
+    instance = build_scores_gpf_instance(
         tmp_path_factory.mktemp("allele_score_gpf"),
         allele_scores_repo,
         textwrap.dedent("""
         - allele_score: MPC
         """),
     )
+    yield instance
+    instance.shutdown()
 
 
 def test_genomic_scores_registry_picks_up_allele_score_annotator(

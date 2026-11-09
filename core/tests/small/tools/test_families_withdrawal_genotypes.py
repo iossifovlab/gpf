@@ -142,21 +142,24 @@ def test_genotype_query_after_withdrawal_is_inaccessible(
 
     gpf2 = GPFInstance.build(
         str(tmp_path / "gpf" / "gpf_instance" / "gpf_instance.yaml"))
-    gpf2.genotype_storages.register_default_storage(
-        get_genotype_storage_factory("duckdb_parquet")(storage_config))
-    study2 = gpf2.get_genotype_data("two_fam_study")
-    assert set(study2.families.keys()) == {"f2"}
+    try:
+        gpf2.genotype_storages.register_default_storage(
+            get_genotype_storage_factory("duckdb_parquet")(storage_config))
+        study2 = gpf2.get_genotype_data("two_fam_study")
+        assert set(study2.families.keys()) == {"f2"}
 
-    with caplog.at_level(logging.WARNING):
-        variants = list(study2.query_variants())
+        with caplog.at_level(logging.WARNING):
+            variants = list(study2.query_variants())
 
-    assert {v.family_id for v in variants} == {"f2"}
-    # f1's variant rows on disk were skipped, with a single warning.
-    f1_warnings = [
-        r for r in caplog.records
-        if r.levelno == logging.WARNING and "'f1'" in r.getMessage()
-    ]
-    assert len(f1_warnings) == 1, "expected exactly one warn-once for f1"
+        assert {v.family_id for v in variants} == {"f2"}
+        # f1's variant rows on disk were skipped, with a single warning.
+        f1_warnings = [
+            r for r in caplog.records
+            if r.levelno == logging.WARNING and "'f1'" in r.getMessage()
+        ]
+        assert len(f1_warnings) == 1, "expected exactly one warn-once for f1"
+    finally:
+        gpf2.shutdown()
 
 
 def test_genotype_resolves_pedigree_from_config_not_hardcoded(

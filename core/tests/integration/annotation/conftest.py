@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
+from collections.abc import Generator
 
 import pytest
 from gain.genomic_resources.repository import (
@@ -80,10 +81,12 @@ def grr_fixture(tmp_path: pathlib.Path) -> GenomicResourceRepo:
 def t4c8_instance(
     tmp_path: pathlib.Path,
     grr_fixture: GenomicResourceRepo,
-) -> GPFInstance:
+) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path / "t4c8_instance"
 
-    return t4c8_gpf(root_path, grr=grr_fixture)
+    instance = t4c8_gpf(root_path, grr=grr_fixture)
+    yield instance
+    instance.shutdown()
 
 
 def t4c8_study(instance: GPFInstance) -> str:

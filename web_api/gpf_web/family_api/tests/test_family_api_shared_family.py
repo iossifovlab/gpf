@@ -3,6 +3,7 @@
 import csv
 import json
 import pathlib
+from collections.abc import Generator
 
 import pytest
 import pytest_mock
@@ -48,7 +49,7 @@ chr1   5   .  A   C   .    .      .    GT     0/0 0/0 0/1
 @pytest.fixture(scope="module")
 def shared_family_module(
     tmp_path_factory: pytest.TempPathFactory,
-) -> WGPFInstance:
+) -> Generator[WGPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp("shared_family")
     instance = setup_wgpf_instance(root_path)
     _shared_family_study(root_path, instance, "shared_study_a", "ch_a")
@@ -58,7 +59,8 @@ def shared_family_module(
         instance, "shared_dataset",
         ["shared_study_a", "shared_study_b", "shared_study_c"])
     instance.reload()
-    return instance
+    yield instance
+    instance.shutdown()
 
 
 @pytest.fixture

@@ -458,34 +458,36 @@ def test_denovo_db_import(
     root_path = tmp_path
     genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = alla_gpf(root_path, genotype_storage)
+    try:
+        families_filename = fixture_dirname("denovo-db-person-id.ped")
+        denovo_filename = fixture_dirname("denovo-db-person-id.tsv")
+        study_id = f"test_denovo_db_import_{genotype_storage.storage_id}"
 
-    families_filename = fixture_dirname("denovo-db-person-id.ped")
-    denovo_filename = fixture_dirname("denovo-db-person-id.tsv")
-    study_id = f"test_denovo_db_import_{genotype_storage.storage_id}"
+        argv = [
+            "--study-id", study_id,
+            families_filename,
+            "-o", str(root_path / "output"),
+            "--skip-reports",
+            "--denovo-chrom", "Chr",
+            "--denovo-pos", "Position",
+            "--denovo-ref", "Ref",
+            "--denovo-alt", "Alt",
+            "--denovo-person-id", "SampleID",
+            "--denovo-file", denovo_filename,
+            "--genotype-storage", genotype_storage.storage_id,
+            "--add-chrom-prefix", "chr",
+        ]
 
-    argv = [
-        "--study-id", study_id,
-        families_filename,
-        "-o", str(root_path / "output"),
-        "--skip-reports",
-        "--denovo-chrom", "Chr",
-        "--denovo-pos", "Position",
-        "--denovo-ref", "Ref",
-        "--denovo-alt", "Alt",
-        "--denovo-person-id", "SampleID",
-        "--denovo-file", denovo_filename,
-        "--genotype-storage", genotype_storage.storage_id,
-        "--add-chrom-prefix", "chr",
-    ]
+        main(argv, gpf_instance)
 
-    main(argv, gpf_instance)
+        gpf_instance.reload()
+        study = gpf_instance.get_genotype_data(study_id)
+        assert study is not None
+        assert study.has_denovo
+        assert not study.has_transmitted
+        assert not study.has_cnv
 
-    gpf_instance.reload()
-    study = gpf_instance.get_genotype_data(study_id)
-    assert study is not None
-    assert study.has_denovo
-    assert not study.has_transmitted
-    assert not study.has_cnv
-
-    vs = list(study.query_variants(inheritance="denovo"))
-    assert len(vs) == 17
+        vs = list(study.query_variants(inheritance="denovo"))
+        assert len(vs) == 17
+    finally:
+        gpf_instance.shutdown()

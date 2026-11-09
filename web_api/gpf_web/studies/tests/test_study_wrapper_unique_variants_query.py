@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+from collections.abc import Generator
 from pathlib import Path
 from typing import Any
 
@@ -20,7 +21,7 @@ def instance_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 
 @pytest.fixture(scope="module")
-def wgpf_instance(instance_path: Path) -> WGPFInstance:
+def wgpf_instance(instance_path: Path) -> Generator[WGPFInstance, None, None]:
     storage_config = {
         "id": "duckdb",
         "storage_type": "duckdb",
@@ -31,12 +32,13 @@ def wgpf_instance(instance_path: Path) -> WGPFInstance:
         instance_path, duckdb_storage_factory(storage_config),
     )
 
-    return WGPFInstance(
+    yield WGPFInstance(
         gpf_instance.dae_config,
         gpf_instance.dae_dir,
         gpf_instance.dae_config_path,
         grr=gpf_instance.grr,
     )
+    gpf_instance.shutdown()
 
 
 @pytest.fixture(scope="module")

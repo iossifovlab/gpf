@@ -213,94 +213,97 @@ def test_generate_gene_profile(
         "_INSERT_GP_BATCH_SIZE", return_value=1)
 
     gpf_instance = gp_gpf_instance(gp_config_1, tmp_path)
-    main(gpf_instance, argv)
-    gpdb = GeneProfileDB(
-        gpf_instance._gene_profile_config,
-        gpdb_filename,
-    )
+    try:
+        main(gpf_instance, argv)
+        gpdb = GeneProfileDB(
+            gpf_instance._gene_profile_config,
+            gpdb_filename,
+        )
 
-    t4 = gpdb.get_gp("t4")
-    c8 = gpdb.get_gp("c8")
+        t4 = gpdb.get_gp("t4")
+        c8 = gpdb.get_gp("c8")
 
-    assert t4 is not None
-    assert c8 is not None
+        assert t4 is not None
+        assert c8 is not None
 
-    assert t4.gene_sets == [
-        "gene_sets_test_gene_set_1",
-        "gene_sets_test_gene_set_3",
-    ]
-    assert c8.gene_sets == [
-        "gene_sets_test_gene_set_2",
-        "gene_sets_test_gene_set_3",
-    ]
+        assert t4.gene_sets == [
+            "gene_sets_test_gene_set_1",
+            "gene_sets_test_gene_set_3",
+        ]
+        assert c8.gene_sets == [
+            "gene_sets_test_gene_set_2",
+            "gene_sets_test_gene_set_3",
+        ]
 
-    assert t4.gene_scores == {
-        "gene_score": {
-            "gene_score1": {
-                "format": "%s",
-                "value": 10.0,
-            },
-        },
-    }
-
-    assert c8.gene_scores == {
-        "gene_score": {
-            "gene_score1": {
-                "format": "%s",
-                "value": 20.0,
-            },
-        },
-    }
-
-    assert t4.variant_counts == {
-        "study_1": {
-            "autism": {
-                "lgds": {
-                    "count": 1.0,
-                    "rate": 1000.0,
-                },
-                "denovo_missense": {
-                    "count": 1.0,
-                    "rate": 1000.0,
+        assert t4.gene_scores == {
+            "gene_score": {
+                "gene_score1": {
+                    "format": "%s",
+                    "value": 10.0,
                 },
             },
-            "unaffected": {
-                "lgds": {
-                    "count": 0.0,
-                    "rate": 0.0,
-                },
-                "denovo_missense": {
-                    "count": 2.0,
-                    "rate": 2000.0,
-                },
-            },
-        },
-    }
+        }
 
-    assert c8.variant_counts == {
-        "study_1": {
-            "autism": {
-                "lgds": {
-                    "count": 1.0,
-                    "rate": 1000.0,
-                },
-                "denovo_missense": {
-                    "count": 1.0,
-                    "rate": 1000.0,
+        assert c8.gene_scores == {
+            "gene_score": {
+                "gene_score1": {
+                    "format": "%s",
+                    "value": 20.0,
                 },
             },
-            "unaffected": {
-                "lgds": {
-                    "count": 1.0,
-                    "rate": 1000.0,
+        }
+
+        assert t4.variant_counts == {
+            "study_1": {
+                "autism": {
+                    "lgds": {
+                        "count": 1.0,
+                        "rate": 1000.0,
+                    },
+                    "denovo_missense": {
+                        "count": 1.0,
+                        "rate": 1000.0,
+                    },
                 },
-                "denovo_missense": {
-                    "count": 0.0,
-                    "rate": 0.0,
+                "unaffected": {
+                    "lgds": {
+                        "count": 0.0,
+                        "rate": 0.0,
+                    },
+                    "denovo_missense": {
+                        "count": 2.0,
+                        "rate": 2000.0,
+                    },
                 },
             },
-        },
-    }
+        }
+
+        assert c8.variant_counts == {
+            "study_1": {
+                "autism": {
+                    "lgds": {
+                        "count": 1.0,
+                        "rate": 1000.0,
+                    },
+                    "denovo_missense": {
+                        "count": 1.0,
+                        "rate": 1000.0,
+                    },
+                },
+                "unaffected": {
+                    "lgds": {
+                        "count": 1.0,
+                        "rate": 1000.0,
+                    },
+                    "denovo_missense": {
+                        "count": 0.0,
+                        "rate": 0.0,
+                    },
+                },
+            },
+        }
+    finally:
+        gpf_instance.shutdown()
 
 
 def test_generate_gene_profile_with_incomplete_config(
@@ -318,13 +321,16 @@ def test_generate_gene_profile_with_incomplete_config(
     del gp_config_1["default_dataset"]
 
     gpf_instance = gp_gpf_instance(gp_config_1, tmp_path)
-    expected_error = re.escape(
-        "/gpf_instance: {'default_dataset': "
-        "['required field'], 'order': ['required field']}")
-    with pytest.raises(
-            ValueError,
-            match=r"^(.*?)" + expected_error):
-        main(gpf_instance, argv)
+    try:
+        expected_error = re.escape(
+            "/gpf_instance: {'default_dataset': "
+            "['required field'], 'order': ['required field']}")
+        with pytest.raises(
+                ValueError,
+                match=r"^(.*?)" + expected_error):
+            main(gpf_instance, argv)
+    finally:
+        gpf_instance.shutdown()
 
 
 def test_generate_gene_profile_with_incomplete_config_order(
@@ -345,8 +351,10 @@ def test_generate_gene_profile_with_incomplete_config_order(
         "study_1",
     ]
     gpf_instance = gp_gpf_instance(gp_config_1, tmp_path)
-
-    with pytest.raises(
-            AssertionError,
-            match="Given GP order has invalid entries"):
-        main(gpf_instance, argv)
+    try:
+        with pytest.raises(
+                AssertionError,
+                match="Given GP order has invalid entries"):
+            main(gpf_instance, argv)
+    finally:
+        gpf_instance.shutdown()

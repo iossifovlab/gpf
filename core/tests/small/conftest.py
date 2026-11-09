@@ -2,6 +2,7 @@
 import logging
 import pathlib
 import textwrap
+from collections.abc import Generator
 
 import pytest
 from gain.genomic_resources.gene_models.gene_models import (
@@ -199,9 +200,11 @@ def liftover_grr_fixture_reverse_strand(
 @pytest.fixture(scope="session")
 def t4c8_instance(
     tmp_path_factory: pytest.TempPathFactory,
-) -> GPFInstance:
+) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp("t4c8_gpf_instance")
-    return setup_t4c8_instance(root_path)
+    instance = setup_t4c8_instance(root_path)
+    yield instance
+    instance.shutdown()
 
 
 @pytest.fixture

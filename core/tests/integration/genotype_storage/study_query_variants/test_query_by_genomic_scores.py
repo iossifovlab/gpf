@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from typing import Any
 
 import pytest
@@ -25,7 +25,7 @@ from gpf.testing.import_helpers import vcf_study
 def imported_study(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
-) -> GenotypeData:
+) -> Generator[GenotypeData, None, None]:
     root_path = tmp_path_factory.mktemp("test_query_by_genomic_scores")
     genotype_storage = genotype_storage_factory(root_path)
 
@@ -114,11 +114,12 @@ chr2   5   .  A   C     .    .      .    GT     1/1  1/1  0/1
 chr2   6   .  A   C     .    .      .    GT     1/1  1/1  0/1
         """)
 
-    return vcf_study(
+    yield vcf_study(
         root_path,
         "test_query_by_genomic_scores", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
         gpf_instance=gpf_instance)
+    gpf_instance.shutdown()
 
 
 @pytest.mark.no_gs_inmemory

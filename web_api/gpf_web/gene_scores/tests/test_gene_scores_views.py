@@ -2,7 +2,7 @@
 import json
 import pathlib
 import textwrap
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 
 import pytest
 import pytest_mock
@@ -33,6 +33,7 @@ def _wgpf_instance_with_gene_score(
     both surface through the gene-scores endpoints.
     """
     t4c8_instance = setup_t4c8_instance(root_path)
+    t4c8_instance.shutdown()
     grr_dir = root_path / "t4c8_grr"
 
     realize(grr_dir / "gene_scores" / resource_name)
@@ -86,7 +87,7 @@ def categorical_wgpf_instance(
     tmp_path: pathlib.Path,
     db: None,  # ruff: ignore[unused-function-argument] ; enable the Django test database
     mocker: pytest_mock.MockFixture,
-) -> WGPFInstance:
+) -> Generator[WGPFInstance, None, None]:
     """A WGPF instance carrying a number and a categorical gene score.
 
     The categorical gene score ``cat_score`` sits next to the t4c8
@@ -106,8 +107,10 @@ def categorical_wgpf_instance(
             .realize_into(resource_dir)
         )
 
-    return _wgpf_instance_with_gene_score(
+    wgpf_instance = _wgpf_instance_with_gene_score(
         tmp_path, mocker, "cat_score", realize)
+    yield wgpf_instance
+    wgpf_instance.shutdown()
 
 
 @pytest.fixture
@@ -115,7 +118,7 @@ def described_wgpf_instance(
     tmp_path: pathlib.Path,
     db: None,  # ruff: ignore[unused-function-argument] ; enable the Django test database
     mocker: pytest_mock.MockFixture,
-) -> WGPFInstance:
+) -> Generator[WGPFInstance, None, None]:
     """A WGPF instance with a gene score declaring every description field.
 
     ``desc_score`` carries a description and distinct small- and
@@ -144,8 +147,10 @@ def described_wgpf_instance(
             c8,2
         """))
 
-    return _wgpf_instance_with_gene_score(
+    wgpf_instance = _wgpf_instance_with_gene_score(
         tmp_path, mocker, "desc_score", realize)
+    yield wgpf_instance
+    wgpf_instance.shutdown()
 
 
 @pytest.mark.parametrize("url", [

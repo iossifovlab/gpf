@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
+from collections.abc import Generator
 
 import pytest
 from gain.genomic_resources.testing import (
@@ -19,7 +20,7 @@ from gpf.testing.import_helpers import (
 @pytest.fixture
 def dataset(
     tmp_path: pathlib.Path,
-) -> GenotypeDataGroup:
+) -> Generator[GenotypeDataGroup, None, None]:
     root_path = tmp_path
     gpf_instance = acgt_gpf(root_path)
     var_path1 = setup_denovo(
@@ -144,7 +145,7 @@ f2       ch2      dad2  mom2  2   2      prb
 
     (root_path / "dataset").mkdir(exist_ok=True)
 
-    return setup_dataset(
+    yield setup_dataset(
         "ds1", gpf_instance, study1, study2,
         dataset_config_update=textwrap.dedent(f"""
             conf_dir: {root_path / "dataset "}
@@ -172,6 +173,7 @@ f2       ch2      dad2  mom2  2   2      prb
                       name: unspecified
                 selected_person_set_collections:
                 - phenotype"""))
+    gpf_instance.shutdown()
 
 
 def test_dataset_build_person_set_collection(

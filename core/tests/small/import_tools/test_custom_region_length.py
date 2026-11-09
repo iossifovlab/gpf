@@ -2,6 +2,7 @@
 
 import os
 import pathlib
+from collections.abc import Generator
 from copy import deepcopy
 from os.path import join
 
@@ -15,8 +16,10 @@ from gpf.testing.acgt_import import acgt_gpf
 
 
 @pytest.fixture
-def gpf_fixture(tmp_path: pathlib.Path) -> GPFInstance:
-    return acgt_gpf(tmp_path / "gpf")
+def gpf_fixture(tmp_path: pathlib.Path) -> Generator[GPFInstance, None, None]:
+    instance = acgt_gpf(tmp_path / "gpf")
+    yield instance
+    instance.shutdown()
 
 
 def test_import_task_bin_size(

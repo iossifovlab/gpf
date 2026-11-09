@@ -30,11 +30,15 @@ def test_setup_import_project(
 ) -> None:
     root_path = tmp_path_factory.mktemp("test_import_project")
     gpf_instance = acgt_gpf(root_path)
-    study = StudyInputLayout(
-        "test_id", root_path / "fam.ped", [root_path / "in.vcf"], [], [], [])
+    try:
+        study = StudyInputLayout(
+            "test_id", root_path / "fam.ped", [root_path / "in.vcf"],
+            [], [], [])
 
-    pathname = setup_import_project_config(
-        root_path, study, gpf_instance, config_update)
+        pathname = setup_import_project_config(
+            root_path, study, gpf_instance, config_update)
 
-    project_config = yaml.safe_load(pathname.read_text())
-    assert set(project_config[key]) == subkeys
+        project_config = yaml.safe_load(pathname.read_text())
+        assert set(project_config[key]) == subkeys
+    finally:
+        gpf_instance.shutdown()

@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from collections.abc import Generator
 
 import pytest
 from gain.genomic_resources.testing import (
@@ -14,15 +15,23 @@ from gpf.testing.t4c8_import import t4c8_gpf
 
 
 @pytest.fixture(scope="module")
-def t4c8_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
+def t4c8_instance(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp("t4c8_instance")
-    return t4c8_gpf(root_path)
+    instance = t4c8_gpf(root_path)
+    yield instance
+    instance.shutdown()
 
 
 @pytest.fixture(scope="module")
-def acgt_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
+def acgt_instance(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp("acgt_instance")
-    return acgt_gpf(root_path)
+    instance = acgt_gpf(root_path)
+    yield instance
+    instance.shutdown()
 
 
 @pytest.fixture(scope="module")

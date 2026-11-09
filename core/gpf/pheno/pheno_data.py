@@ -840,6 +840,11 @@ class PhenotypeStudy(PhenotypeData):
             )[0],
         ]
 
+    def close(self) -> None:
+        """Close the connections to the pheno DB and the browser DB."""
+        super().close()
+        self.db.connection.close()
+
     @cached_property
     def families(self) -> FamiliesData:
         return FamiliesLoader.build_families_data_from_pedigree(

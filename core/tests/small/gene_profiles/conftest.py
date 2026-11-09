@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from collections.abc import Generator
 
 import pytest
 from box import Box
@@ -193,7 +194,7 @@ def gp_gpf_instance(
         tmp_path: pathlib.Path,
         gp_config: Box,
         sample_gp: GPStatistic,  # ruff: ignore[unused-function-argument]
-        mocker: MockerFixture) -> GPFInstance:
+        mocker: MockerFixture) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path
     gpf_instance = alla_gpf(root_path)
     gpdb_filename = str(root_path / "gpdb")
@@ -227,7 +228,8 @@ def gp_gpf_instance(
         )
     print(gpdb_filename)
 
-    return gpf_instance
+    yield gpf_instance
+    gpf_instance.shutdown()
 
 
 @pytest.fixture

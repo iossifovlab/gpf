@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from collections.abc import Generator
+
 import pytest
 import pytest_mock
 from gpf_instance.gpf_instance import WGPFInstance, reload_datasets
@@ -10,7 +12,7 @@ from gpf.testing.import_helpers import setup_dataset_config
 @pytest.fixture(scope="module")
 def custom_wgpf_module(
     tmp_path_factory: pytest.TempPathFactory,
-) -> WGPFInstance:
+) -> Generator[WGPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp("custom_wgpf_module_datasets")
     gpf_instance = setup_wgpf_instance(root_path)
     setup_dataset_config(gpf_instance, "dataset_1", ["t4c8_study_1"])
@@ -18,7 +20,8 @@ def custom_wgpf_module(
     setup_dataset_config(gpf_instance, "omni_dataset", ["dataset_1",
                                                         "dataset_2"])
     gpf_instance.reload()
-    return gpf_instance
+    yield gpf_instance
+    gpf_instance.shutdown()
 
 
 @pytest.fixture

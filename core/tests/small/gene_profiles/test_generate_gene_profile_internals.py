@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
+from collections.abc import Generator
 
 import duckdb
 import pytest
@@ -255,7 +256,7 @@ def gp_t4c8_instance(
     tmp_path_factory: pytest.TempPathFactory,
     gp_grr: GenomicResourceRepo,
     gp_config: Box,
-) -> GPFInstance:
+) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path_factory.mktemp(
         "test_generate_gene_profiles_internals_gp_instance")
     instance_path = root_path / "gpf_instance"
@@ -309,10 +310,12 @@ def gp_t4c8_instance(
     (instance_path / "gp_config.yaml").write_text(
         yaml.safe_dump(gp_config.to_dict()))
 
-    return setup_t4c8_instance(
+    instance = setup_t4c8_instance(
         root_path,
         grr=gp_grr,
     )
+    yield instance
+    instance.shutdown()
 
 
 def test_generate_gene_profile_internals(

@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from collections.abc import Generator
 from typing import cast
 
 import pytest
@@ -46,9 +47,11 @@ def duckdb_storage(
 def t4c8_instance(
     tmp_path: pathlib.Path,
     duckdb_storage: DuckDbStorage,
-) -> GPFInstance:
+) -> Generator[GPFInstance, None, None]:
     root_path = tmp_path / "t4c8_instance"
-    return t4c8_gpf(root_path, duckdb_storage)
+    instance = t4c8_gpf(root_path, duckdb_storage)
+    yield instance
+    instance.shutdown()
 
 
 @pytest.fixture
