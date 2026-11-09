@@ -32,9 +32,6 @@ def test_shutdown_closes_genotype_and_pheno_db_files(
         "db": "test.duckdb",
         "base_dir": str(tmp_path / "duckdb_storage"),
     })
-    instance = t4c8_gpf(tmp_path / "t4c8", storage)
-    pheno_dbfile = pathlib.Path(instance.dae_dir) / "pheno" / "fake" / "fake.db"
-    shutil.copytree(FAKE_PHENO_DIR, pheno_dbfile.parent)
     ped_path = setup_pedigree(
         tmp_path / "study_1" / "in.ped",
         """
@@ -52,15 +49,23 @@ f1.1     ch1      dad1  mom1  2   2      prb
 #CHROM POS  ID REF ALT QUAL FILTER INFO FORMAT mom1 dad1 ch1
 chr1   54   .  T   C   .    .      .    GT     0/1  0/0  0/1
         """)
-    study = vcf_study(
-        tmp_path, "study_1", ped_path, [vcf_path], gpf_instance=instance)
-    assert len(list(study.query_variants())) == 1
-    assert instance.get_phenotype_data("fake") is not None
+    instance = t4c8_gpf(tmp_path / "t4c8", storage)
+    try:
+        pheno_dbfile = \
+            pathlib.Path(instance.dae_dir) / "pheno" / "fake" / "fake.db"
+        shutil.copytree(FAKE_PHENO_DIR, pheno_dbfile.parent)
+        study = vcf_study(
+            tmp_path, "study_1", ped_path, [vcf_path], gpf_instance=instance)
+        assert len(list(study.query_variants())) == 1
+        assert instance.get_phenotype_data("fake") is not None
 
-    instance.shutdown()
+        instance.shutdown()
 
-    _assert_writable(storage_dbfile)
-    _assert_writable(pheno_dbfile)
+        _assert_writable(storage_dbfile)
+        _assert_writable(pheno_dbfile)
+        instance.shutdown()
+    finally:
+        instance.shutdown()
 
 
 def test_shutdown_of_fresh_instance_builds_no_registry(

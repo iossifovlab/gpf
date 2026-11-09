@@ -32,13 +32,16 @@ def wgpf_instance(instance_path: Path) -> Generator[WGPFInstance, None, None]:
         instance_path, duckdb_storage_factory(storage_config),
     )
 
-    yield WGPFInstance(
+    wgpf = WGPFInstance(
         gpf_instance.dae_config,
         gpf_instance.dae_dir,
         gpf_instance.dae_config_path,
         grr=gpf_instance.grr,
     )
     gpf_instance.shutdown()
+
+    yield wgpf
+    wgpf.shutdown()
 
 
 @pytest.fixture(scope="module")
