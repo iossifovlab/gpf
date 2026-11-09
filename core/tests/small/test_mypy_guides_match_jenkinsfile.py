@@ -27,6 +27,7 @@ class GuideMypyCommands:
 
     web_api: list[frozenset[str]]
     core: list[tuple[str, ...]]
+    unchecked: list[str] = dataclasses.field(default_factory=list)
 
 
 def _call_bodies(text: str, name: str) -> list[str]:
@@ -85,28 +86,54 @@ def jenkinsfile_mypy_targets(text: str) -> dict[str, str]:
 
 
 def guide_mypy_commands(text: str) -> GuideMypyCommands:
-    """Return the core and web_api mypy commands of a guide."""
+    """Return the core and web_api mypy commands of a guide.
+
+    The parser reads every fenced code block, also an indented one and
+    one with any language tag. A line that runs mypy in a form that the
+    parser cannot check goes to ``unchecked``.
+    """
     web_api: list[frozenset[str]] = []
     core: list[tuple[str, ...]] = []
+    unchecked: list[str] = []
     blocks = re.findall(
-        r"^```bash\n(.*?)^```", text, re.MULTILINE | re.DOTALL)
+        r"^[ \t]*```[^\n]*\n(.*?)^[ \t]*```", text,
+        re.MULTILINE | re.DOTALL)
     for block in blocks:
-        for line in block.replace("\\\n", " ").splitlines():
-            match = re.match(
-                r"\s*cd (\S+) && uv run (?:--no-sync )?mypy\b(.*)", line)
+        for line in re.sub(r"\\\n", " ", block).splitlines():
+            if "mypy" not in line.split():
+                continue
+            match = re.fullmatch(
+                r"\s*cd (\S+) && uv run (?:--[\w-]+ +)*mypy\b(.*)", line)
             if not match:
+                unchecked.append(line.strip())
                 continue
             directory, args = match.group(1), shlex.split(match.group(2))
-            if directory == "web_api" and "-p" in args:
+            if directory == "web_api" and not _positional(args):
                 web_api.append(_packages(args))
             elif directory == "core":
                 core.append(_positional(args))
-    return GuideMypyCommands(web_api=web_api, core=core)
+            else:
+                unchecked.append(line.strip())
+    return GuideMypyCommands(web_api=web_api, core=core, unchecked=unchecked)
 
 
 def _packages(args: list[str]) -> frozenset[str]:
     return frozenset(
         args[i + 1] for i, arg in enumerate(args[:-1]) if arg == "-p")
+
+
+# The mypy options that take the next argument as their value.
+_VALUE_OPTIONS = frozenset({
+    "-p", "--package", "-m", "--module", "-c", "--command",
+    "--config-file", "--exclude", "--python-version", "--platform",
+    "--python-executable", "--cache-dir", "--custom-typeshed-dir",
+    "--always-true", "--always-false", "--disable-error-code",
+    "--enable-error-code", "--junit-xml", "--html-report",
+    "--txt-report", "--xml-report", "--linecount-report",
+    "--any-exprs-report", "--cobertura-xml-report",
+    "--linecoverage-report", "--lineprecision-report",
+    "--shadow-file", "--find-occurrences",
+})
 
 
 def _positional(args: list[str]) -> tuple[str, ...]:
@@ -116,7 +143,7 @@ def _positional(args: list[str]) -> tuple[str, ...]:
     for arg in args:
         if skip:
             skip = False
-        elif arg in {"--config-file", "-p"}:
+        elif arg in _VALUE_OPTIONS:
             skip = True
         elif not arg.startswith("-"):
             result.append(arg)
@@ -134,6 +161,11 @@ def guide_mismatches(
         problems.append(f"{guide_name}: no web_api mypy command found")
     if not commands.core:
         problems.append(f"{guide_name}: no core mypy command found")
+    problems.extend(
+        f"{guide_name}: the parser cannot check the mypy command "
+        f"'{line}'; use 'cd core && uv run mypy <target>' or "
+        f"'cd web_api && uv run mypy -p <pkg> ...'"
+        for line in commands.unchecked)
     for packages in commands.web_api:
         missing = sorted(expected_web_api - packages)
         extra = sorted(packages - expected_web_api)
@@ -273,6 +305,64 @@ def test_guide_parser_finds_no_sync_commands() -> None:
 
     assert commands == GuideMypyCommands(
         web_api=[frozenset({"gpf_web", "utils"})], core=[("gpf",)])
+
+
+def test_guide_parser_reads_every_fenced_block() -> None:
+    guide = textwrap.dedent("""\
+        ```sh
+        cd core && uv run mypy gpfx
+        ```
+
+        - A step in a list:
+
+          ```bash
+          cd web_api && uv run mypy -p gpf_web -p studies
+          ```
+        """)
+
+    commands = guide_mypy_commands(guide)
+
+    assert commands == GuideMypyCommands(
+        web_api=[frozenset({"gpf_web", "studies"})], core=[("gpfx",)])
+
+
+@pytest.mark.parametrize("line", [
+    "cd web_api && uv run mypy gpf_web",
+    "cd web_api && uv run mypy --config-file mypy.ini gpf_web",
+    "mypy gpf_web",
+    "cd web_api && mypy -p gpf_web -p utils",
+    "cd federation && uv run mypy -p federation",
+])
+def test_unchecked_mypy_command_is_reported(line: str) -> None:
+    jenkinsfile = _jenkinsfile(["gpf_web", "utils"])
+    guide = _guide(["gpf_web", "utils"]) + f"```bash\n{line}\n```\n"
+
+    problems = guide_mismatches(
+        "GUIDE.md", guide, jenkinsfile_mypy_targets(jenkinsfile))
+
+    assert len(problems) == 1
+    assert problems[0].startswith(
+        f"GUIDE.md: the parser cannot check the mypy command '{line}'")
+
+
+def test_guide_parser_accepts_more_uv_run_flags() -> None:
+    guide = (
+        "```bash\n"
+        "cd web_api && uv run --no-sync --frozen mypy -p gpf_web\n"
+        "```\n")
+
+    commands = guide_mypy_commands(guide)
+
+    assert commands == GuideMypyCommands(
+        web_api=[frozenset({"gpf_web"})], core=[])
+
+
+def test_option_value_is_not_a_core_target() -> None:
+    guide = "```bash\ncd core && uv run mypy --exclude tests gpf\n```\n"
+
+    commands = guide_mypy_commands(guide)
+
+    assert commands.core == [("gpf",)]
 
 
 def test_jenkinsfile_without_web_api_stage_is_reported() -> None:
