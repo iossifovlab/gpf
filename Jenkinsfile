@@ -809,6 +809,18 @@ pipeline {
                                                     stylelint-checkstyle-formatter \\
                                                     --output-file /reports/css-lint-report.xml \\
                                                     "**/*.css"
+                                                # Rewrite the container /app/
+                                                # file names of the lint reports
+                                                # to web_ui/, so Warnings NG finds
+                                                # and fingerprints each file
+                                                # (#1152). The g flag is needed:
+                                                # ESLint writes all file elements
+                                                # on one line.
+                                                sed -i -E \\
+                                                    "s#(<file name=.)/app/#\\1web_ui/#g" \\
+                                                    /reports/ts-lint-report.xml \\
+                                                    /reports/css-lint-report.xml \\
+                                                    2>/dev/null || true
                                                 JEST_JUNIT_OUTPUT_DIR=/reports \\
                                                 JEST_JUNIT_OUTPUT_NAME=jest.xml \\
                                                     npx jest --ci \\
