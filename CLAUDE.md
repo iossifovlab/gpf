@@ -242,8 +242,10 @@ cd web_api && uv run --no-sync mypy --config-file mypy.ini \
 ```
 
 The `-p` list is the `mypyTarget` of the `web_api` stage
-(`pkg: 'gpf_web'`) in the `Jenkinsfile`. Keep the two lists
-equal.
+(`pkg: 'gpf_web'`) in the `Jenkinsfile`.
+`core/tests/small/test_mypy_guides_match_jenkinsfile.py`
+fails when a mypy command in `CLAUDE.md` or `README.md`
+differs from its `mypyTarget`.
 
 ## Commands
 
