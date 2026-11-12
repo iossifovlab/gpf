@@ -498,16 +498,20 @@ def _print_annotation_plan(
     pipeline: AnnotationPipeline,
     grr: GenomicResourceRepo,
     loader: ParquetLoader,
-) -> None:
+) -> AnnotationPipeline:
     """Print the (re)annotation plan to stderr.
 
     When the dataset already carries an embedded annotation, the previous
     pipeline is loaded from its meta and a :class:`ReannotationPipeline` plan
     is rendered; otherwise the plain all-ADDED annotation plan is rendered.
+
+    Return the pipeline whose annotators run: the
+    :class:`ReannotationPipeline` wrapper for a dataset with an embedded
+    annotation, otherwise the new pipeline itself.
     """
     if not loader.has_annotation:
         print_annotation_plan(pipeline)
-        return
+        return pipeline
 
     pipeline_previous = load_pipeline_from_yaml(
         loader.meta["annotation_pipeline"], grr)
@@ -519,8 +523,10 @@ def _print_annotation_plan(
     finally:
         # The ReannotationPipeline wrapper shares the live new-pipeline
         # annotators, so close only the previous pipeline here, not the
-        # wrapper.
+        # wrapper. The wrapper stays usable for the resource cache, which
+        # reads only the annotators of the new pipeline.
         pipeline_previous.close()
+    return reannotation
 
 
 def cli(raw_args: list[str] | None = None) -> None:
@@ -542,8 +548,9 @@ def cli(raw_args: list[str] | None = None) -> None:
     assert grr.definition is not None
 
     loader = ParquetLoader.load_from_dir(input_dir)
+    running_pipeline = pipeline
     if args["dry_run"] or loader.has_annotation:
-        _print_annotation_plan(args, pipeline, grr, loader)
+        running_pipeline = _print_annotation_plan(args, pipeline, grr, loader)
     if args["dry_run"]:
         return
 
@@ -552,10 +559,9 @@ def cli(raw_args: list[str] | None = None) -> None:
     args["task_status_dir"] = os.path.join(args["work_dir"], ".task-status")
     args["task_log_dir"] = os.path.join(args["work_dir"], ".task-log")
 
-    # Is this too eager? What if a reannotation pipeline is created
-    # inside work() and the only caching that must be done is far smaller
-    # than the entire new annotation config suggests?
-    cache_pipeline_resources(grr, pipeline)
+    # Cache only the resources of the annotators that run. COPIED annotators
+    # of a reannotation take their columns from the input Parquet.
+    cache_pipeline_resources(grr, running_pipeline)
 
     input_layout, output_layout = _setup_io_layouts(
         args["input"],
