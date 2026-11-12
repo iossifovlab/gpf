@@ -79,9 +79,7 @@ docs = [
     "sphinx-rtd-theme",
     "sphinx-copybutton",
     "sphinxcontrib-httpdomain",
-    "ipython",
     "sphinx-autorun",
     "sphinxcontrib-video",
-    "sphinx-last-updated-by-git",
     "jinja2",
 ]

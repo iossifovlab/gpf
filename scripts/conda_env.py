@@ -55,10 +55,7 @@ CONDA_NAMES: Mapping[str, str] = MappingProxyType({
 #: An output renders the entries its own feeds declare under a ``pip:``
 #: sub-list, with ``pip`` itself added as a conda dependency.
 PIP_ONLY: Mapping[str, str] = MappingProxyType({
-    "pylint-junit": "not packaged on any conda channel",
-    "pytestarch": "not packaged on any conda channel",
     "sphinx-autorun": "not packaged on any conda channel",
-    "types-requests-oauthlib": "not packaged on any conda channel",
 })
 
 #: Canonical PyPI name -> how to get it, for dependencies left out of the

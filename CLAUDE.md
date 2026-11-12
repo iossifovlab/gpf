@@ -670,7 +670,7 @@ repository.
 - **lark 1.2** — parsing (GRR search grammar)
 - **fsspec / s3fs** — filesystem abstraction + S3 access
 - Dev: **ruff 0.16**, **mypy 1.15**, **pytest**,
-  **pytest-xdist**, **pytestarch**
+  **pytest-xdist**
 
 ## Django Settings
 
