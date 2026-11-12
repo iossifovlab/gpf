@@ -53,8 +53,6 @@ dev = [
     "mypy==1.15.0",
     "pandas-stubs",
     "pylint",
-    "pylint-django",
-    "pylint-junit",
     "pytest",
     "pytest-cov",
     "pytest-django",
@@ -62,7 +60,6 @@ dev = [
     "pytest-xdist",
     "ruff==0.16.5",
     "types-requests",
-    "types-requests-oauthlib",
 ]
 
 [tool.hatch.version]

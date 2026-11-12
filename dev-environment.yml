@@ -17,38 +17,26 @@ dependencies:
   - pylint
   - pytest
   - pytest-cov
-  - pytest-doctestplus>=1.2
   - pytest-mock
   - pytest-xdist
   - ruff==0.16.5
-  - types-docker
-  - types-psutil
   - types-pyyaml
   - types-toml
   # gpf-web (web_api/pyproject.toml [dependency-groups.dev])
   - django-stubs==5.2.2
-  - pylint-django
   - pytest-django
   - types-requests
   # gpf-federation (federation/pyproject.toml [dependency-groups.dev])
   # gpf-rest-client (rest_client/pyproject.toml [dependency-groups.dev])
   # gpf-monorepo (pyproject.toml [dependency-groups.docs])
-  - ipython
   - jinja2
   - sphinx
   - sphinx-copybutton
-  - sphinx-last-updated-by-git
   - sphinx-rtd-theme
   - sphinxcontrib-httpdomain
   - sphinxcontrib-video
   # pip-only: PIP_ONLY in scripts/conda_env.py
   - pip
   - pip:
-    # pylint-junit: not packaged on any conda channel
-    - pylint-junit
-    # pytestarch: not packaged on any conda channel
-    - pytestarch
     # sphinx-autorun: not packaged on any conda channel
     - sphinx-autorun
-    # types-requests-oauthlib: not packaged on any conda channel
-    - types-requests-oauthlib

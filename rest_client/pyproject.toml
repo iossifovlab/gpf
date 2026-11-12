@@ -32,12 +32,8 @@ Homepage = "https://github.com/IossifovLab/gpf"
 dev = [
     "mypy==1.15.0",
     "pylint",
-    "pylint-junit",
     "pytest",
     "pytest-cov",
-    "pytest-django",
-    "pytest-mock",
-    "pytest-xdist",
     "ruff==0.16.5",
     "types-requests",
 ]
