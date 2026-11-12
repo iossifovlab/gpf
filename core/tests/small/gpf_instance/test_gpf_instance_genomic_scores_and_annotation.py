@@ -1,6 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import logging
+import tempfile
 import textwrap
 from collections.abc import Callable, Generator
+from pathlib import Path
 
 import pytest
 from gain.genomic_resources.repository import GenomicResourceRepo
@@ -117,3 +120,52 @@ def test_annotation_pipeline_with_bad_config(gpf_fixture: Callable) -> None:
             ValueError,
             match="annotation config file not found"):
         gpf_instance.get_annotation_pipeline()
+
+
+_ANNOTATION_INSTANCE_CONFIG = {
+    "gpf_instance.yaml": textwrap.dedent("""
+        instance_id: test_instance
+        annotation:
+          conf_file: annotation.yaml
+    """),
+    "annotation.yaml": textwrap.dedent("""
+        - position_score: genomic_scores/score_one
+    """),
+}
+
+
+def _annotation_work_dir_parents(gpf_instance: GPFInstance) -> set[Path]:
+    pipeline = gpf_instance.get_annotation_pipeline()
+    return {
+        Path(annotator.work_dir).parent
+        for annotator in pipeline.annotators
+    }
+
+
+def test_annotation_pipeline_gets_an_explicit_temp_work_dir(
+    gpf_fixture: Callable,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
+    first = gpf_fixture(_ANNOTATION_INSTANCE_CONFIG)
+    second = gpf_fixture(_ANNOTATION_INSTANCE_CONFIG)
+
+    with caplog.at_level(logging.WARNING):
+        first_parents = _annotation_work_dir_parents(first)
+        first_again_parents = _annotation_work_dir_parents(first)
+        second_parents = _annotation_work_dir_parents(second)
+
+    assert not [
+        record for record in caplog.records
+        if record.name == "gain.annotation.annotation_factory"
+        and "no `work_dir` passed" in record.getMessage()
+    ]
+    assert len(first_parents) == 1
+    first_parent = first_parents.pop()
+    assert first_parent.parent == tmp_path
+    assert first_parent.name.startswith("gpf-annotation-")
+    assert first_again_parents == {first_parent}
+    assert len(second_parents) == 1
+    assert second_parents.pop() != first_parent

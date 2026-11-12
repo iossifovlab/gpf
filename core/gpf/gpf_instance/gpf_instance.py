@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import logging
 import os
+import tempfile
 from functools import cached_property
 from pathlib import Path
 from typing import Any, cast
@@ -611,7 +612,9 @@ class GPFInstance:
         """Return the annotation pipeline configured in the GPF instance."""
         if self._annotation_pipeline is None:
             pipeline_config = self.get_annotation_pipeline_config()
-            pipeline = build_annotation_pipeline(pipeline_config, self.grr)
+            work_dir = Path(tempfile.mkdtemp(prefix="gpf-annotation-"))
+            pipeline = build_annotation_pipeline(
+                pipeline_config, self.grr, work_dir=work_dir)
 
             self._annotation_pipeline = pipeline
 
