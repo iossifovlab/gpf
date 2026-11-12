@@ -1070,3 +1070,181 @@ def test_produce_regions(
     contig_lens = {"chrZ": 1000, "chrW": 2000}
     result = produce_regions(target_region, region_size, contig_lens)
     assert result == expected
+
+
+def _cached_resource_ids(spy: pytest_mock.MockType) -> set[str]:
+    """Collect the resource ids of the pipeline that the spy received."""
+    assert spy.call_count == 1
+    pipeline = spy.call_args.args[1]
+    return {
+        resource_id
+        for annotator in pipeline.annotators
+        for resource_id in annotator.resource_ids
+    }
+
+
+def _annotate_then_reannotate(
+    mocker: pytest_mock.MockerFixture,
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    input_dir: str,
+    extra_args: list[str],
+) -> pytest_mock.MockType:
+    """Annotate with new_annotation.yaml, then reannotate the output.
+
+    Return the spy on ``cache_pipeline_resources`` of the second run.
+    """
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    grr_file = str(root_path / "grr.yaml")
+    instance_file = str(
+        pathlib.Path(t4c8_instance.dae_dir) / "gpf_instance.yaml")
+
+    out_path = str(tmp_path / "out")
+    cli([
+        input_dir, str(root_path / "new_annotation.yaml"),
+        "--grr", grr_file,
+        "-j", "1",
+        "-o", out_path,
+        "-w", str(tmp_path / "work"),
+        "-i", instance_file,
+    ])
+    clear_registered_contexts()
+
+    spy = mocker.spy(gpf.parquet.schema2.annotate_schema2_parquet,
+                     "cache_pipeline_resources")
+    cli([
+        out_path, str(root_path / "new_annotation_2.yaml"),
+        "--grr", grr_file,
+        "-j", "1",
+        "-o", str(tmp_path / "out2"),
+        "-w", str(tmp_path / "work2"),
+        "-i", instance_file,
+        *extra_args,
+    ])
+    return spy
+
+
+def test_reannotation_caches_only_the_resources_of_annotators_that_run(
+    mocker: pytest_mock.MockerFixture,
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_study_nonpartitioned: str,
+) -> None:
+    spy = _annotate_then_reannotate(
+        mocker, tmp_path, t4c8_instance, t4c8_study_nonpartitioned, [])
+
+    # The "three" annotator is COPIED from the embedded annotation, so its
+    # resource needs no cache.
+    assert _cached_resource_ids(spy) == {"two"}
+
+
+def test_full_reannotation_caches_the_resources_of_every_annotator(
+    mocker: pytest_mock.MockerFixture,
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_study_nonpartitioned: str,
+) -> None:
+    spy = _annotate_then_reannotate(
+        mocker, tmp_path, t4c8_instance, t4c8_study_nonpartitioned,
+        ["--full-reannotation"])
+
+    assert _cached_resource_ids(spy) == {"three", "two"}
+
+
+def test_annotation_without_embedded_annotation_caches_every_resource(
+    mocker: pytest_mock.MockerFixture,
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_annotationless_study: str,
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    spy = mocker.spy(gpf.parquet.schema2.annotate_schema2_parquet,
+                     "cache_pipeline_resources")
+
+    cli([
+        t4c8_annotationless_study, str(root_path / "new_annotation_2.yaml"),
+        "--grr", str(root_path / "grr.yaml"),
+        "-j", "1",
+        "-o", str(tmp_path / "out"),
+        "-w", str(tmp_path / "work"),
+        "-i", str(pathlib.Path(t4c8_instance.dae_dir) / "gpf_instance.yaml"),
+    ])
+
+    assert _cached_resource_ids(spy) == {"three", "two"}
+
+
+def test_dry_run_caches_nothing(
+    mocker: pytest_mock.MockerFixture,
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_study_nonpartitioned: str,
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    spy = mocker.spy(gpf.parquet.schema2.annotate_schema2_parquet,
+                     "cache_pipeline_resources")
+
+    cli([
+        t4c8_study_nonpartitioned, str(root_path / "new_annotation_2.yaml"),
+        "-w", str(tmp_path / "work"),
+        "--grr", str(root_path / "grr.yaml"),
+        "-j", "1",
+        "--dry-run",
+        "-i", str(pathlib.Path(t4c8_instance.dae_dir) / "gpf_instance.yaml"),
+    ])
+
+    assert spy.call_count == 0
+
+
+def test_reannotation_with_cached_grr_never_fetches_copied_resources(
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_study_nonpartitioned: str,
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    instance_file = str(
+        pathlib.Path(t4c8_instance.dae_dir) / "gpf_instance.yaml")
+    cache_dir = tmp_path / "grr_cache"
+    cached_grr_file = tmp_path / "cached_grr.yaml"
+    cached_grr_file.write_text(textwrap.dedent(f"""
+        id: t4c8_cached
+        type: directory
+        directory: {root_path!s}
+        cache_dir: {cache_dir!s}
+    """))
+
+    out_path = str(tmp_path / "out")
+    cli([
+        t4c8_study_nonpartitioned, str(root_path / "new_annotation.yaml"),
+        "--grr", str(root_path / "grr.yaml"),
+        "-j", "1",
+        "-o", out_path,
+        "-w", str(tmp_path / "work"),
+        "-i", instance_file,
+    ])
+    clear_registered_contexts()
+
+    output_dir = str(tmp_path / "out2")
+    cli([
+        out_path, str(root_path / "new_annotation_2.yaml"),
+        "--grr", str(cached_grr_file),
+        "-j", "1",
+        "-o", output_dir,
+        "-w", str(tmp_path / "work2"),
+        "-i", instance_file,
+    ])
+
+    score_a: set[float] = set()
+    score_two: set[float] = set()
+    for sv in ParquetLoader.load_from_dir(output_dir).fetch_summary_variants():
+        score_a.update(sv.get_attribute("score_A"))
+        score_two.update(sv.get_attribute("score_two"))
+    # The COPIED score_A column keeps the values of resource "three" from
+    # the first run, and the ADDED "two" annotator computes score_two.
+    assert sorted(score_a) == pytest.approx(
+        [0.21, 0.22, 0.23, 0.24, 0.25, 0.26])
+    assert sorted(score_two) == pytest.approx(
+        [0.11, 0.12, 0.13, 0.14, 0.15, 0.16])
+    # The run fetches the resource of the ADDED annotator, and never
+    # fetches the resource of the COPIED annotator.
+    assert (cache_dir / "t4c8_cached" / "two" / "data.txt").exists()
+    assert not (cache_dir / "t4c8_cached" / "three").exists()
