@@ -102,9 +102,10 @@ Alias /__GPF_PREFIX__/static/ "/var/www/html/static/"
     Options FollowSymLinks
     AllowOverride None
     Require all granted
-    ExpiresActive On
-    ExpiresDefault "access plus 1 year"
-    Header set Cache-Control "public, immutable"
+    # Django static files carry no content hash in their names, so
+    # browsers must revalidate them; a Django upgrade then shows up
+    # on the next request instead of after a year.
+    Header set Cache-Control "no-cache"
 </Directory>
 
 # The SPA, served under the prefix. The Alias maps /__GPF_PREFIX__
@@ -121,12 +122,17 @@ Alias /__GPF_PREFIX__ "/var/www/html"
     FallbackResource /__GPF_PREFIX__/index.html
 </Directory>
 
-# Long cache on hashed Angular assets, no-cache on index.html so a
-# deploy is picked up immediately. Filename-based, prefix-agnostic.
+# One-year immutable cache only on hashed Angular assets: the
+# @angular/build:application output names them
+# <name>-<8-char uppercase hash>.<ext>, for example
+# main-KJO4KJAK.js. Unhashed files in the document root
+# (favicon.ico, og-image.png, assets/*) get no cache headers here.
+# index.html gets no-store so a deploy is picked up immediately.
+# Filename-based, prefix-agnostic.
 <Files "index.html">
     Header set Cache-Control "no-store, no-cache, must-revalidate"
 </Files>
-<FilesMatch "\.(js|css|woff2?|svg|png|jpg|jpeg|gif|ico)$">
+<FilesMatch "-[A-Z0-9]{8}\.(js|css|woff2?|svg|png|jpg|jpeg|gif|ico)$">
     ExpiresActive On
     ExpiresDefault "access plus 1 year"
     Header set Cache-Control "public, immutable"
