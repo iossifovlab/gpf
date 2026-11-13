@@ -1,5 +1,6 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,R0917,C0302
 import pathlib
+import tempfile
 import textwrap
 from collections.abc import Callable
 from contextlib import closing
@@ -643,6 +644,37 @@ def test_denovo_liftover_simple(
         # Check that chrB is in the output (lifted from chrA)
         content = "".join(lines)
         assert "chrB" in content
+
+
+def test_denovo_liftover_pipeline_gets_explicit_work_dir(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    liftover_data: GenomicResourceRepo,
+    denovo_data: tuple[pathlib.Path, pathlib.Path],
+) -> None:
+    pedigree_file, denovo_file = denovo_data
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
+    argv = [
+        str(pedigree_file),
+        str(denovo_file),
+        "--denovo-location", "location",
+        "--denovo-variant", "variant",
+        "--denovo-family-id", "familyId",
+        "--denovo-best-state", "bestState",
+        "--chain", "liftover_chain",
+        "--source-genome", "source_genome",
+        "--target-genome", "target_genome",
+        "-o", str(tmp_path / "lifted_denovo.txt"),
+    ]
+
+    denovo_liftover_main(argv, grr=liftover_data)
+
+    assert not [
+        rec for rec in caplog.records
+        if rec.name == "gain.annotation.annotation_factory"
+        and "no `work_dir` passed" in rec.getMessage()
+    ]
 
 
 @pytest.fixture

@@ -132,7 +132,10 @@ class LiftoverTool(abc.ABC):
             """,
         )
 
-        pipeline = load_pipeline_from_yaml(pipeline_config, grr)
+        pipeline = load_pipeline_from_yaml(
+            pipeline_config, grr,
+            work_dir=pathlib.Path(tempfile.mkdtemp(prefix="gpf-liftover-")),
+        )
         pipeline.open()
 
         return pipeline

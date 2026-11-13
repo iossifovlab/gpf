@@ -597,6 +597,45 @@ def test_autodetection_reannotate(
     assert spy.call_count == 2
 
 
+def test_reannotate_previous_pipeline_gets_explicit_work_dir(
+    mocker: pytest_mock.MockerFixture,
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_study_nonpartitioned: str,
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    output_dir = str(tmp_path / "out")
+    work_dir = str(tmp_path / "work")
+    spy = mocker.spy(gpf.parquet.schema2.annotate_schema2_parquet,
+                     "load_pipeline_from_yaml")
+
+    # -j 1 runs process_parquet in this process, so caplog sees its records.
+    cli([
+        t4c8_study_nonpartitioned, annotation_file_new,
+        "-o", output_dir,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1",
+        "-i", str(pathlib.Path(t4c8_instance.dae_dir) / "gpf_instance.yaml"),
+    ])
+
+    # _print_annotation_plan and process_parquet each load the previous
+    # pipeline from the Parquet meta.
+    assert spy.call_count == 2
+    assert all(
+        call.kwargs.get("work_dir") is not None
+        for call in spy.call_args_list
+    )
+    assert not [
+        rec for rec in caplog.records
+        if rec.name == "gain.annotation.annotation_factory"
+        and "no `work_dir` passed" in rec.getMessage()
+    ]
+
+
 def test_reannotate_in_place(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,

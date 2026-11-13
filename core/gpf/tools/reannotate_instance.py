@@ -108,6 +108,7 @@ class ReannotateInstanceTool:
     def _is_study_annotation_up_to_date(
         study_id: str,
         gpf_instance: GPFInstance,
+        work_dir: pathlib.Path,
     ) -> bool:
         canonical = set(gpf_instance.get_annotation_pipeline().get_info())
         study = gpf_instance.get_genotype_data(study_id)
@@ -126,7 +127,8 @@ class ReannotateInstanceTool:
         else:
             raise ValueError(f"Invalid storage type {storage.storage_type}")
         raw = raw.strip()
-        annotation = load_pipeline_from_yaml(raw, gpf_instance.grr)
+        annotation = load_pipeline_from_yaml(
+            raw, gpf_instance.grr, work_dir=work_dir)
         new_infos = set(annotation.get_info())
         return new_infos == canonical
 
@@ -134,11 +136,12 @@ class ReannotateInstanceTool:
     def _is_reannotatable(
         study: GenotypeData,
         gpf_instance: GPFInstance,
+        work_dir: pathlib.Path,
     ) -> bool:
         genotype_storage = ReannotateInstanceTool._get_genotype_storage(
             study, gpf_instance)
         annotation_ok = ReannotateInstanceTool._is_study_annotation_up_to_date(
-            study.study_id, gpf_instance)
+            study.study_id, gpf_instance, work_dir)
         return genotype_storage.storage_type in {"duckdb_parquet", "parquet"} \
             and not annotation_ok
 
@@ -177,7 +180,10 @@ class ReannotateInstanceTool:
             for study in self.gpf_instance.get_all_genotype_data()
             if (not study.is_group
                 and not study.is_remote
-                and self._is_reannotatable(study, self.gpf_instance))
+                and self._is_reannotatable(
+                    study, self.gpf_instance,
+                    pathlib.Path(
+                        self.args.work_dir, "check", study.study_id)))
         ]
 
         if not reannotatable_data:

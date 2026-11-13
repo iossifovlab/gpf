@@ -278,7 +278,10 @@ def process_parquet(  # pylint:disable=too-many-positional-arguments
 
     pipeline_previous = None
     if pipeline_config_old is not None:
-        pipeline_previous = load_pipeline_from_yaml(pipeline_config_old, grr)
+        pipeline_previous = load_pipeline_from_yaml(
+            pipeline_config_old, grr,
+            work_dir=pathlib.Path(args["work_dir"], "previous_pipeline"),
+        )
 
     attributes_to_delete = []
 
@@ -514,7 +517,9 @@ def _print_annotation_plan(
         return pipeline
 
     pipeline_previous = load_pipeline_from_yaml(
-        loader.meta["annotation_pipeline"], grr)
+        loader.meta["annotation_pipeline"], grr,
+        work_dir=pathlib.Path(args["work_dir"], "previous_pipeline"),
+    )
     try:
         reannotation = ReannotationPipeline(
             pipeline, pipeline_previous,
