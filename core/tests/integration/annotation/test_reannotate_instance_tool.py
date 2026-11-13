@@ -1,9 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+import tempfile
 import textwrap
 
+import pytest
+import pytest_mock
+
 from gpf.gpf_instance import GPFInstance
-from gpf.tools.reannotate_instance import cli
+from gpf.tools.reannotate_instance import ReannotateInstanceTool, cli
 from tests.integration.annotation.conftest import t4c8_study
 
 
@@ -56,3 +60,40 @@ def test_reannotate_instance_tool(
 
     assert all(v.has_attribute("score_two") for v in vs)
     assert not any(v.has_attribute("score_one") for v in vs)
+
+
+def test_reannotate_instance_dry_run_gets_explicit_work_dir(
+    t4c8_instance: GPFInstance,
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    # GPFInstance.get_annotation_pipeline makes its work directory with
+    # tempfile.mkdtemp.
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
+    t4c8_study(t4c8_instance)
+    instance_path = pathlib.Path(t4c8_instance.dae_dir)
+    spy = mocker.spy(
+        ReannotateInstanceTool, "_is_study_annotation_up_to_date")
+
+    # --dry-run loads only the study pipeline, in
+    # _is_study_annotation_up_to_date, and runs no reannotation task.
+    cli([
+        "--dry-run",
+        "--work-dir", str(tmp_path / "work"),
+        "-i", str(instance_path / "gpf_instance.yaml"),
+    ])
+
+    # Each study gets its own subdirectory of the work directory of the tool.
+    assert spy.call_count > 0
+    for call in spy.call_args_list:
+        study_id, _, study_work_dir = call.args
+        assert study_work_dir != tmp_path / "work"
+        assert study_work_dir.is_relative_to(tmp_path / "work")
+        assert study_work_dir.name == study_id
+    assert not [
+        rec for rec in caplog.records
+        if rec.name == "gain.annotation.annotation_factory"
+        and "no `work_dir` passed" in rec.getMessage()
+    ]
