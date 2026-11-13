@@ -5,7 +5,7 @@ from collections.abc import Callable, Generator
 from typing import Any
 
 import pytest
-from gain.genomic_resources.repository import (
+from gain.genomic_resources.repository_ids import (
     GR_CONF_FILE_NAME,
 )
 from gain.genomic_resources.testing import (

@@ -12,7 +12,7 @@ from gain.genomic_resources.cli import cli_manage
 from gain.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from gain.genomic_resources.testing.builders import a_gene_score
+from gain.genomic_resources.testing.gene_score_builder import a_gene_score
 from gpf_instance.gpf_instance import WGPFInstance
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer

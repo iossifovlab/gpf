@@ -15,12 +15,14 @@ from gain.genomic_resources.histogram import (
     NumberHistogram,
 )
 from gain.genomic_resources.repository import (
-    GR_CONF_FILE_NAME,
     GenomicResourceProtocolRepo,
 )
 from gain.genomic_resources.repository_factory import (
     build_genomic_resource_group_repository,
     build_genomic_resource_repository,
+)
+from gain.genomic_resources.repository_ids import (
+    GR_CONF_FILE_NAME,
 )
 from gain.genomic_resources.testing import (
     build_inmemory_test_repository,
