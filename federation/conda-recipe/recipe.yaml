@@ -33,6 +33,7 @@ requirements:
     - gpf-core ==${{ version }}
     - gpf-rest-client ==${{ version }}
     - gpf-web ==${{ version }}
+    - pandas >=3.1
 
 about:
   homepage: https://github.com/iossifovlab/gpf

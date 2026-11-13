@@ -1314,6 +1314,7 @@ dependencies = [
     { name = "gpf-core" },
     { name = "gpf-rest-client" },
     { name = "gpf-web" },
+    { name = "pandas" },
 ]
 
 [package.dev-dependencies]
@@ -1336,6 +1337,7 @@ requires-dist = [
     { name = "gpf-core", editable = "core" },
     { name = "gpf-rest-client", editable = "rest_client" },
     { name = "gpf-web", editable = "web_api" },
+    { name = "pandas", specifier = ">=3.1" },
 ]
 
 [package.metadata.requires-dev]

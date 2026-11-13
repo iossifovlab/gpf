@@ -21,6 +21,7 @@ dependencies = [
     "gpf-core",
     "gpf-rest-client",
     "gpf-web",
+    "pandas>=3.1",
 ]
 dynamic = ["version"]
 
