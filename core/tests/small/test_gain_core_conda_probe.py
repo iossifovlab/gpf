@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0116
-"""``scripts/gain_core_conda_probe.sh`` finds gain-core on a conda channel.
+"""``scripts/gain_core_conda_probe.sh`` finds gain-core on iossifovlab.
 
 The `Pre-flight: tag freshness` stage of ``Jenkinsfile.release`` runs the
 script when the operator sets ``GAIN_PIN_VERSION``. A stub ``curl`` first
@@ -73,30 +73,7 @@ def run_probe(
     )
 
 
-def test_present_on_bioconda_passes(tmp_path: pathlib.Path) -> None:
-    result = run_probe(tmp_path, bioconda="200", iossifovlab="404")
-
-    assert result.returncode == 0, result.stderr
-    assert (
-        f"Gain conda probe: gain-core {VERSION} present on bioconda"
-        in result.stdout
-    )
-
-
-def test_present_on_both_channels_names_bioconda(
-    tmp_path: pathlib.Path,
-) -> None:
-    result = run_probe(tmp_path, bioconda="200", iossifovlab="200")
-
-    assert result.returncode == 0, result.stderr
-    assert (
-        f"Gain conda probe: gain-core {VERSION} present on bioconda"
-        in result.stdout
-    )
-    assert "present on iossifovlab" not in result.stdout
-
-
-def test_present_only_on_iossifovlab_passes(tmp_path: pathlib.Path) -> None:
+def test_present_on_iossifovlab_passes(tmp_path: pathlib.Path) -> None:
     result = run_probe(tmp_path, bioconda="404", iossifovlab="200")
 
     assert result.returncode == 0, result.stderr
@@ -106,17 +83,22 @@ def test_present_only_on_iossifovlab_passes(tmp_path: pathlib.Path) -> None:
     )
 
 
-def test_absent_on_both_channels_fails(tmp_path: pathlib.Path) -> None:
+def test_present_only_on_bioconda_fails(tmp_path: pathlib.Path) -> None:
+    result = run_probe(tmp_path, bioconda="200", iossifovlab="404")
+
+    assert result.returncode == 1
+    assert "present on bioconda" not in result.stdout
+
+
+def test_absent_on_iossifovlab_fails(tmp_path: pathlib.Path) -> None:
     result = run_probe(tmp_path, bioconda="404", iossifovlab="404")
 
     assert result.returncode == 1
     assert VERSION in result.stderr
-    assert "bioconda" in result.stderr
     assert "iossifovlab" in result.stderr
-    assert "lags a gain release" in result.stderr
 
 
-def test_network_failure_on_both_channels_fails(
+def test_network_failure_fails(
     tmp_path: pathlib.Path,
 ) -> None:
     result = run_probe(tmp_path, bioconda="000", iossifovlab="000")
