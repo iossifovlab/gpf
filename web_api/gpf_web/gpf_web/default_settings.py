@@ -6,7 +6,10 @@ import sys
 from typing import ClassVar
 
 
-def _env_bool(name: str, *, default: bool) -> bool:
+def _env_bool(
+    name: str,
+    default: bool,  # ruff: ignore[boolean-type-hint-positional-argument]
+) -> bool:
     """Read the environment variable ``name`` as a boolean.
 
     An unset or blank value gives ``default``. Only ``true``, ``1``,
