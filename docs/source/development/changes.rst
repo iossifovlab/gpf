@@ -1,6 +1,58 @@
 Release Notes
 =============
  
+* 2026.11.0
+    * Partial grants: a user granted some child studies of a dataset but
+      not the dataset itself sees only those children in the family,
+      pedigree, person set, family report and phenotype routes;
+      variant reports and the enrichment test answer 403, and a remote
+      child is refused.
+    * Web API access checks: the genotype browser download is capped at
+      ``DOWNLOAD_LIMIT`` variants unless the user is staff or in the
+      unlimited download group, the denovo gene sets dump replaces
+      family ids with per-response tokens, and the person set, pedigree
+      and enrichment test views check dataset access. A request naming
+      two different dataset ids is refused, the single dataset
+      permissions view needs a staff user, phenotype images are served
+      only from the images directory, and the SQL query builders check
+      attribute names and range bounds and escape string literals.
+    * Accounts: a password change ends the user's sessions and revokes
+      their OAuth tokens, logout revokes the token, a token of an
+      inactive user is refused, the set and reset password forms check
+      password strength, the login lockout is checked before
+      authentication, the login ``next`` URL is checked, and secret
+      values are masked in the request log. The unused
+      ``users/change_password`` route is removed.
+    * Sentry support is removed: the ``api/v3/sentry`` route, the
+      ``WDAE_SENTRY_DSN`` setting, the web UI Sentry handler and the
+      ``sentry-sdk`` and ``@sentry/angular`` dependencies.
+    * API: ``gpf.gene_scores`` provides ``GeneScoresDb`` and
+      ``GeneScoreDesc``, so gpf no longer imports them from gain.
+      ``GPFInstance.shutdown()`` closes the genotype storage and
+      phenotype registries the instance built, and
+      ``create_statistics_build_tasks`` of the enrichment resource takes
+      keyword-only arguments.
+    * Dependencies: gpf-core requires ``pandas>=3.1``, as gain-core does,
+      and no longer declares apsw, dask, dask-jobqueue, distributed,
+      docker, filelock, intervaltree, markdown2, psutil, pyBigWig,
+      pyliftover, toolz and requests; gpf-web drops importlib-metadata.
+      The web UI drops Tether, Popper 1, sprintf-js and other unused npm
+      packages and declares font-awesome. The Python and web UI locks
+      clear every open Dependabot advisory, including Django,
+      djangorestframework, certifi, Pillow, aiohttp and oauthlib 4.0.
+    * Packaging: the gpf-core and gpf-web conda packages pin gain-core to
+      the gain version of the release, ``environment.yml`` and
+      ``dev-environment.yml`` are generated from the workspace
+      pyprojects, and the stale kubernetes and ``--sge`` cluster docs are
+      removed.
+    * **Issues closed in this release:** `all issues
+      <https://github.com/iossifovlab/gpf/issues?q=is%3Aissue+is%3Aclose
+      d+reason%3Acompleted+closed%3A2026-09-08T13%3A11%3A32Z..2026-11-09
+      T13%3A33%3A24Z>`__, `bug issues
+      <https://github.com/iossifovlab/gpf/issues?q=is%3Aissue+label%3Abu
+      g+is%3Aclosed+reason%3Acompleted+closed%3A2026-09-08T13%3A11%3A32Z
+      ..2026-11-09T13%3A33%3A24Z>`__.
+
 * 2026.9.0
     * ``GET /api/v3/gene_scores`` lists a gene score with a categorical
       or null histogram instead of failing with a 500 (:issue:`982`).
