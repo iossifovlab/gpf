@@ -518,8 +518,8 @@ pipeline {
 
                     // The same version must exist as a gain-core conda
                     // package. scripts/gain_core_conda_probe.sh probes
-                    // bioconda and then the iossifovlab channel through
-                    // the public anaconda.org API (gpf#1071).
+                    // the iossifovlab channel through the public
+                    // anaconda.org API (gpf#1071, gpf#1181).
                     //
                     // This file comes from master, but the workspace is
                     // the tag checkout. A tag cut before gpf#1071 has no

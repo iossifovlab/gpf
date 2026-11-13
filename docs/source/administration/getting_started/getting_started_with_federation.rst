@@ -23,9 +23,13 @@ this by running the following command:
 
     mamba install \
         -c conda-forge \
-        -c bioconda \
         -c iossifovlab \
+        -c bioconda \
         gpf-federation
+
+With strict channel priority, the first channel that has ``gain-core`` hides
+the others, so list ``iossifovlab`` before ``bioconda``. Bioconda can lag the
+``gain-core`` version that GPF pins.
 
 Once the package is installed, you need to configure the federation on your
 local GPF instance. You can do this by editing the

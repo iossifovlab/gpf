@@ -45,9 +45,13 @@ Afterwards, install the `gpf-web` conda package:
 
     mamba install \
         -c conda-forge \
-        -c bioconda \
         -c iossifovlab \
+        -c bioconda \
         gpf-web
+
+With strict channel priority, the first channel that has ``gain-core`` hides
+the others, so list ``iossifovlab`` before ``bioconda``. Bioconda can lag the
+``gain-core`` version that GPF pins.
 
 This command is going to install GPF and all of its dependencies.
 
