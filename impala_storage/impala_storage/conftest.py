@@ -95,6 +95,7 @@ def impala_genotype_storage(
 def vcf_variants_loaders(
     vcf_loader_data: Callable[[str], DefaultBox],
     gpf_instance_2019: Any,
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> Callable[[str, dict[str, Any]], list[AnnotationPipelineDecorator]]:
 
     def builder(  # pylint: disable=W0102
@@ -130,6 +131,7 @@ def vcf_variants_loaders(
             )
             annotation_pipeline = construct_import_annotation_pipeline(
                 gpf_instance_2019,
+                work_dir=tmp_path_factory.mktemp("import_annotation"),
             )
 
             loaders.append(AnnotationPipelineDecorator(
@@ -144,6 +146,7 @@ def vcf_variants_loaders(
 
         annotation_pipeline = construct_import_annotation_pipeline(
             gpf_instance_2019,
+            work_dir=tmp_path_factory.mktemp("import_annotation"),
         )
         loaders.append(AnnotationPipelineDecorator(
             vcf_loader, annotation_pipeline,
