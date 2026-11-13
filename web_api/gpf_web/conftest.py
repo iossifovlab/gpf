@@ -17,8 +17,10 @@ from django.contrib.auth.models import AbstractUser, Group, User
 from django.test import Client
 from django.utils import timezone
 from gain.genomic_resources.repository import (
-    GR_CONF_FILE_NAME,
     GenomicResourceRepo,
+)
+from gain.genomic_resources.repository_ids import (
+    GR_CONF_FILE_NAME,
 )
 from gain.genomic_resources.testing import (
     build_inmemory_test_repository,
