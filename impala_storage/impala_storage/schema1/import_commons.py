@@ -5,7 +5,9 @@ import abc
 import argparse
 import logging
 import os
+import pathlib
 import sys
+import tempfile
 from typing import Any, cast
 from urllib.parse import urlparse
 
@@ -1141,6 +1143,8 @@ class Variants2ParquetTool:
 
         annotation_pipeline = construct_import_annotation_pipeline(
             gpf_instance, annotation_configfile=argv.annotation_config,
+            work_dir=pathlib.Path(
+                tempfile.mkdtemp(prefix="gpf-import-annotation-")),
         )
 
         if annotation_pipeline is not None:

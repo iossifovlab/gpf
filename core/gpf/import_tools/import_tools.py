@@ -959,7 +959,8 @@ def construct_import_annotation_pipeline_config(
 def construct_import_annotation_pipeline(
     gpf_instance: GPFInstance,
     annotation_configfile: str | None = None,
-    work_dir: pathlib.Path | None = None,
+    *,
+    work_dir: pathlib.Path,
 ) -> AnnotationPipeline:
     """Construct annotation pipeline for importing data."""
     pipeline_config = construct_import_annotation_pipeline_config(

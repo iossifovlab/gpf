@@ -348,10 +348,21 @@ def test_construct_annotation_pipeline_config_with_file(
 
 
 def test_construct_annotation_pipeline(
+    tmp_path: pathlib.Path,
     gpf_fixture: GPFInstance,
 ) -> None:
-    pipeline = construct_import_annotation_pipeline(gpf_fixture)
+    pipeline = construct_import_annotation_pipeline(
+        gpf_fixture, work_dir=tmp_path / "work")
     assert pipeline is not None
+
+
+def test_construct_annotation_pipeline_requires_work_dir(
+    gpf_fixture: GPFInstance,
+) -> None:
+    with pytest.raises(TypeError, match="work_dir"):
+        # pylint: disable-next=missing-kwoa
+        construct_import_annotation_pipeline(  # type: ignore[call-arg]
+            gpf_fixture)
 
 
 def test_construct_annotation_pipeline_with_work_dir(
