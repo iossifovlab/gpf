@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 """Extended tests for import_tools module."""
-import logging
 import pathlib
 import sys
 from collections.abc import Generator
@@ -369,18 +368,17 @@ def test_construct_annotation_pipeline_requires_work_dir(
 def test_construct_annotation_pipeline_passes_work_dir_to_gain(
     tmp_path: pathlib.Path,
     gpf_fixture: GPFInstance,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     work_dir = tmp_path / "work"
-    with caplog.at_level(
-            logging.WARNING, logger="gain.annotation.annotation_factory"):
-        construct_import_annotation_pipeline(gpf_fixture, work_dir=work_dir)
 
-    assert not [
-        rec for rec in caplog.records
-        if rec.name == "gain.annotation.annotation_factory"
-        and "no `work_dir` passed" in rec.getMessage()
-    ]
+    pipeline = construct_import_annotation_pipeline(
+        gpf_fixture, work_dir=work_dir)
+
+    assert pipeline.annotators
+    assert {
+        pathlib.Path(annotator.get_info().parameters["work_dir"]).parent
+        for annotator in pipeline.annotators
+    } == {work_dir}
 
 
 def test_save_study_config_new_file(
