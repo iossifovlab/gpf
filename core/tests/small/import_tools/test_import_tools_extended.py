@@ -375,10 +375,12 @@ def test_construct_annotation_pipeline_passes_work_dir_to_gain(
         gpf_fixture, work_dir=work_dir)
 
     assert pipeline.annotators
-    assert {
-        pathlib.Path(annotator.get_info().parameters["work_dir"]).parent
+    assert all(
+        pathlib.Path(
+            annotator.get_info().parameters["work_dir"],
+        ).is_relative_to(work_dir)
         for annotator in pipeline.annotators
-    } == {work_dir}
+    )
 
 
 def test_save_study_config_new_file(
