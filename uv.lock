@@ -1310,11 +1310,10 @@ dev = [
 name = "gpf-federation"
 source = { editable = "federation" }
 dependencies = [
+    { name = "gain-core" },
     { name = "gpf-core" },
     { name = "gpf-rest-client" },
     { name = "gpf-web" },
-    { name = "ijson" },
-    { name = "requests" },
 ]
 
 [package.dev-dependencies]
@@ -1326,17 +1325,17 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-django" },
     { name = "pytest-mock" },
+    { name = "requests" },
     { name = "ruff" },
     { name = "types-requests" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "gain-core" },
     { name = "gpf-core", editable = "core" },
     { name = "gpf-rest-client", editable = "rest_client" },
     { name = "gpf-web", editable = "web_api" },
-    { name = "ijson", specifier = ">=3.2" },
-    { name = "requests", specifier = ">=2.32" },
 ]
 
 [package.metadata.requires-dev]
@@ -1348,6 +1347,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-django" },
     { name = "pytest-mock" },
+    { name = "requests", specifier = ">=2.32" },
     { name = "ruff", specifier = "==0.16.5" },
     { name = "types-requests" },
 ]

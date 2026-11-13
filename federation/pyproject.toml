@@ -17,11 +17,10 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
+    "gain-core",
     "gpf-core",
     "gpf-rest-client",
     "gpf-web",
-    "ijson>=3.2",
-    "requests>=2.32",
 ]
 dynamic = ["version"]
 
@@ -47,6 +46,7 @@ dev = [
     "pytest-cov",
     "pytest-django",
     "pytest-mock",
+    "requests>=2.32",
     "ruff==0.16.5",
     "types-requests",
 ]

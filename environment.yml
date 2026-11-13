@@ -40,5 +40,5 @@ dependencies:
   - requests>=2.32
   - requests-oauthlib>=2
   # gpf-federation (federation/pyproject.toml [project.dependencies])
-  - ijson>=3.2
   # gpf-rest-client (rest_client/pyproject.toml [project.dependencies])
+  - ijson>=3.2
