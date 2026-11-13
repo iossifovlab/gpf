@@ -611,6 +611,8 @@ def test_reannotate_previous_pipeline_gets_explicit_work_dir(
     work_dir = str(tmp_path / "work")
     spy = mocker.spy(gpf.parquet.schema2.annotate_schema2_parquet,
                      "load_pipeline_from_yaml")
+    build_spy = mocker.spy(gpf.parquet.schema2.annotate_schema2_parquet,
+                           "build_annotation_pipeline")
 
     # -j 1 runs process_parquet in this process, so caplog sees its records.
     cli([
@@ -629,6 +631,15 @@ def test_reannotate_previous_pipeline_gets_explicit_work_dir(
         call.kwargs.get("work_dir") is not None
         for call in spy.call_args_list
     )
+    # The previous pipeline gets its own work directory, apart from the
+    # work directory of the new pipeline.
+    new_work_dirs = {
+        call.kwargs.get("work_dir") for call in build_spy.call_args_list
+    }
+    assert new_work_dirs
+    assert not {
+        call.kwargs["work_dir"] for call in spy.call_args_list
+    } & new_work_dirs
     assert not [
         rec for rec in caplog.records
         if rec.name == "gain.annotation.annotation_factory"
