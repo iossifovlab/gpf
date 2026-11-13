@@ -1,4 +1,7 @@
 # pylint: disable=W0621,C0114,C0116
+# The header is the pytest convention of the other gpf_web test modules.
+# W0621: a test takes the reload_default_settings fixture as an argument.
+# C0114, C0116: the test names state the behavior, so no docstrings.
 import importlib
 from collections.abc import Callable, Iterator
 from types import ModuleType
