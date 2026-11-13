@@ -29,6 +29,6 @@ fi
 echo "ERROR: gain-core ${GAIN_PIN_VERSION} not found on the conda" \
      "channel iossifovlab." \
      "The conda packages would pin a gain-core nobody can install." \
-     "Check https://anaconda.org/iossifovlab/gain-core, and re-trigger" \
+     "Check https://anaconda.org/iossifovlab/gain-core and re-trigger" \
      "with a valid GAIN_PIN_VERSION." >&2
 exit 1

@@ -98,9 +98,7 @@ def test_absent_on_iossifovlab_fails(tmp_path: pathlib.Path) -> None:
     assert "iossifovlab" in result.stderr
 
 
-def test_network_failure_fails(
-    tmp_path: pathlib.Path,
-) -> None:
+def test_network_failure_fails(tmp_path: pathlib.Path) -> None:
     result = run_probe(tmp_path, bioconda="000", iossifovlab="000")
 
     assert result.returncode == 1
