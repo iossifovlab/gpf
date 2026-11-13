@@ -5,6 +5,20 @@ import os
 import sys
 from typing import ClassVar
 
+
+def _env_bool(name: str, *, default: bool) -> bool:
+    """Read the environment variable ``name`` as a boolean.
+
+    An unset or blank value gives ``default``. Only ``true``, ``1``,
+    ``yes`` and ``on`` (any case, surrounding whitespace removed) give
+    ``True``. Every other value gives ``False``.
+    """
+    value = os.environ.get(name, "").strip()
+    if not value:
+        return default
+    return value.lower() in {"true", "1", "yes", "on"}
+
+
 DEBUG = os.environ.get("WDAE_DEBUG", "False") == "True"
 
 
@@ -53,7 +67,7 @@ else:
     FORCE_SCRIPT_NAME = "/"
 
 EMAIL_HOST = os.environ.get("WDAE_EMAIL_HOST", "localhost")
-EMAIL_USE_TLS = os.environ.get("WDAE_EMAIL_USE_TLS", False)
+EMAIL_USE_TLS = _env_bool("WDAE_EMAIL_USE_TLS", default=False)
 EMAIL_HOST_USER = os.environ.get("WDAE_EMAIL_HOST_USER", None)
 EMAIL_HOST_PASSWORD = os.environ.get("WDAE_EMAIL_HOST_PASSWORD", None)
 
