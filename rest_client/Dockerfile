@@ -43,13 +43,18 @@ COPY web_api/gpf_web/ ./web_api/gpf_web/
 # `cd ../gain && uv build --package gain-core --out-dir ../gpf/dist/gain`.
 COPY dist/gain/ ./dist/gain/
 
+# The gain master wheel has a pre-release version, for example
+# 2026.11.1.post1.dev23+g<sha>. Without `--prerelease allow`, uv skips it
+# and installs the latest gain release from PyPI instead. The other
+# packages keep their locked versions: `--upgrade-package` frees only
+# gain-core.
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --package gpf-rest-client --group dev --upgrade-package gain-core --find-links ./dist/gain --no-install-project
+    uv sync --package gpf-rest-client --group dev --upgrade-package gain-core --find-links ./dist/gain --prerelease allow --no-install-project
 
 COPY rest_client/ ./rest_client/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --package gpf-rest-client --group dev --upgrade-package gain-core --find-links ./dist/gain
+    uv sync --package gpf-rest-client --group dev --upgrade-package gain-core --find-links ./dist/gain --prerelease allow
 
 ENV PATH="/workspace/.venv/bin:$PATH"
 WORKDIR /workspace/rest_client
