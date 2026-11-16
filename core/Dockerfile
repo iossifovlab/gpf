@@ -45,13 +45,18 @@ COPY rest_client/pyproject.toml rest_client/README.md ./rest_client/
 # `cd ../gain && uv build --package gain-core --out-dir ../gpf/dist/gain`.
 COPY dist/gain/ ./dist/gain/
 
+# The gain master wheel has a pre-release version, for example
+# 2026.11.1.post1.dev23+g<sha>. Without `--prerelease allow`, uv skips it
+# and installs the latest gain release from PyPI instead. The other
+# packages keep their locked versions: `--upgrade-package` frees only
+# gain-core.
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --package gpf-core --group dev --upgrade-package gain-core --find-links ./dist/gain --no-install-project
+    uv sync --package gpf-core --group dev --upgrade-package gain-core --find-links ./dist/gain --prerelease allow --no-install-project
 
 COPY core/ ./core/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --package gpf-core --group dev --upgrade-package gain-core --find-links ./dist/gain
+    uv sync --package gpf-core --group dev --upgrade-package gain-core --find-links ./dist/gain --prerelease allow
 
 # tests/small/test_conda_deps.py holds the committed environment files to
 # a fresh render of the pyprojects copied above, and each conda recipe's

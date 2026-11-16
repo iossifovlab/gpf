@@ -1019,9 +1019,14 @@ pipeline {
                                     # without --package: this installs
                                     # gpf-core + gpf-web (the root deps)
                                     # plus the sphinx toolchain.
+                                    # --prerelease allow: the gain
+                                    # master wheel has a .devN version,
+                                    # which uv skips otherwise (see
+                                    # core/Dockerfile).
                                     uv sync --group docs \
                                         --upgrade-package gain-core \
-                                        --find-links ./dist/gain
+                                        --find-links ./dist/gain \
+                                        --prerelease allow
                                     bash docs/build_docs.sh
                                 '
                             cp docs/gpfdocs-html.tar.gz dist/docs/
