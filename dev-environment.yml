@@ -27,6 +27,7 @@ dependencies:
   - pytest-django
   - types-requests
   # gpf-federation (federation/pyproject.toml [dependency-groups.dev])
+  - requests>=2.32
   # gpf-rest-client (rest_client/pyproject.toml [dependency-groups.dev])
   # gpf-monorepo (pyproject.toml [dependency-groups.docs])
   - jinja2
