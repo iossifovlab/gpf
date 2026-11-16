@@ -9,6 +9,8 @@ from typing import Any, ClassVar, cast
 from gain.effect_annotation.effect import expand_effect_types
 from gain.genomic_resources.repository import (
     GenomicResourceRepo,
+)
+from gain.genomic_resources.repository_ids import (
     parse_resource_id_version,
 )
 from gpf_instance.extension import GPFTool

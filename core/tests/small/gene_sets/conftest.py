@@ -7,8 +7,10 @@ from typing import Any
 import pytest
 from gain.gene_sets.gene_set import GeneSetCollection
 from gain.genomic_resources.repository import (
-    GR_CONF_FILE_NAME,
     GenomicResourceRepo,
+)
+from gain.genomic_resources.repository_ids import (
+    GR_CONF_FILE_NAME,
 )
 from gain.genomic_resources.testing import (
     build_inmemory_test_repository,
