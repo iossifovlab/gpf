@@ -1,6 +1,34 @@
 Release Notes
 =============
  
+* 2026.11.1
+    * Annotation work directories: ``GPFInstance.get_annotation_pipeline``
+      and the ``load_pipeline_from_yaml`` calls in
+      ``annotate_schema2_parquet``, ``reannotate_instance`` and the
+      liftover tools pass an explicit ``work_dir`` to gain, and
+      ``construct_import_annotation_pipeline`` requires ``work_dir`` as a
+      keyword-only argument, so gain logs no deprecation warning and the
+      calls keep working when gain makes ``work_dir`` required.
+    * ``annotate_schema2_parquet`` caches only the GRR resources of the
+      annotators that run in a reannotation.
+    * Web: ``WDAE_EMAIL_USE_TLS`` is read as a boolean, so ``False`` and
+      ``0`` no longer turn STARTTLS on. Apache caches only hashed Angular
+      assets as immutable, and Django and DRF static files revalidate
+      after an upgrade.
+    * Dependencies: gpf-federation declares gain-core and pandas, drops
+      ijson and moves requests to the dev group; unused dev and docs
+      packages are removed from every workspace member. The locks take
+      tornado 6.6.1 and hono 4.13.18.
+    * Install docs list ``-c iossifovlab`` before ``-c bioconda`` and
+      explain why the channel order matters with strict channel priority.
+    * **Issues closed in this release:** `all issues
+      <https://github.com/iossifovlab/gpf/issues?q=is%3Aissue+is%3Aclose
+      d+reason%3Acompleted+closed%3A2026-11-09T13%3A33%3A24Z..2026-11-16
+      T07%3A29%3A57Z>`__, `bug issues
+      <https://github.com/iossifovlab/gpf/issues?q=is%3Aissue+label%3Abu
+      g+is%3Aclosed+reason%3Acompleted+closed%3A2026-11-09T13%3A33%3A24Z
+      ..2026-11-16T07%3A29%3A57Z>`__.
+
 * 2026.11.0
     * Partial grants: a user granted some child studies of a dataset but
       not the dataset itself sees only those children in the family,
