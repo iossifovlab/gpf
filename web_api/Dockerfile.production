@@ -66,10 +66,10 @@ COPY dist/web_api/gpf_web-*.whl ./
 # files.
 #
 # --only-binary=:all: --no-binary=mysqlclient: tb-qp5 wheels-only
-# enforcement. Any future transitive dep that lacks a manylinux_x86_64
-# wheel for the PYTHON_IMAGE interpreter fails the build loudly instead of silently
-# growing source-build residue (and silently bloating cold-build
-# wall time). mysqlclient is the documented exception — no
+# enforcement. Any future transitive dep that lacks a
+# manylinux_x86_64 wheel for the PYTHON_IMAGE interpreter fails the
+# build loudly instead of silently growing source-build residue (and
+# silently bloating cold-build wall time). mysqlclient is the documented exception — no
 # manylinux wheel exists on PyPI; it always builds from source
 # against the libmariadb-dev installed above.
 RUN --mount=type=cache,target=/root/.cache/uv \
