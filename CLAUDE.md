@@ -215,7 +215,8 @@ The two wheels come from these sources:
   `dist/core/*.whl` artifact of the last green
   `iossifovlab/gain/master` build. CI tests gpf against that
   wheel. If the artifact is not available, build the wheel at
-  the gain commit that the meta-repo pins.
+  the gain `master` commit of the last green
+  `iossifovlab/gain/master` build.
 
 Do not add `--no-deps` to step 3. A newer gain can add
 dependencies. On gpf#1100, `--no-deps` left out `pathspec`,
@@ -417,6 +418,9 @@ today: a fix of a cycle deletes entries, and nobody adds one.
 `gain` must **never** import from `gpf` or `gpf_web` —
 that rule is enforced by pytestarch tests in the gain
 repository.
+A change that needs both repos lands in `gain` first. `gpf`
+consumes the change after a gain release or a gain wheel
+build.
 
 ### Package Structure
 

@@ -5,7 +5,7 @@ End-to-end tests for the GPF web stack. Two ways to run them:
 - **Local dev** — fastest cycle. Run the backend with `wdaemanage runserver`, the frontend with `ng serve`, and Playwright against `http://127.0.0.1:8080/gpf`. This is what you want day-to-day.
 - **Jenkins-mirrored compose stack** — runs the same images CI runs, against the same `web_infra/compose-jenkins.yaml`. Use this only when reproducing a Jenkins-only failure.
 
-This README walks through both. For a snapshot of currently-failing tests and the cluster-level reasoning behind the CI configuration choices (capped Playwright workers, OAuth seeding), see [`../../issues/test-failures-summary.md`](../../issues/test-failures-summary.md) in the meta-repo.
+This README walks through both.
 
 ---
 
@@ -291,7 +291,7 @@ A few things differ from a vanilla `wdaemanage runserver` setup. They're load-be
 
 ## Triaging a failure
 
-1. Look up the spec in [`../../issues/test-failures-summary.md`](../../issues/test-failures-summary.md). Most of the currently-failing specs are listed with hypotheses and reproduction commands.
+1. Search the open issues of `iossifovlab/gpf` for the spec name. A known failure has an issue with hypotheses and reproduction commands.
 2. If it's not there, run it standalone with `--reporter=list` and Playwright's trace:
    ```bash
    PLAYWRIGHT_HTML_REPORT=playwright-report \
@@ -312,4 +312,4 @@ A few things differ from a vanilla `wdaemanage runserver` setup. They're load-be
    docker exec <container> supervisorctl restart gunicorn
    ```
    or, on a CI build, grab the `wdae-debug.log` and `compose.log` artefacts archived by the Jenkins job — `wdae-debug.log` has the per-request Django output, `compose.log` interleaves every service's stdout by timestamp.
-4. File a new issue: `gh issue create --repo iossifovlab/gpf --label needs-triage`. The umbrella `genomics-toolbox/CLAUDE.md` documents the label vocabulary and the workflow loop.
+4. File a new issue: `gh issue create --repo iossifovlab/gpf --label needs-triage`. The `iossifovlab/gpf` tracker uses these labels: the type labels `bug` and `enhancement`, the priority labels `P0` (critical) to `P4` (backlog), and the state labels `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human` and `wontfix`.

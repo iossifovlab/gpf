@@ -146,8 +146,10 @@
 cd ../gpf &amp;&amp; uv lock --upgrade-package gain-core --find-links ./dist/gain</code></pre>
 
 <p>
-  and commits the new lockfile. Meta-repo bump commits with the title
-  <code>Bump gpf: ... &mdash; uv.lock: gain-core +&lt;SHA&gt;</code> record this pairing.
+  and commits the new lockfile. The <code>+g&lt;sha&gt;</code> suffix of the locked
+  <code>gain-core</code> version records the gain commit, so the commit history of
+  <code>uv.lock</code> records the pairing. A lock on a <code>gain-core</code> release
+  from PyPI has no <code>+g</code> suffix: the release tag identifies the gain commit.
 </p>
 
 <h3>Why <code>--upgrade-package</code> is everywhere in CI</h3>
@@ -187,8 +189,7 @@ cd ../gpf &amp;&amp; uv lock --upgrade-package gain-core --find-links ./dist/gai
 
 <p>
   Every gpf master build pulls the most recent green gain master build. There is
-  <strong>no read of <code>.gitmodules</code></strong>, <strong>no read of gpf's
-  <code>uv.lock</code></strong>, no SHA matching of any kind.
+  <strong>no read of gpf's <code>uv.lock</code></strong>, no SHA matching of any kind.
 </p>
 
 <div class="callout warn">
@@ -362,37 +363,24 @@ cd ../gpf &amp;&amp; uv sync --upgrade-package gain-core --find-links ./dist/gai
 # 3. Run tests under the CI shape
 uv run pytest -v tests/small/
 
-# 4. If uv.lock changed, commit it (the "Bump gpf ... +gSHA" workflow).
+# 4. If uv.lock changed, commit uv.lock.
 #    If not, your branch doesn't need to bump the gain pin.
 
 # 5. Restore editable for ongoing dev
 #    (re-add the inline source, re-skip-worktree both files, uv sync)</code></pre>
 
-<h3>The genomics-toolbox meta-repo role</h3>
+<h3>The workspace: plain clones, no cross-repo pins</h3>
 
 <p>
-  Purely a <strong>human coordination record</strong>. Nothing in CI reads
-  <code>.gitmodules</code> or the meta-repo's submodule pins. The commit pattern
-  <code>Bump gpf: ...@&lt;gpf-SHA&gt; &mdash; uv.lock: gain-core +&lt;gain-SHA&gt;</code>
-  paired with an earlier <code>Bump gain: ...@&lt;gain-SHA&gt;</code> documents
-  &ldquo;these two SHAs are a tested combination.&rdquo;
+  Each repo is a plain clone in the workspace, with <code>gain</code> as a sibling
+  clone at <code>../gain/</code>. No repo pins another repo as a git submodule.
 </p>
 
 <p>
-  Useful for:
-</p>
-<ul>
-  <li>
-    Reproducible clones:
-    <code>git clone seqpipe/genomics-toolbox &amp;&amp; git checkout &lt;meta-SHA&gt;
-    &amp;&amp; git submodule update --init --recursive</code>
-  </li>
-  <li>Documenting what got deployed</li>
-  <li>Shaping <code>../gain/</code>-relative editable workflows</li>
-</ul>
-
-<p>
-  But <em>not</em> for triggering or pinning CI builds.
+  The locked <code>gain-core</code> version in <code>uv.lock</code> is a soft anchor:
+  it names the gain commit that a developer last tested gpf against locally. CI does
+  not install the locked wheel. CI builds against the wheel of the last green gain
+  <code>master</code> build. Nothing in CI reads a cross-repo pin.
 </p>
 
 <hr>
