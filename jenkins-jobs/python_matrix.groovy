@@ -11,11 +11,12 @@
 // BRANCH_NAME master; can also be run on demand against a branch.
 // The job tests the head of BRANCH_NAME, not a pinned commit.
 //
-// gpf-nightly calls this job with `propagate: false`
-// (iossifovlab/gain#2385, decision 5): a red matrix does not block
-// the nightly deploy on dory. The job therefore sends its own
-// Zulip alert on failure (topic: nightly), the same topic as the
-// orchestrator.
+// gpf-nightly calls this job after the dory deploy, with
+// `propagate: false` (iossifovlab/gain#2385, decision 5): a red
+// matrix does not block the nightly deploy on dory. The job
+// therefore sends its own Zulip alert on a failed, unstable or
+// aborted run (topic: nightly), the same topic as the
+// orchestrator. The job aborts a run after 2 hours.
 //
 // First-run note: after `Apply Job DSL` applies this file, a
 // Jenkins admin may need to approve the script under
@@ -29,9 +30,10 @@ pipelineJob('gpf-python-matrix') {
     description(
         'Pytest matrix across Python 3.12/3.13/3.14 for gpf-core ' +
         'and gpf-web. Forward-compatibility canary for the ' +
-        'dependency closure. Triggered nightly via gpf-nightly, ' +
-        'which does not wait on its result for the dory deploy. ' +
-        'Sends a Zulip alert on failure (topic: nightly).')
+        'dependency closure. Triggered nightly via gpf-nightly ' +
+        'after the dory deploy, so its result never gates that ' +
+        'deploy. Aborts a run after 2 hours. Sends a Zulip alert ' +
+        'on a failed, unstable or aborted run (topic: nightly).')
 
     logRotator {
         numToKeep(40)

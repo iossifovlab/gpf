@@ -11,14 +11,6 @@
 //   - /gpf-rest-client-integration        — rest_client tests against
 //                                           a freshly seeded backend
 //                                           + Mailpit
-//   - /gpf-python-matrix                  — core + web_api pytest under
-//                                           Python 3.12 / 3.13 / 3.14.
-//                                           Called with propagate:false,
-//                                           so its result never gates
-//                                           the deploy below; the job
-//                                           sends its own alert
-//                                           (iossifovlab/gain#2385,
-//                                           decision 5).
 //   - /gpf-staging-deploy                 — wipe-and-redeploy gpf-web
 //                                           on dory (iossifovlab
 //                                           playground host) pinned
@@ -28,18 +20,31 @@
 //                                           all succeeding — we will
 //                                           NOT wipe dory to install
 //                                           a known-bad build.
+//   - /gpf-python-matrix                  — core + web_api pytest under
+//                                           Python 3.12 / 3.13 / 3.14.
+//                                           Runs after the deploy, with
+//                                           propagate:false, so its
+//                                           result never gates or
+//                                           delays the deploy; the job
+//                                           sends its own alert
+//                                           (iossifovlab/gain#2385,
+//                                           decision 5).
 //
 // The first three stages are wrapped in `catchError` with
 // buildResult: 'FAILURE', so a failure in one doesn't mask the
 // others. By morning we want a single Zulip alert whose linked
 // build surfaces every failing downstream, not just whichever
-// broke first. The fourth stage, Run gpf-python-matrix, uses
-// `catchError` with buildResult: 'SUCCESS' instead: a red,
-// aborted or unstartable matrix turns only that stage UNSTABLE
-// and leaves the deploy gate open. The matrix job bounds its own
-// run with a 2-hour timeout. The Deploy on dory stage uses a
-// `when` gate instead — firing a destructive deploy after a
-// known failure would be a real own-goal.
+// broke first. The Deploy on dory stage uses a `when` gate
+// instead — firing a destructive deploy after a known failure
+// would be a real own-goal.
+//
+// The last stage, Run gpf-python-matrix, runs after the deploy
+// and uses `catchError` with buildResult: 'SUCCESS'. Only a
+// matrix job that cannot start turns that stage UNSTABLE. A red
+// or aborted matrix run leaves the stage and the nightly green:
+// gpf-python-matrix alerts from its own post{}. The matrix job
+// bounds its own run with a 2-hour timeout. A failed deploy
+// stops the nightly, and the matrix does not run that night.
 
 // Zulip failure alert (seqpipe/infra#105). Builds that pass say nothing.
 //
@@ -87,10 +92,11 @@ pipeline {
     options {
         // Generous: a cold master rebuild + both integration suites
         // + a wipe-and-redeploy on dory can comfortably reach 100
-        // minutes. The python matrix adds at most 2 hours, the
-        // timeout of gpf-python-matrix itself. 4 hours leaves
-        // headroom for a slow/contended night without
-        // false-alarming.
+        // minutes. The python matrix runs after the deploy and adds
+        // at most 2 hours, the timeout of gpf-python-matrix itself.
+        // 4 hours leaves headroom for a slow/contended night without
+        // false-alarming. A nightly timeout during the matrix wait
+        // fires only after the deploy is done.
         timeout(time: 4, unit: 'HOURS')
         // 40 keeps ~6 weeks of nightlies for trend analysis without
         // bloating the controller's disk.
@@ -155,17 +161,53 @@ pipeline {
             }
         }
 
+        stage('Deploy on dory') {
+            // Wipes /opt/gpf-web/ on dory and redeploys the gpf-web
+            // stack pinned to the master rebuild's BUILD_NUMBER.
+            // NOT wrapped in catchError — if the deploy itself
+            // fails after the gate passed, we want to halt and
+            // alert. The deploy job has its own rescue/rollback,
+            // so on its own internal failure dory rolls back to the
+            // previous image automatically.
+            when {
+                expression {
+                    currentBuild.currentResult == 'SUCCESS'
+                }
+            }
+            steps {
+                build(
+                    job: 'gpf-staging-deploy',
+                    wait: true,
+                    propagate: true,
+                    parameters: [
+                        booleanParam(
+                            name: 'WIPE_FIRST',
+                            value: true,
+                        ),
+                        string(
+                            name: 'IMAGE_TAG',
+                            value: env.MASTER_REBUILD_NUMBER,
+                        ),
+                    ],
+                )
+            }
+        }
+
         stage('Run gpf-python-matrix') {
+            // Runs after `Deploy on dory`, so the nightly does not
+            // hold the deploy for the matrix run (up to 2 hours).
             // propagate: false: a red matrix must not change this
-            // build's result, because `Deploy on dory` below runs only
-            // on SUCCESS (iossifovlab/gain#2385, decision 5). That
+            // build's result, because a red matrix must not stop the
+            // deploy (iossifovlab/gain#2385, decision 5). That
             // differs on purpose from gain, where a red matrix stops
-            // the deploy. gpf-python-matrix reports its own red or
-            // aborted result with a Zulip alert (topic: nightly).
+            // the deploy. gpf-python-matrix reports its own red,
+            // unstable or aborted result with a Zulip alert
+            // (topic: nightly).
             //
             // No `timeout` wraps the build step here. A timeout that
             // fires interrupts this build, and catchError then marks
-            // the whole nightly ABORTED, which skips the deploy.
+            // the whole nightly ABORTED for a matrix result that must
+            // not change it.
             // gpf-python-matrix bounds its own run with a 2-hour
             // timeout instead: an aborted matrix run comes back as a
             // run object, and the build step does not throw.
@@ -174,7 +216,8 @@ pipeline {
             // start. The catch block sends a Zulip alert, because the
             // nightly result stays SUCCESS and its post{} stays silent.
             // catchError(buildResult: 'SUCCESS') keeps that result,
-            // and only the stage turns UNSTABLE.
+            // and only the stage turns UNSTABLE. A red or aborted
+            // matrix run leaves this stage green.
             steps {
                 catchError(buildResult: 'SUCCESS',
                            stageResult: 'UNSTABLE') {
@@ -207,38 +250,6 @@ pipeline {
                         }
                     }
                 }
-            }
-        }
-
-        stage('Deploy on dory') {
-            // Wipes /opt/gpf-web/ on dory and redeploys the gpf-web
-            // stack pinned to the master rebuild's BUILD_NUMBER.
-            // NOT wrapped in catchError — if the deploy itself
-            // fails after the gate passed, we want to halt and
-            // alert. The deploy job has its own rescue/rollback,
-            // so on its own internal failure dory rolls back to the
-            // previous image automatically.
-            when {
-                expression {
-                    currentBuild.currentResult == 'SUCCESS'
-                }
-            }
-            steps {
-                build(
-                    job: 'gpf-staging-deploy',
-                    wait: true,
-                    propagate: true,
-                    parameters: [
-                        booleanParam(
-                            name: 'WIPE_FIRST',
-                            value: true,
-                        ),
-                        string(
-                            name: 'IMAGE_TAG',
-                            value: env.MASTER_REBUILD_NUMBER,
-                        ),
-                    ],
-                )
             }
         }
     }
