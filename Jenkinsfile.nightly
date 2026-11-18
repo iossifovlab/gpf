@@ -29,12 +29,17 @@
 //                                           NOT wipe dory to install
 //                                           a known-bad build.
 //
-// The first three stages are wrapped in `catchError` so a failure
-// in one doesn't mask the others. By morning we want a single
-// Zulip alert whose linked build surfaces every failing
-// downstream, not just whichever broke first. The Deploy on dory
-// stage uses a `when` gate instead — firing a destructive deploy
-// after a known failure would be a real own-goal.
+// The first three stages are wrapped in `catchError` with
+// buildResult: 'FAILURE', so a failure in one doesn't mask the
+// others. By morning we want a single Zulip alert whose linked
+// build surfaces every failing downstream, not just whichever
+// broke first. The fourth stage, Run gpf-python-matrix, uses
+// `catchError` with buildResult: 'SUCCESS' instead: a red,
+// aborted or unstartable matrix turns only that stage UNSTABLE
+// and leaves the deploy gate open. The matrix job bounds its own
+// run with a 2-hour timeout. The Deploy on dory stage uses a
+// `when` gate instead — firing a destructive deploy after a
+// known failure would be a real own-goal.
 
 // Zulip failure alert (seqpipe/infra#105). Builds that pass say nothing.
 //
@@ -82,8 +87,10 @@ pipeline {
     options {
         // Generous: a cold master rebuild + both integration suites
         // + a wipe-and-redeploy on dory can comfortably reach 100
-        // minutes; 4 hours leaves headroom for a slow/contended
-        // night without false-alarming.
+        // minutes. The python matrix adds at most 2 hours, the
+        // timeout of gpf-python-matrix itself. 4 hours leaves
+        // headroom for a slow/contended night without
+        // false-alarming.
         timeout(time: 4, unit: 'HOURS')
         // 40 keeps ~6 weeks of nightlies for trend analysis without
         // bloating the controller's disk.
@@ -153,22 +160,26 @@ pipeline {
             // build's result, because `Deploy on dory` below runs only
             // on SUCCESS (iossifovlab/gain#2385, decision 5). That
             // differs on purpose from gain, where a red matrix stops
-            // the deploy. gpf-python-matrix reports its own red result
-            // with a Zulip alert (topic: nightly).
+            // the deploy. gpf-python-matrix reports its own red or
+            // aborted result with a Zulip alert (topic: nightly).
             //
-            // The timeout keeps a slow or hung matrix inside the 4-hour
-            // budget of this nightly: the earlier stages take up to
-            // ~100 min, so 90 min here leaves time for the deploy. When
-            // the timeout fires, the build step aborts the matrix run.
-            // catchError with buildResult: 'SUCCESS' also catches that
-            // abort, and a matrix job that cannot start, so neither
-            // case changes this build's result. Only the stage turns
-            // UNSTABLE.
+            // No `timeout` wraps the build step here. A timeout that
+            // fires interrupts this build, and catchError then marks
+            // the whole nightly ABORTED, which skips the deploy.
+            // gpf-python-matrix bounds its own run with a 2-hour
+            // timeout instead: an aborted matrix run comes back as a
+            // run object, and the build step does not throw.
+            //
+            // The build step throws only when the matrix job cannot
+            // start. The catch block sends a Zulip alert, because the
+            // nightly result stays SUCCESS and its post{} stays silent.
+            // catchError(buildResult: 'SUCCESS') keeps that result,
+            // and only the stage turns UNSTABLE.
             steps {
                 catchError(buildResult: 'SUCCESS',
                            stageResult: 'UNSTABLE') {
-                    timeout(time: 90, unit: 'MINUTES') {
-                        script {
+                    script {
+                        try {
                             def matrixRun = build(
                                 job: '/gpf-python-matrix',
                                 wait: true,
@@ -182,6 +193,17 @@ pipeline {
                                 "#${matrixRun.number}: " +
                                 "${matrixRun.result} " +
                                 "(does not gate the deploy)"
+                        } catch (hudson.AbortException e) {
+                            zulipSend(
+                                topic: 'nightly',
+                                message: "@**channel** ⚠️ " +
+                                    "[${env.JOB_NAME} " +
+                                    "${currentBuild.displayName}]" +
+                                    "(${env.BUILD_URL}) " +
+                                    "gpf-python-matrix did not " +
+                                    "start: ${e.message}",
+                            )
+                            throw e
                         }
                     }
                 }

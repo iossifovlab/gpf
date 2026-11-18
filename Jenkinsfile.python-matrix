@@ -21,7 +21,8 @@
 // Jenkinsfile already runs them.
 //
 // Failure semantics: any cell failure → pipeline FAILURE → the
-// Zulip alert in post{} below. gpf-nightly calls this job with
+// Zulip alert in post{} below. A run aborted by the timeout in
+// options{} alerts too. gpf-nightly calls this job with
 // `propagate: false` (iossifovlab/gain#2385, decision 5), so a red
 // matrix never blocks the nightly deploy on dory: this job reports
 // its own red result.
@@ -169,7 +170,10 @@ pipeline {
 
     options {
         // 6 cells, mostly parallel but bounded by agent count.
-        timeout(time: 3, unit: 'HOURS')
+        // 2 hours fits the 4-hour budget of gpf-nightly, which waits
+        // for this job after ~100 minutes of other stages. A run that
+        // hits this timeout ends ABORTED and alerts from post{}.
+        timeout(time: 2, unit: 'HOURS')
         // 40 to match Jenkinsfile.nightly's retention.
         buildDiscarder(logRotator(numToKeepStr: '40'))
     }
@@ -297,6 +301,17 @@ pipeline {
                 zulipSend(
                     topic: 'nightly',
                     message: zulipAlert('UNSTABLE', '⚠️'),
+                )
+            }
+        }
+        // gpf-nightly ignores the result of this job (propagate:
+        // false), so an aborted run, for example on the timeout in
+        // options{}, alerts here or nowhere.
+        aborted {
+            node('builder') {
+                zulipSend(
+                    topic: 'nightly',
+                    message: zulipAlert('ABORTED', '⏹️'),
                 )
             }
         }
