@@ -11,7 +11,7 @@
 // BRANCH_NAME master; can also be run on demand against a branch.
 // The job tests the head of BRANCH_NAME, not a pinned commit.
 //
-// gpf-nightly calls this job after the dory deploy, with
+// gpf-nightly calls this job beside the dory deploy, with
 // `propagate: false` (iossifovlab/gain#2385, decision 5): a red
 // matrix does not block the nightly deploy on dory. The job
 // therefore sends its own Zulip alert on a failed, unstable or
@@ -31,7 +31,7 @@ pipelineJob('gpf-python-matrix') {
         'Pytest matrix across Python 3.12/3.13/3.14 for gpf-core ' +
         'and gpf-web. Forward-compatibility canary for the ' +
         'dependency closure. Triggered nightly via gpf-nightly ' +
-        'after the dory deploy, so its result never gates that ' +
+        'beside the dory deploy, so its result never gates that ' +
         'deploy. Aborts a run after 2 hours. Sends a Zulip alert ' +
         'on a failed, unstable or aborted run (topic: nightly).')
 
