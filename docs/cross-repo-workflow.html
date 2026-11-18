@@ -148,7 +148,8 @@ cd ../gpf &amp;&amp; uv lock --upgrade-package gain-core --find-links ./dist/gai
 <p>
   and commits the new lockfile. The <code>+g&lt;sha&gt;</code> suffix of the locked
   <code>gain-core</code> version records the gain commit, so the commit history of
-  <code>uv.lock</code> records the pairing.
+  <code>uv.lock</code> records the pairing. A lock on a <code>gain-core</code> release
+  from PyPI has no <code>+g</code> suffix: the release tag identifies the gain commit.
 </p>
 
 <h3>Why <code>--upgrade-package</code> is everywhere in CI</h3>
@@ -372,13 +373,14 @@ uv run pytest -v tests/small/
 
 <p>
   Each repo is a plain clone in the workspace, with <code>gain</code> as a sibling
-  clone at <code>../gain/</code>. No repo records the SHA of another repo.
+  clone at <code>../gain/</code>. No submodule pin and no meta-level SHA pin exist.
 </p>
 
 <p>
-  The locked <code>gain-core</code> version in <code>uv.lock</code> is the only record
-  of the gain commit that gpf was last tested against. CI builds against the wheel of
-  the last green gain <code>master</code> build. Nothing in CI reads a cross-repo pin.
+  The locked <code>gain-core</code> version in <code>uv.lock</code> is a soft anchor:
+  it names the gain commit that a developer last tested gpf against locally. CI does
+  not install the locked wheel. CI builds against the wheel of the last green gain
+  <code>master</code> build. Nothing in CI reads a cross-repo pin.
 </p>
 
 <hr>

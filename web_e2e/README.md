@@ -291,7 +291,7 @@ A few things differ from a vanilla `wdaemanage runserver` setup. They're load-be
 
 ## Triaging a failure
 
-1. Look up the spec in [`../../issues/test-failures-summary.md`](../../issues/test-failures-summary.md). Most of the currently-failing specs are listed with hypotheses and reproduction commands.
+1. Search the open issues of `iossifovlab/gpf` for the spec name. A known failure has an issue with hypotheses and reproduction commands.
 2. If it's not there, run it standalone with `--reporter=list` and Playwright's trace:
    ```bash
    PLAYWRIGHT_HTML_REPORT=playwright-report \
