@@ -276,11 +276,11 @@ pipeline {
         // post.cleanup, which is why this is pipeline-level env rather
         // than a Groovy local (post blocks need it too).
         CI_TAG = "${ciScope(env.BRANCH_NAME)}-${env.BUILD_NUMBER}"
-        // The one place that names the interpreter of the CI images and
-        // of the throwaway python containers. The production image build
-        // keeps its own interpreter until gpf#1175 moves it.
+        // The one place that names the interpreter of the CI images, of
+        // the production images and of the throwaway python containers.
         // core/tests/small/test_python_image_pin.py checks that the
-        // default of each CI Dockerfile ARG PYTHON_IMAGE equals it.
+        // default of each Dockerfile ARG PYTHON_IMAGE equals it, and that
+        // the pip2pi container of Jenkinsfile.release names it too.
         PYTHON_IMAGE = 'python:3.13-slim'
     }
 
@@ -1319,7 +1319,7 @@ pipeline {
                             # daemon level with a <repo>:<tag> +
                             # RepoDigests entry, which leaves NODE_IMAGE
                             # / HTTPD_IMAGE empty in dist/base-images.lock.
-                            docker pull python:3.12-slim
+                            docker pull "${PYTHON_IMAGE}"
                             docker pull node:22.14.0-alpine
                             docker pull httpd:2.4-alpine
 
@@ -1332,11 +1332,12 @@ pipeline {
                             # frontend / bundle image (#1049).
                             # PYTHON_IMAGE is passed explicitly so the
                             # Dockerfile is consistent across master (this
-                            # path, floating tag) and any future digest-
-                            # pinned release stage.
+                            # path, floating tag) and the digest-pinned
+                            # release stage. Its value comes from the
+                            # pipeline environment (gpf#1175).
                             docker build \
                                 -f web_api/Dockerfile.production \
-                                --build-arg PYTHON_IMAGE=python:3.12-slim \
+                                --build-arg PYTHON_IMAGE="${PYTHON_IMAGE}" \
                                 -t "$BACKEND_REPO:$CI_TAG" .
 
                             # Build frontend; multi-stages collectstatic
@@ -1357,7 +1358,7 @@ pipeline {
                             # :9001, apache on :80).
                             docker build \
                                 -f Dockerfile.production \
-                                --build-arg PYTHON_IMAGE=python:3.12-slim \
+                                --build-arg PYTHON_IMAGE="${PYTHON_IMAGE}" \
                                 --build-arg BACKEND_IMAGE="$BACKEND_REPO:$CI_TAG" \
                                 --build-arg FRONTEND_IMAGE="$FRONTEND_REPO:$CI_TAG" \
                                 -t "$BUNDLE_REPO:$CI_TAG" .
@@ -1425,7 +1426,7 @@ print('gpf-web prefix settings OK')"
                             # record rotates out.
                             mkdir -p dist
                             {
-                                echo "PYTHON_IMAGE=$(docker image inspect python:3.12-slim \
+                                echo "PYTHON_IMAGE=$(docker image inspect "${PYTHON_IMAGE}" \
                                     --format '{{index .RepoDigests 0}}')"
                                 echo "NODE_IMAGE=$(docker image inspect node:22.14.0-alpine \
                                     --format '{{index .RepoDigests 0}}')"
