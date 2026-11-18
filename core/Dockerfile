@@ -14,8 +14,8 @@ FROM ${PYTHON_IMAGE}
 
 COPY --from=ghcr.io/astral-sh/uv:0.11.3 /uv /uvx /usr/local/bin/
 
-# System deps for building wheels that have no prebuilt Python 3.12 binaries
-# (notably pyBigWig: needs gcc + libcurl).
+# System deps for building wheels that have no prebuilt binaries for the
+# PYTHON_IMAGE interpreter (notably pyBigWig: needs gcc + libcurl).
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         libcurl4-openssl-dev \
