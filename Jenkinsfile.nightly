@@ -2,7 +2,7 @@
 // and re-runs the integration jobs unconditionally. Catches
 // dependency drift / silently-stale caches on quiet days.
 //
-// Four downstreams are exercised:
+// Five downstreams are exercised:
 //   - iossifovlab/gpf/master              — full rebuild, lint+tests+
 //                                           wheels for core + web_api +
 //                                           federation + rest_client
@@ -11,6 +11,14 @@
 //   - /gpf-rest-client-integration        — rest_client tests against
 //                                           a freshly seeded backend
 //                                           + Mailpit
+//   - /gpf-python-matrix                  — core + web_api pytest under
+//                                           Python 3.12 / 3.13 / 3.14.
+//                                           Called with propagate:false,
+//                                           so its result never gates
+//                                           the deploy below; the job
+//                                           sends its own alert
+//                                           (iossifovlab/gain#2385,
+//                                           decision 5).
 //   - /gpf-staging-deploy                 — wipe-and-redeploy gpf-web
 //                                           on dory (iossifovlab
 //                                           playground host) pinned
@@ -136,6 +144,29 @@ pipeline {
                         wait: true,
                         propagate: true,
                     )
+                }
+            }
+        }
+
+        stage('Run gpf-python-matrix') {
+            // propagate: false, and no catchError: a red matrix must
+            // not change this build's result, because `Deploy on dory`
+            // below runs only on SUCCESS (iossifovlab/gain#2385,
+            // decision 5). That differs on purpose from gain, where a
+            // red matrix stops the deploy. gpf-python-matrix reports
+            // its own red result with a Zulip alert (topic: nightly).
+            steps {
+                script {
+                    def matrixRun = build(
+                        job: '/gpf-python-matrix',
+                        wait: true,
+                        propagate: false,
+                        parameters: [
+                            string(name: 'BRANCH_NAME', value: 'master'),
+                        ],
+                    )
+                    echo "gpf-python-matrix #${matrixRun.number}: " +
+                        "${matrixRun.result} (does not gate the deploy)"
                 }
             }
         }

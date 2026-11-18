@@ -1,0 +1,315 @@
+// Python-version matrix for the GPF sub-projects (gpf#1174).
+//
+// Re-runs the pytest suites of `core` and `web_api` under Python
+// 3.12, 3.13 and 3.14, so that breakage on a newer interpreter is
+// caught incrementally instead of at migration time. Modelled on
+// gain's Jenkinsfile.python-matrix. Triggered nightly from
+// Jenkinsfile.nightly; can also be run on demand (job DSL:
+// jenkins-jobs/python_matrix.groovy).
+//
+// Matrix axes:
+//   PY      — 3.12, 3.13, 3.14. Each cell builds the project's CI
+//             Dockerfile with --build-arg PYTHON_IMAGE=python:${PY}-slim.
+//   PROJECT — core, web_api. The pytest targets and arguments are
+//             those of the runProject() calls of the root Jenkinsfile.
+//             federation and rest_client have no cells: their
+//             runProject() calls pass skipPytest: true, because their
+//             tests need a live backend.
+//
+// Per cell we only run pytest. ruff / mypy / pylint are not
+// interpreter-sensitive in any useful way, and the per-branch
+// Jenkinsfile already runs them.
+//
+// Failure semantics: any cell failure → pipeline FAILURE → the
+// Zulip alert in post{} below. gpf-nightly calls this job with
+// `propagate: false` (iossifovlab/gain#2385, decision 5), so a red
+// matrix never blocks the nightly deploy on dory: this job reports
+// its own red result.
+
+def runCellPytest(Map args) {
+    String project        = args.project                       // dir name, e.g. "core"
+    String tests          = args.tests                         // pytest target relative to project dir
+    String py             = args.py                            // "3.12" / "3.13" / "3.14"
+    String pytestArgs     = args.pytestArgs ?: ''
+    String dockerRunExtra = args.dockerRunExtra ?: ''
+    String pyTag          = py.replace('.', '')                // e.g. "312" — usable in image tags
+    String reportDir      = "${project}-py${py}"               // e.g. "core-py3.12"
+    String imageTag       = "gpf-${project.replace('_', '-')}-pymtx-py${pyTag}:${env.BUILD_NUMBER}"
+
+    // A slow network can fail an image build with no failed test.
+    // Build once more on failure: the second attempt reuses the warm
+    // layer and uv caches. Pytest below runs once only: a failed test
+    // is a real result, and a second run must not hide it.
+    //
+    // `${PY}` is expanded by the shell: Jenkins exports the PY axis
+    // of the matrix into the environment of each cell.
+    retry(2) {
+        sh label: "Build ${project} image (py${py})", script: """
+            docker build -f ${project}/Dockerfile \\
+                --build-arg PYTHON_IMAGE=python:\${PY}-slim \\
+                -t ${imageTag} .
+        """
+    }
+
+    // Mirrors runProject() in the root Jenkinsfile, minus the linter
+    // and wheel-build steps. Reports land in a cell-scoped dir so
+    // parallel cells cannot collide. The container runs as root, so
+    // it hands /reports back to the agent user on any exit (#1031).
+    sh label: "Run ${project} pytest (py${py})", script: """
+        mkdir -p reports/${reportDir}
+        docker run --rm \\
+            -e DOCKER_USER="\$(id -u):\$(id -g)" \\
+            -v \$PWD/reports/${reportDir}:/reports \\
+            ${dockerRunExtra} \\
+            ${imageTag} \\
+            sh -c '
+                give_back() { chown -R "\$DOCKER_USER" /reports; }
+                trap give_back EXIT
+                pytest ${pytestArgs} \\
+                    --junitxml=/reports/pytest.xml \\
+                    ${tests}
+                pytest_exit=\$?
+                chmod -R a+rw /reports
+                exit \$pytest_exit
+            '
+    """
+}
+
+// Runs body() with the http (apache) and s3 fixtures of
+// docker-compose.yaml up, under compose project `composeProject`.
+// Same bring-up as the core stage of the root Jenkinsfile:
+//   - `-f docker-compose.yaml` skips docker-compose.override.yaml, the
+//     local-dev file that publishes host ports. Without it the three
+//     parallel core cells would race on those host ports.
+//   - s3-setup is a one-shot bucket job, run inline.
+//   - the curl sidecar proves that a sibling container resolves `s3`
+//     on the compose network before the tests start (tb-eqh).
+def withFixtures(String composeProject, Closure body) {
+    String composeNetwork = "${composeProject}_default"
+    try {
+        sh """
+            mkdir -p core/tests/.test_grr
+            docker compose -f docker-compose.yaml \\
+                -p "${composeProject}" \\
+                up -d --wait apache s3
+            docker compose -f docker-compose.yaml \\
+                -p "${composeProject}" \\
+                run --rm s3-setup
+            docker run --rm --network "${composeNetwork}" \\
+                curlimages/curl:latest \\
+                --retry 10 --retry-delay 2 --retry-all-errors \\
+                -fsS http://s3:9000/health/live
+        """
+        body()
+    } finally {
+        sh """
+            docker compose -f docker-compose.yaml \\
+                -p "${composeProject}" \\
+                down -v --remove-orphans || true
+        """
+    }
+}
+
+// The cells. pytest targets and arguments are those of the
+// runProject() calls of the root Jenkinsfile.
+Map cell(String project) {
+    if (project == 'core') {
+        return [
+            tests: 'tests/small',
+            pytestArgs: '-n 5 --enable-http-testing --enable-s3-testing',
+            fixtures: true,
+            dockerRunExtra:
+                '-e HTTP_HOST=apache:80 ' +
+                '-e S3_HOST=s3:9000 ' +
+                '-v $PWD/core/tests/.test_grr:/workspace/core/tests/.test_grr',
+        ]
+    }
+    if (project == 'web_api') {
+        return [
+            tests: 'gpf_web/',
+            pytestArgs: '-n 5',
+            fixtures: false,
+            dockerRunExtra:
+                '-e DJANGO_SETTINGS_MODULE=gpf_web.test_settings',
+        ]
+    }
+    error("no python-matrix cell for project ${project}")
+}
+
+// Zulip failure alert (seqpipe/infra#105). Verbatim copy of the block
+// proven in iossifovlab/gain#809 — do not re-derive it.
+def zulipAlert(String status, String emoji) {
+    String suffix = ''
+    try {
+        def results = currentBuild.rawBuild.getAction(
+            hudson.tasks.test.AbstractTestResultAction)
+        if (results != null) {
+            // failCount == 0 on a red build means nothing got as far as
+            // failing a test — a teardown / sidecar / agent problem rather
+            // than a code break. Saying which is what decides "re-run" vs
+            // "investigate" without opening Jenkins.
+            suffix = results.failCount > 0
+                ? " — ${results.failCount} test(s) failed"
+                : ' — no failing tests (infra/teardown)'
+        }
+    } catch (ignored) {
+        // getAction() needs a one-time In-process Script Approval
+        // (seqpipe/infra#106). Until that lands the alert still fires, just
+        // without the count: the reporting must never break the report.
+        suffix = ''
+    }
+    return "@**channel** ${emoji} " +
+        "[${env.JOB_NAME} ${currentBuild.displayName}](${env.BUILD_URL}) " +
+        "${status}${suffix}"
+}
+
+pipeline {
+    // builder = general build agents; deploy targets don't carry it
+    agent { label 'builder' }
+
+    options {
+        // 6 cells, mostly parallel but bounded by agent count.
+        timeout(time: 3, unit: 'HOURS')
+        // 40 to match Jenkinsfile.nightly's retention.
+        buildDiscarder(logRotator(numToKeepStr: '40'))
+    }
+
+    stages {
+        stage('Prepare workspace') {
+            // Reclaim first, every build (#1031): hand every entry the
+            // agent does not own back to it, so that root-owned trees
+            // from an earlier run never block a wipe of this workspace.
+            // Same block as `Prepare workspace` of the root Jenkinsfile.
+            steps {
+                sh '''
+                    docker run --rm \
+                        -e DOCKER_USER="$(id -u):$(id -g)" \
+                        -v "$PWD:/workspace" \
+                        -v "$PWD/.git:/workspace/.git:ro" \
+                        alpine sh -c '
+                            set -eu
+                            find /workspace -path /workspace/.git -prune \
+                                -o ! -user "${DOCKER_USER%:*}" -print \
+                                -exec chown -h "$DOCKER_USER" {} + \
+                                > /tmp/reclaimed
+                            echo "Reclaim workspace: reclaimed $(wc -l < /tmp/reclaimed) entries"
+                        '
+                    rm -rf reports dist && mkdir -p reports dist
+                '''
+            }
+        }
+
+        stage('Fetch gain wheel') {
+            // Same as `Fetch gain wheel` of the root Jenkinsfile: the CI
+            // Dockerfiles install the gain-core wheel from dist/gain/.
+            // flatten: true drops the dist/core/ prefix, so the wheel
+            // lands at dist/gain/gain_core-<version>-py3-none-any.whl.
+            steps {
+                copyArtifacts(
+                    filter: 'dist/core/*.whl',
+                    fingerprintArtifacts: true,
+                    projectName: 'iossifovlab/gain/master',
+                    selector: lastSuccessful(),
+                    target: 'dist/gain',
+                    flatten: true,
+                )
+                sh '''
+                    ls -la dist/gain/
+                    test -n "$(ls dist/gain/gain_core-*.whl 2>/dev/null)"
+                '''
+            }
+        }
+
+        stage('Matrix') {
+            matrix {
+                axes {
+                    axis {
+                        name 'PY'
+                        values '3.12', '3.13', '3.14'
+                    }
+                    axis {
+                        name 'PROJECT'
+                        values 'core', 'web_api'
+                    }
+                }
+
+                stages {
+                    stage('pytest') {
+                        steps {
+                            script {
+                                // Per-cell compose project name keeps
+                                // service container names unique when
+                                // several cells land on the same agent.
+                                String composeProject =
+                                    "gpf-pymtx-${env.BUILD_NUMBER}-" +
+                                    "${env.PROJECT.replace('_', '-')}-" +
+                                    "py${env.PY.replace('.', '')}"
+                                Map c = cell(env.PROJECT)
+
+                                Closure runCell = { String dockerRunExtra ->
+                                    runCellPytest(
+                                        project: env.PROJECT,
+                                        tests: c.tests,
+                                        py: env.PY,
+                                        pytestArgs: c.pytestArgs,
+                                        dockerRunExtra: dockerRunExtra,
+                                    )
+                                }
+
+                                if (c.fixtures) {
+                                    withFixtures(composeProject) {
+                                        runCell(
+                                            "--network ${composeProject}_default " +
+                                            c.dockerRunExtra,
+                                        )
+                                    }
+                                } else {
+                                    runCell(c.dockerRunExtra)
+                                }
+                            }
+                        }
+                        post {
+                            always {
+                                junit allowEmptyResults: true,
+                                      testResults: "reports/${env.PROJECT}-py${env.PY}/*.xml"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        failure {
+            // Wrapped in an explicit node block: a pipeline-init failure
+            // can tear down the outer agent before post runs, leaving
+            // zulipSend without a FilePath context.
+            node('builder') {
+                zulipSend(
+                    topic: 'nightly',
+                    message: zulipAlert('FAILED', '❌'),
+                )
+            }
+        }
+        unstable {
+            node('builder') {
+                zulipSend(
+                    topic: 'nightly',
+                    message: zulipAlert('UNSTABLE', '⚠️'),
+                )
+            }
+        }
+        cleanup {
+            // Remove exactly the images this build created. The tags
+            // carry this job's BUILD_NUMBER, so no other job owns them.
+            sh '''
+                for project in core web-api; do
+                    for py in 312 313 314; do
+                        docker rmi "gpf-$project-pymtx-py$py:$BUILD_NUMBER" 2>/dev/null || true
+                    done
+                done
+            '''
+        }
+    }
+}

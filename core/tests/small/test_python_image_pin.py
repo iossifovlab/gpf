@@ -11,6 +11,11 @@ value. The guard also fails when the ``PYTHON_IMAGE`` of
 ``web_e2e/Jenkinsfile.e2e`` or the pip2pi container of
 ``Jenkinsfile.release`` differs from the ``Jenkinsfile`` value.
 
+``Jenkinsfile.python-matrix`` names an interpreter on purpose: each cell
+builds with ``--build-arg PYTHON_IMAGE=python:${PY}-slim`` (gpf#1174).
+The guard checks that its ``PY`` axis holds the version of the
+``Jenkinsfile`` value, so the matrix keeps the default interpreter.
+
 The ``core`` CI image holds the ``Jenkinsfile``, but not the other
 Dockerfiles, ``web_e2e/Jenkinsfile.e2e`` or ``Jenkinsfile.release``.
 When a file that a check reads is not in the tree, the check skips with
@@ -26,6 +31,7 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
 JENKINSFILE = REPO_ROOT / "Jenkinsfile"
 E2E_JENKINSFILE = REPO_ROOT / "web_e2e" / "Jenkinsfile.e2e"
 RELEASE_JENKINSFILE = REPO_ROOT / "Jenkinsfile.release"
+MATRIX_JENKINSFILE = REPO_ROOT / "Jenkinsfile.python-matrix"
 
 # The CI Dockerfiles that gpf#1173 names. The walk must find each one.
 NAMED_CI_DOCKERFILES = [
@@ -476,3 +482,49 @@ def test_jenkinsfile_builds_each_ci_dockerfile_with_the_arg() -> None:
         and PYTHON_IMAGE_BUILD_ARG.search(command)}
 
     assert {"${name}", "web_api"} <= dirs
+
+
+MATRIX_PY_AXIS = re.compile(
+    r"name\s+'PY'\s+values\s+((?:'[^']*'\s*,?\s*)+)")
+MATRIX_PYTHON_IMAGE_BUILD_ARG = re.compile(
+    r"--build-arg\s+PYTHON_IMAGE=python:\\?\$\{PY\}-slim")
+
+
+def matrix_python_versions(jenkinsfile: str) -> list[str]:
+    """Return the values of the ``PY`` axis of the matrix Jenkinsfile."""
+    match = MATRIX_PY_AXIS.search(jenkinsfile)
+    if match is None:
+        return []
+    return re.findall(r"'([^']*)'", match.group(1))
+
+
+def test_matrix_python_versions_reads_the_py_axis() -> None:
+    jenkinsfile = (
+        "axis {\n"
+        "    name 'PY'\n"
+        "    values '3.12', '3.13', '3.14'\n"
+        "}\n"
+        "axis {\n"
+        "    name 'PROJECT'\n"
+        "    values 'core', 'web_api'\n"
+        "}\n")
+
+    assert matrix_python_versions(jenkinsfile) == ["3.12", "3.13", "3.14"]
+
+
+def test_matrix_covers_the_default_interpreter(
+    ci_python_image: str,
+) -> None:
+    matrix = read_or_skip(MATRIX_JENKINSFILE)
+    version = ci_python_image.removeprefix("python:").removesuffix("-slim")
+
+    assert version in matrix_python_versions(matrix)
+
+
+def test_matrix_builds_each_cell_with_its_python_image() -> None:
+    commands = docker_build_commands(read_or_skip(MATRIX_JENKINSFILE))
+
+    assert commands
+    assert all(
+        MATRIX_PYTHON_IMAGE_BUILD_ARG.search(command)
+        for command in commands), commands
