@@ -24,7 +24,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -79,7 +79,7 @@ def require_study_kind(
 
 def make_run_stamp() -> str:
     """Return a single UTC stamp for one run, e.g. ``20260625T143000Z``."""
-    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
 
 
 def backup_path(path: Path, stamp: str) -> Path:

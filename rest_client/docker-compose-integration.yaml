@@ -30,7 +30,7 @@ services:
     entrypoint: /workspace/rest_client/scripts/backend/run_gpf.sh
     healthcheck:
       # python (always present in the image) instead of curl (not in
-      # python:3.12-slim).
+      # the PYTHON_IMAGE base image).
       test:
         - "CMD"
         - "python"

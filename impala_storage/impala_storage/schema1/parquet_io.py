@@ -9,7 +9,7 @@ import sys
 import time
 from collections.abc import Callable
 from copy import copy
-from typing import Any
+from typing import Any, Protocol
 from urllib.parse import urlparse
 
 import fsspec
@@ -21,7 +21,6 @@ import toml
 from gain.utils import fs_utils
 from gain.utils.regions import Region
 from pyarrow import fs as pa_fs
-from typing_extensions import Protocol
 
 from gpf.import_tools.import_tools import Bucket, ImportProject
 from gpf.parquet.helpers import url_to_pyarrow_fs

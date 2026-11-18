@@ -26,12 +26,12 @@ import argparse
 import pathlib
 import re
 import sys
+import tomllib
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
-import tomllib
 from packaging.requirements import Requirement
 from packaging.specifiers import Specifier
 from packaging.utils import canonicalize_name
