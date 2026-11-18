@@ -149,24 +149,41 @@ pipeline {
         }
 
         stage('Run gpf-python-matrix') {
-            // propagate: false, and no catchError: a red matrix must
-            // not change this build's result, because `Deploy on dory`
-            // below runs only on SUCCESS (iossifovlab/gain#2385,
-            // decision 5). That differs on purpose from gain, where a
-            // red matrix stops the deploy. gpf-python-matrix reports
-            // its own red result with a Zulip alert (topic: nightly).
+            // propagate: false: a red matrix must not change this
+            // build's result, because `Deploy on dory` below runs only
+            // on SUCCESS (iossifovlab/gain#2385, decision 5). That
+            // differs on purpose from gain, where a red matrix stops
+            // the deploy. gpf-python-matrix reports its own red result
+            // with a Zulip alert (topic: nightly).
+            //
+            // The timeout keeps a slow or hung matrix inside the 4-hour
+            // budget of this nightly: the earlier stages take up to
+            // ~100 min, so 90 min here leaves time for the deploy. When
+            // the timeout fires, the build step aborts the matrix run.
+            // catchError with buildResult: 'SUCCESS' also catches that
+            // abort, and a matrix job that cannot start, so neither
+            // case changes this build's result. Only the stage turns
+            // UNSTABLE.
             steps {
-                script {
-                    def matrixRun = build(
-                        job: '/gpf-python-matrix',
-                        wait: true,
-                        propagate: false,
-                        parameters: [
-                            string(name: 'BRANCH_NAME', value: 'master'),
-                        ],
-                    )
-                    echo "gpf-python-matrix #${matrixRun.number}: " +
-                        "${matrixRun.result} (does not gate the deploy)"
+                catchError(buildResult: 'SUCCESS',
+                           stageResult: 'UNSTABLE') {
+                    timeout(time: 90, unit: 'MINUTES') {
+                        script {
+                            def matrixRun = build(
+                                job: '/gpf-python-matrix',
+                                wait: true,
+                                propagate: false,
+                                parameters: [
+                                    string(name: 'BRANCH_NAME',
+                                           value: 'master'),
+                                ],
+                            )
+                            echo "gpf-python-matrix " +
+                                "#${matrixRun.number}: " +
+                                "${matrixRun.result} " +
+                                "(does not gate the deploy)"
+                        }
+                    }
                 }
             }
         }

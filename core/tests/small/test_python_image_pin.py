@@ -32,6 +32,7 @@ JENKINSFILE = REPO_ROOT / "Jenkinsfile"
 E2E_JENKINSFILE = REPO_ROOT / "web_e2e" / "Jenkinsfile.e2e"
 RELEASE_JENKINSFILE = REPO_ROOT / "Jenkinsfile.release"
 MATRIX_JENKINSFILE = REPO_ROOT / "Jenkinsfile.python-matrix"
+MATRIX_JOB_DSL = REPO_ROOT / "jenkins-jobs" / "python_matrix.groovy"
 
 # The CI Dockerfiles that gpf#1173 names. The walk must find each one.
 NAMED_CI_DOCKERFILES = [
@@ -512,17 +513,31 @@ def test_matrix_python_versions_reads_the_py_axis() -> None:
     assert matrix_python_versions(jenkinsfile) == ["3.12", "3.13", "3.14"]
 
 
+def read_matrix_jenkinsfile() -> str:
+    """Read the matrix Jenkinsfile that the matrix Job DSL loads.
+
+    The test skips when neither file is in the tree. The test fails when
+    the Job DSL names the Jenkinsfile and the Jenkinsfile is missing.
+    """
+    if MATRIX_JOB_DSL.exists():
+        assert MATRIX_JENKINSFILE.name in MATRIX_JOB_DSL.read_text()
+        assert MATRIX_JENKINSFILE.exists(), (
+            f"{MATRIX_JOB_DSL} loads {MATRIX_JENKINSFILE.name}, "
+            "which is missing")
+    return read_or_skip(MATRIX_JENKINSFILE)
+
+
 def test_matrix_covers_the_default_interpreter(
     ci_python_image: str,
 ) -> None:
-    matrix = read_or_skip(MATRIX_JENKINSFILE)
+    matrix = read_matrix_jenkinsfile()
     version = ci_python_image.removeprefix("python:").removesuffix("-slim")
 
     assert version in matrix_python_versions(matrix)
 
 
 def test_matrix_builds_each_cell_with_its_python_image() -> None:
-    commands = docker_build_commands(read_or_skip(MATRIX_JENKINSFILE))
+    commands = docker_build_commands(read_matrix_jenkinsfile())
 
     assert commands
     assert all(
