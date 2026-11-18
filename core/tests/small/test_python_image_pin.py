@@ -115,6 +115,10 @@ EXEMPT_JENKINSFILE_LINES = [
 LITERAL_PYTHON_IMAGE = re.compile(r"(?<![\w${/.-])python[:@]")
 
 
+def is_comment(line: str) -> bool:
+    return line.strip().startswith(("//", "#"))
+
+
 def literal_python_image_lines(jenkinsfile: str) -> list[str]:
     """Return the stripped Jenkinsfile lines that name a literal
     ``python`` image.
@@ -123,12 +127,10 @@ def literal_python_image_lines(jenkinsfile: str) -> list[str]:
     """
     found: list[str] = []
     for line in jenkinsfile.splitlines():
-        text = line.strip()
-        if text.startswith(("//", "#")) or \
-                JENKINS_PYTHON_IMAGE.match(line):
+        if is_comment(line) or JENKINS_PYTHON_IMAGE.match(line):
             continue
-        if LITERAL_PYTHON_IMAGE.search(text):
-            found.append(text)
+        if LITERAL_PYTHON_IMAGE.search(line):
+            found.append(line.strip())
     return found
 
 
@@ -150,8 +152,7 @@ def docker_build_commands(jenkinsfile: str) -> list[str]:
     commands: list[str] = []
     lines = jenkinsfile.splitlines()
     for index, line in enumerate(lines):
-        if "docker build" not in line or line.strip().startswith(
-                ("//", "#")):
+        if "docker build" not in line or is_comment(line):
             continue
         parts = [line.strip()]
         while parts[-1].endswith("\\") and index + 1 < len(lines):
