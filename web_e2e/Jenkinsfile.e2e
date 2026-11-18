@@ -157,6 +157,10 @@ pipeline {
         // it is gated on STACK_MODE in the prepare-images
         // stage below.
         COMBINED_IMAGE = "gpf-web-prod:${env.BUILD_NUMBER}"
+        // The interpreter of the throwaway wheel-build container.
+        // core/tests/small/test_python_image_pin.py checks that it
+        // equals the PYTHON_IMAGE of the root Jenkinsfile.
+        PYTHON_IMAGE = 'python:3.13-slim'
         // STACK_MODE re-exported so shell conditionals in
         // sh-heredocs can fork on it; COMPOSE_OVERLAY is the
         // overlay path that pairs with compose-jenkins.yaml
@@ -618,7 +622,7 @@ EOF
                                     -e HOME=/tmp \
                                     -e HOST_UID="$(id -u)" \
                                     -e HOST_GID="$(id -g)" \
-                                    python:3.12-slim \
+                                    "${PYTHON_IMAGE}" \
                                     sh -c '
                                         set -eu
                                         apt-get update -qq

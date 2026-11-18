@@ -53,7 +53,9 @@ def runProject(Map args) {
 """
 
     sh label: "Build ${name} image", script: """
-        docker build -f ${name}/Dockerfile -t ${imageTag} .
+        docker build -f ${name}/Dockerfile \\
+            --build-arg PYTHON_IMAGE=${env.PYTHON_IMAGE} \\
+            -t ${imageTag} .
     """
 
     // Mount .git read-only so hatch-vcs can derive the version during
@@ -274,6 +276,12 @@ pipeline {
         // post.cleanup, which is why this is pipeline-level env rather
         // than a Groovy local (post blocks need it too).
         CI_TAG = "${ciScope(env.BRANCH_NAME)}-${env.BUILD_NUMBER}"
+        // The one place that names the interpreter of the CI images and
+        // of the throwaway python containers. The production image build
+        // keeps its own interpreter until gpf#1175 moves it.
+        // core/tests/small/test_python_image_pin.py checks that the
+        // default of each CI Dockerfile ARG PYTHON_IMAGE equals it.
+        PYTHON_IMAGE = 'python:3.13-slim'
     }
 
     options {
@@ -1003,6 +1011,7 @@ pipeline {
                     steps {
                         sh '''
                             docker build -f web_api/Dockerfile \
+                                --build-arg PYTHON_IMAGE=${PYTHON_IMAGE} \
                                 -t gpf-web-api-ci:${CI_TAG} .
                             mkdir -p dist/docs
                             docker run --rm \
@@ -1145,7 +1154,7 @@ pipeline {
                     // (the helper PATCHes only when a body actually
                     // changed), so it is safe on every changes.rst
                     // commit. Runs the stdlib-only helper in a throwaway
-                    // python:3.12-slim because it must run on docs-only
+                    // PYTHON_IMAGE container because it must run on docs-only
                     // commits too, where the conda-builder image is not
                     // built. Token is stage-scoped via withCredentials —
                     // same `github-token-iossifovlab` credential the
@@ -1169,7 +1178,7 @@ pipeline {
                                         -e GH_TOKEN \
                                         -v "$PWD:/workspace" \
                                         -w /workspace \
-                                        python:3.12-slim \
+                                        "${PYTHON_IMAGE}" \
                                         python \
                                           scripts/make_github_release.py \
                                           --sync-existing

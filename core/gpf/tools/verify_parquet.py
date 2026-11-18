@@ -174,14 +174,14 @@ def main(argv: list[str] | None = None) -> int:
         )
         return EXIT_USAGE
 
-    started = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    started = datetime.datetime.now(datetime.UTC).isoformat()
     check = functools.partial(verify_parquet_file, deep=args.deep)
     if args.jobs <= 1:
         results = [check(p) for p in targets]
     else:
         with ThreadPoolExecutor(max_workers=args.jobs) as pool:
             results = list(pool.map(check, targets))
-    finished = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    finished = datetime.datetime.now(datetime.UTC).isoformat()
     failures = sum(1 for r in results if not r.ok)
     for r in results:
         if r.ok:

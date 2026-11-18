@@ -300,7 +300,7 @@ cd web_api && uv run mypy --config-file mypy.ini \
     -p users_api -p utils
 ```
 
-Config: `ruff.toml` (line-length: 80, target: py310),
+Config: `ruff.toml` (line-length: 80, target: py312),
 `mypy.ini` (strict, Django plugin via django-stubs).
 
 **Suppress ruff with `# ruff: ignore[rule-name]`, not
