@@ -99,7 +99,8 @@ gain for local development").
 `web_api/Dockerfile.production` enforces a **wheels-only**
 install via `uv pip install --only-binary=:all:
 --no-binary=mysqlclient`. Any transitive dep without a
-cp312-manylinux_x86_64 wheel fails the build loudly
+manylinux_x86_64 wheel for the `PYTHON_IMAGE` interpreter
+(currently cp313) fails the build loudly
 instead of silently growing source-build residue and
 inflating cold-build time. `mysqlclient` is the one
 documented exception (no manylinux wheel exists on PyPI;
@@ -665,7 +666,7 @@ repository.
 
 ## Key Dependencies
 
-- **Python 3.12**, Django 5.2, DRF 3.16
+- **Python >=3.12** (images run 3.13), Django 5.2, DRF 3.16
 - **DuckDB 1.5** — primary embedded storage
 - **pandas 3.1**, **numpy 2.2**, **pyarrow >=18** — data
   analysis
