@@ -172,8 +172,13 @@ pipeline {
                     // stack pinned to the master rebuild's BUILD_NUMBER.
                     // NOT wrapped in catchError — if the deploy itself
                     // fails after the gate passed, the nightly turns
-                    // FAILURE and alerts. The matrix branch still runs
-                    // to its end. The deploy job has its own rescue/rollback,
+                    // FAILURE. The matrix branch still runs to its end.
+                    // The parallel stage ends only when the matrix ends,
+                    // up to 2 hours later, so post{} would hold the
+                    // FAILED alert that long. The catch block sends the
+                    // alert at once and rethrows. post{} then skips its
+                    // own FAILED alert, because DEPLOY_FAILURE_ALERTED
+                    // is set. The deploy job has its own rescue/rollback,
                     // so on its own internal failure dory rolls back to the
                     // previous image automatically.
                     when {
@@ -182,21 +187,33 @@ pipeline {
                         }
                     }
                     steps {
-                        build(
-                            job: 'gpf-staging-deploy',
-                            wait: true,
-                            propagate: true,
-                            parameters: [
-                                booleanParam(
-                                    name: 'WIPE_FIRST',
-                                    value: true,
-                                ),
-                                string(
-                                    name: 'IMAGE_TAG',
-                                    value: env.MASTER_REBUILD_NUMBER,
-                                ),
-                            ],
-                        )
+                        script {
+                            try {
+                                build(
+                                    job: 'gpf-staging-deploy',
+                                    wait: true,
+                                    propagate: true,
+                                    parameters: [
+                                        booleanParam(
+                                            name: 'WIPE_FIRST',
+                                            value: true,
+                                        ),
+                                        string(
+                                            name: 'IMAGE_TAG',
+                                            value: env.MASTER_REBUILD_NUMBER,
+                                        ),
+                                    ],
+                                )
+                            } catch (e) {
+                                zulipSend(
+                                    topic: 'nightly',
+                                    message: zulipAlert(
+                                        'FAILED (deploy)', '❌'),
+                                )
+                                env.DEPLOY_FAILURE_ALERTED = 'true'
+                                throw e
+                            }
+                        }
                     }
                 }
 
@@ -280,11 +297,18 @@ pipeline {
             // Wrapped in an explicit node block: a pipeline-init
             // failure can tear down the outer agent before post
             // runs, leaving zulipSend without a FilePath context.
-            node('builder') {
-                zulipSend(
-                    topic: 'nightly',
-                    message: zulipAlert('FAILED', '❌'),
-                )
+            // The deploy branch already sent the FAILED alert when
+            // the deploy failed. The deploy runs only when every
+            // earlier stage passed, so that alert covers this failure.
+            script {
+                if (env.DEPLOY_FAILURE_ALERTED != 'true') {
+                    node('builder') {
+                        zulipSend(
+                            topic: 'nightly',
+                            message: zulipAlert('FAILED', '❌'),
+                        )
+                    }
+                }
             }
         }
         // UNSTABLE now alerts too (seqpipe/infra#105): lint/type gates
