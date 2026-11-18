@@ -178,7 +178,19 @@ pipeline {
                     // FAILED alert that long. The catch block sends the
                     // alert at once and rethrows. post{} then skips its
                     // own FAILED alert, because DEPLOY_FAILURE_ALERTED
-                    // is set. The deploy job has its own rescue/rollback,
+                    // is set.
+                    //
+                    // propagate: false, and the script reads the result
+                    // of the deploy run. The catch block takes only
+                    // hudson.AbortException: the deploy job did not start,
+                    // or error() below reports a FAILURE run. An abort of
+                    // the nightly, by hand or by its timeout, throws
+                    // FlowInterruptedException. That exception passes the
+                    // catch block, so the nightly ends ABORTED without a
+                    // FAILED alert. A deploy run that ends UNSTABLE or
+                    // ABORTED gives the nightly the same result as
+                    // propagate: true did, also without the FAILED alert.
+                    // The deploy job has its own rescue/rollback,
                     // so on its own internal failure dory rolls back to the
                     // previous image automatically.
                     when {
@@ -188,11 +200,12 @@ pipeline {
                     }
                     steps {
                         script {
+                            def deployRun = null
                             try {
-                                build(
+                                deployRun = build(
                                     job: 'gpf-staging-deploy',
                                     wait: true,
-                                    propagate: true,
+                                    propagate: false,
                                     parameters: [
                                         booleanParam(
                                             name: 'WIPE_FIRST',
@@ -204,7 +217,11 @@ pipeline {
                                         ),
                                     ],
                                 )
-                            } catch (e) {
+                                if (deployRun.result == 'FAILURE') {
+                                    error("gpf-staging-deploy " +
+                                          "#${deployRun.number}: FAILURE")
+                                }
+                            } catch (hudson.AbortException e) {
                                 zulipSend(
                                     topic: 'nightly',
                                     message: zulipAlert(
@@ -212,6 +229,15 @@ pipeline {
                                 )
                                 env.DEPLOY_FAILURE_ALERTED = 'true'
                                 throw e
+                            }
+                            if (deployRun.result == 'UNSTABLE') {
+                                unstable("gpf-staging-deploy " +
+                                         "#${deployRun.number}: UNSTABLE")
+                            } else if (deployRun.result != 'SUCCESS') {
+                                currentBuild.result = 'ABORTED'
+                                error("gpf-staging-deploy " +
+                                      "#${deployRun.number}: " +
+                                      "${deployRun.result}")
                             }
                         }
                     }
