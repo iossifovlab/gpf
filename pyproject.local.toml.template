@@ -20,6 +20,6 @@
 
 [tool.uv.sources]
 # Editable path source for gain-core. Assumes gain is checked out
-# as a sibling repo at ../gain/ (the conventional layout in
-# genomics-toolbox/). Adjust the path if your layout differs.
+# as a sibling clone at ../gain/ (the conventional workspace
+# layout). Adjust the path if your layout differs.
 gain-core = { path = "../gain/core", editable = true }
