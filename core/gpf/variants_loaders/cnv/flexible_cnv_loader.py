@@ -56,6 +56,14 @@ def _cnv_vcf_to_vcf_trasformer() \
     return trasformer
 
 
+def _cnv_column_index(header: list[str], name: str) -> int:
+    """Return the index of a configured CNV column in the header."""
+    if name not in header:
+        raise ValueError(
+            f"CNV column {name!r} not found in the header: {header!r}")
+    return header.index(name)
+
+
 def _configure_cnv_location(
         header: list[str],
         transformers: list[Callable[[dict[str, Any]], dict[str, Any]]],
@@ -82,9 +90,9 @@ def _configure_cnv_location(
         if cnv_end is None:
             cnv_end = "pos_end"
 
-        chrom_index = header.index(cnv_chrom)
-        start_index = header.index(cnv_start)
-        end_index = header.index(cnv_end)
+        chrom_index = _cnv_column_index(header, cnv_chrom)
+        start_index = _cnv_column_index(header, cnv_start)
+        end_index = _cnv_column_index(header, cnv_end)
 
         header[chrom_index] = "chrom"
         header[start_index] = "pos"
@@ -93,7 +101,7 @@ def _configure_cnv_location(
     else:
         if cnv_location is None:
             cnv_location = "location"
-        location_index = header.index(cnv_location)
+        location_index = _cnv_column_index(header, cnv_location)
         header[location_index] = "location"
         transformers.append(_cnv_location_to_vcf_trasformer())
 
@@ -198,7 +206,7 @@ def _configure_cnv_best_state(
         cnv_best_state: str | None = None) -> None:
     """Configure header and transformers that handle CNV family genotypes."""
     if cnv_person_id is not None:
-        person_index = header.index(cnv_person_id)
+        person_index = _cnv_column_index(header, cnv_person_id)
         header[person_index] = "person_id"
 
         transformers.append(
@@ -210,8 +218,8 @@ def _configure_cnv_best_state(
         if cnv_best_state is None:
             cnv_best_state = "best_state"
 
-        family_index = header.index(cnv_family_id)
-        best_state_index = header.index(cnv_best_state)
+        family_index = _cnv_column_index(header, cnv_family_id)
+        best_state_index = _cnv_column_index(header, cnv_best_state)
 
         header[family_index] = "family_id"
         header[best_state_index] = "best_state"
@@ -271,7 +279,7 @@ def _configure_cnv_variant_type(
     if cnv_variant_type is None:
         cnv_variant_type = "variant"
 
-    variant_type_index = header.index(cnv_variant_type)
+    variant_type_index = _cnv_column_index(header, cnv_variant_type)
     header[variant_type_index] = "variant"
 
     transformers.append(

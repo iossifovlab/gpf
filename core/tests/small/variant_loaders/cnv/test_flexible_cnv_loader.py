@@ -215,7 +215,8 @@ def test_flexible_cnv_variants_bad_configs(
     content = io.StringIO(convert_to_tab_separated(header))
     with pytest.raises(
             ValueError,
-            match=r"'.*' is not in list|mixed variant location"):
+            match=r"CNV column '.*' not found in the header"
+                  r"|mixed variant location"):
         next(
             flexible_cnv_loader(
                 content,
