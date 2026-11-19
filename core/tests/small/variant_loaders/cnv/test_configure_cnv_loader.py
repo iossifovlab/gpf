@@ -12,6 +12,7 @@ from gpf.pedigrees.loader import FamiliesLoader
 from gpf.variants_loaders.cnv.flexible_cnv_loader import (
     _configure_cnv_best_state,
     _configure_cnv_location,
+    _configure_cnv_variant_type,
 )
 
 
@@ -53,7 +54,8 @@ def test_configure_cnv_loader_vcf_like_pos_missmatch() -> None:
     header = ["person_id", "Chr", "Start", "End", "variant", "extra"]
     transformers: list[Callable] = []
 
-    with pytest.raises(ValueError, match="'Chrom' is not in list"):
+    with pytest.raises(
+            ValueError, match=r"CNV column 'Chrom' not found in the header"):
         _configure_cnv_location(
             header, transformers,
             cnv_chrom="Chrom",
@@ -73,7 +75,9 @@ def test_configure_cnv_loader_location() -> None:
 def test_configure_cnv_loader_location_mismatch() -> None:
     header = ["person_id", "location", "variant", "extra"]
     transformers: list[Callable] = []
-    with pytest.raises(ValueError, match="'Location' is not in list"):
+    with pytest.raises(
+            ValueError,
+            match=r"CNV column 'Location' not found in the header"):
         _configure_cnv_location(
             header, transformers, cnv_location="Location")
 
@@ -125,7 +129,9 @@ def test_configure_cnv_loader_best_state_person_id_not_found(
     header = ["personId", "location", "variant", "extra"]
     transformers: list[Callable] = []
 
-    with pytest.raises(ValueError, match="'person_id' is not in list"):
+    with pytest.raises(
+            ValueError,
+            match=r"CNV column 'person_id' not found in the header"):
         _configure_cnv_best_state(
             header, transformers,
             families,
@@ -142,7 +148,9 @@ def test_configure_cnv_loader_best_state_best_state_not_found(
     header = ["familyId", "location", "variant", "bestState", "extra"]
     transformers: list[Callable] = []
 
-    with pytest.raises(ValueError, match="'best_state' is not in list"):
+    with pytest.raises(
+            ValueError,
+            match=r"CNV column 'best_state' not found in the header"):
         _configure_cnv_best_state(
             header, transformers,
             families,
@@ -160,7 +168,9 @@ def test_configure_cnv_loader_best_state_family_id_not_found(
     header = ["familyId", "location", "variant", "bestState", "extra"]
     transformers: list[Callable] = []
 
-    with pytest.raises(ValueError, match="'family_id' is not in list"):
+    with pytest.raises(
+            ValueError,
+            match=r"CNV column 'family_id' not found in the header"):
         _configure_cnv_best_state(
             header, transformers,
             families,
@@ -168,3 +178,13 @@ def test_configure_cnv_loader_best_state_family_id_not_found(
             cnv_family_id="family_id",
             cnv_best_state="bestState",
         )
+
+
+def test_configure_cnv_loader_variant_type_default_not_found() -> None:
+    header = ["family_id", "location", "variantType", "best_state"]
+    transformers: list[Callable] = []
+
+    with pytest.raises(
+            ValueError,
+            match=r"CNV column 'variant' not found in the header"):
+        _configure_cnv_variant_type(header, transformers)
