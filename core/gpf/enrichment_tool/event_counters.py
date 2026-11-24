@@ -14,26 +14,24 @@ def filter_denovo_one_event_per_family(
     variant_events: list[VariantEvent],
     requested_effect_types: Iterable[str],
 ) -> list[list[str]]:
-    """
-    For each variant returns list of affected gene syms.
+    """Return the new affected genes of each event, one event per family.
 
-    vs - generator for variants.
-
-    This functions receives a generator for variants and transforms each
-    variant into list of gene symbols, that are affected by the variant.
-
-    The result is represented as list of lists.
+    The function processes the events in ascending ``fvuid`` order. An
+    event counts only when it hits a gene that no earlier event of the
+    same family hit. Each returned list holds the new genes of one event,
+    in ascending order. The result does not depend on the input order.
     """
     seen: set[str] = set()
     res = []
-    for ve in variant_events:
+    for ve in sorted(variant_events, key=operator.attrgetter("fvuid")):
         syms = {
             ge.gene
             for ae in ve.allele_events
             for ge in ae.effect_genes
             if ge.effect in requested_effect_types
         }
-        not_seen_genes = [gs for gs in syms if (ve.family_id + gs) not in seen]
+        not_seen_genes = sorted(
+            gs for gs in syms if (ve.family_id + gs) not in seen)
         if not not_seen_genes:
             continue
         seen.update(ve.family_id + gene_sym for gene_sym in not_seen_genes)
