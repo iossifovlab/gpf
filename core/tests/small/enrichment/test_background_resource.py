@@ -82,3 +82,35 @@ def test_background_gene_score_resource_simple() -> None:
 
     assert background.is_loaded()
     assert background._total == 90
+
+
+def test_background_gene_score_gene_without_value_weighs_zero() -> None:
+    res: GenomicResource = build_inmemory_test_resource({
+        GR_CONF_FILE_NAME: """
+            type: gene_score
+            filename: data.mem
+            separator: "\t"
+            scores:
+            - id: weight
+              desc: Gene weight
+              histogram:
+                type: number
+                number_of_bins: 10
+                view_range:
+                    min: 0
+                    max: 100
+        """,
+        "data.mem": convert_to_tab_separated("""
+            gene   weight
+            A      10
+            B      NA
+            C      30
+        """),
+    })
+    background = GeneScoreEnrichmentBackground(res)
+
+    background.load()
+
+    assert background.genes_weight(["B"]) == 0.0
+    assert background.genes_weight(["A", "B", "C"]) == 40.0
+    assert background._total == 40.0

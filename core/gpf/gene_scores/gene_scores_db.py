@@ -75,7 +75,6 @@ class GeneScoresDb:
         """Return the gene score with the given resource ID, if any."""
         if score_id not in self.gene_scores:
             return None
-        assert self.gene_scores[score_id].df is not None
         return self.gene_scores[score_id]
 
     def get_score_desc(self, score_id: str) -> GeneScoreDesc | None:

@@ -182,7 +182,7 @@ class ResponseTransformer(ResponseTransformerProtocol):
                 if gene_score is None:
                     continue
                 self.gene_scores_dicts[score_id] = \
-                    gene_score._to_dict(score_id)  # ruff: ignore[private-member-access]
+                    gene_score.to_dict(score_id)
 
     @staticmethod
     def _get_pheno_values_for_variant(
