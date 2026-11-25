@@ -44,14 +44,8 @@ def test_bad_gene_score_partition(
     assert response.status_code == 404
 
 
-def test_gene_scores_partitions_counts_at_the_boundaries(
-    user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    resource_id = t4c8_wgpf_instance.get_gene_score_desc(
-        "t4c8_score").resource_id
-    gene_score = GeneScore(build_inmemory_test_resource({
+def _t4c8_gene_score(data: str) -> GeneScore:
+    return GeneScore(build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: gene_score
             filename: data.mem
@@ -62,14 +56,24 @@ def test_gene_scores_partitions_counts_at_the_boundaries(
                 type: number
                 number_of_bins: 3
         """,
-        "data.mem": convert_to_tab_separated("""
+        "data.mem": convert_to_tab_separated(data),
+    }))
+
+
+def test_gene_scores_partitions_counts_at_the_boundaries(
+    user_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    resource_id = t4c8_wgpf_instance.get_gene_score_desc(
+        "t4c8_score").resource_id
+    gene_score = _t4c8_gene_score("""
             gene   t4c8_score
             A      1.0
             B      1.5
             C      5.0
             D      7.0
-        """),
-    }))
+        """)
     monkeypatch.setitem(
         t4c8_wgpf_instance.gene_scores_db.gene_scores,
         resource_id, gene_score)
@@ -95,25 +99,13 @@ def test_gene_scores_partitions_count_a_duplicate_gene_once(
 ) -> None:
     resource_id = t4c8_wgpf_instance.get_gene_score_desc(
         "t4c8_score").resource_id
-    gene_score = GeneScore(build_inmemory_test_resource({
-        GR_CONF_FILE_NAME: """
-            type: gene_score
-            filename: data.mem
-            separator: "\t"
-            scores:
-            - id: t4c8_score
-              histogram:
-                type: number
-                number_of_bins: 3
-        """,
-        "data.mem": convert_to_tab_separated("""
+    gene_score = _t4c8_gene_score("""
             gene   t4c8_score
             A      1.0
             A      1.0
             B      3.0
             C      7.0
-        """),
-    }))
+        """)
     monkeypatch.setitem(
         t4c8_wgpf_instance.gene_scores_db.gene_scores,
         resource_id, gene_score)
