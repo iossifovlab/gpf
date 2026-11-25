@@ -1,6 +1,5 @@
 from typing import Any
 
-import numpy as np
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.http.response import StreamingHttpResponse
 from django.utils.decorators import method_decorator
@@ -128,7 +127,7 @@ class GeneScoresPartitionsView(QueryBaseView):
 
         score_desc = self.gpf_instance.get_gene_score_desc(score_name)
         gene_score = self.gpf_instance.get_gene_score(score_desc.resource_id)
-        df = gene_score.get_score_df(score_name)
+        values = gene_score.to_dict(score_name).values()
 
         try:
             score_min = float(data["min"])
@@ -140,19 +139,14 @@ class GeneScoresPartitionsView(QueryBaseView):
         except (ValueError, TypeError):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        total = 1.0 * len(df)
-
-        ldf = df[df[score_name] < score_min]
-        rdf = df[df[score_name] > score_max]
-        mdf = df[
-            np.logical_and(
-                df[score_name] >= score_min,
-                df[score_name] <= score_max)
-        ]
+        total = 1.0 * len(values)
+        left = sum(1 for v in values if v < score_min)
+        right = sum(1 for v in values if v > score_max)
+        mid = sum(1 for v in values if score_min <= v <= score_max)
 
         res = {
-            "left": {"count": len(ldf), "percent": len(ldf) / total},
-            "mid": {"count": len(mdf), "percent": len(mdf) / total},
-            "right": {"count": len(rdf), "percent": len(rdf) / total},
+            "left": {"count": left, "percent": left / total},
+            "mid": {"count": mid, "percent": mid / total},
+            "right": {"count": right, "percent": right / total},
         }
         return Response(res)
