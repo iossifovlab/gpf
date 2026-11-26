@@ -1,3 +1,4 @@
+import math
 from typing import Any
 
 from datasets_api.permissions import get_instance_timestamp_etag
@@ -127,7 +128,6 @@ class GeneScoresPartitionsView(QueryBaseView):
 
         score_desc = self.gpf_instance.get_gene_score_desc(score_name)
         gene_score = self.gpf_instance.get_gene_score(score_desc.resource_id)
-        values = gene_score.to_dict(score_name).values()
 
         try:
             score_min = float(data["min"])
@@ -139,10 +139,15 @@ class GeneScoresPartitionsView(QueryBaseView):
         except (ValueError, TypeError):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        total = 1.0 * len(values)
-        left = sum(1 for v in values if v < score_min)
-        right = sum(1 for v in values if v > score_max)
-        mid = sum(1 for v in values if score_min <= v <= score_max)
+        # Count distinct gene symbols. ``get_genes`` includes both limits,
+        # so the strict limits of left and right use ``math.nextafter``.
+        total = 1.0 * len(gene_score.get_genes(score_name))
+        left = len(gene_score.get_genes(
+            score_name, score_max=math.nextafter(score_min, -math.inf)))
+        right = len(gene_score.get_genes(
+            score_name, score_min=math.nextafter(score_max, math.inf)))
+        mid = len(gene_score.get_genes(
+            score_name, score_min=score_min, score_max=score_max))
 
         res = {
             "left": {"count": left, "percent": left / total},
