@@ -155,3 +155,35 @@ def test_gene_scores_partitions_count_a_gene_with_an_in_range_row_first(
     }
     assert response.json()["mid"]["count"] == len(gene_score.get_genes(
         "t4c8_score", score_min=1.5, score_max=5.0))
+
+
+def test_gene_scores_partitions_leave_a_gene_with_no_value_out_of_the_base(
+    user_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    resource_id = t4c8_wgpf_instance.get_gene_score_desc(
+        "t4c8_score").resource_id
+    gene_score = _t4c8_gene_score("""
+            gene   t4c8_score
+            A      3.0
+            A      1.0
+            B      7.0
+            D      NA
+        """)
+    monkeypatch.setitem(
+        t4c8_wgpf_instance.gene_scores_db.gene_scores,
+        resource_id, gene_score)
+    data = {"score": "t4c8_score", "min": 1.5, "max": 5.0}
+
+    response = user_client.post(
+        "/api/v3/gene_scores/partitions",
+        json.dumps(data), content_type="application/json", format="json",
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "left": {"count": 1, "percent": 0.5},
+        "mid": {"count": 1, "percent": 0.5},
+        "right": {"count": 1, "percent": 0.5},
+    }
