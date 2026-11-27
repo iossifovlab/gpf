@@ -8,6 +8,7 @@ pin the step and run the same ``git log`` options on a small repo.
 import importlib.util
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -81,6 +82,14 @@ def test_prepare_workspace_writes_the_churn_log(jenkinsfile: str) -> None:
     assert CHURN_LOG in stage
 
 
+def test_churn_log_step_runs_after_the_cleanup(jenkinsfile: str) -> None:
+    # The cleanup deletes reports/, so a churn log written before it is lost.
+    stage = prepare_workspace(jenkinsfile)
+
+    assert stage.index("rm -rf reports dist") < stage.index(
+        f"git log {GIT_LOG_OPTIONS}")
+
+
 def test_failed_git_log_removes_the_partial_file(jenkinsfile: str) -> None:
     stage = prepare_workspace(jenkinsfile)
     step = stage[stage.index(f"git log {GIT_LOG_OPTIONS}"):]
@@ -101,6 +110,18 @@ def test_crap_step_passes_the_churn_log_and_the_root(
     assert call == (
         "/workspace/scripts/crap_report_html.py /reports/crap.txt "
         "/reports/crap.html /reports/crap_churn_log.txt ${crapRoot}")
+
+
+def test_crap_step_never_touches_the_pytest_exit_code(
+    jenkinsfile: str,
+) -> None:
+    # The report never changes the build result: only pytest_exit decides it.
+    step = crap_step(jenkinsfile)
+
+    assert "pytest_exit" not in step
+    # No exit command at the start of a line or after a shell separator.
+    # The echo line holds "exit" only inside its quoted message.
+    assert re.search(r"(^|[;&|])\s*exit\b", step, re.MULTILINE) is None
 
 
 def test_crap_step_holds_no_apostrophe(jenkinsfile: str) -> None:

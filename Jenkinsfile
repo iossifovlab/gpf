@@ -1872,16 +1872,24 @@ print('gpf-web prefix settings OK')"
                     )
                 }
                 // The CRAP table of core (#1187) as a sidebar page of the
-                // build. allowMissing covers a docs-only build and a core
-                // stage that died before crapper ran.
-                publishHTML(target: [
-                    reportDir: 'reports/core',
-                    reportFiles: 'crap.html',
-                    reportName: 'CRAP report',
-                    allowMissing: true,
-                    alwaysLinkToLastBuild: false,
-                    keepAll: true,
-                ])
+                // build. reports/core exists in every build, because
+                // Prepare workspace writes the churn log there, so
+                // allowMissing alone never hides the link. The
+                // fileExists guard skips the page in a docs-only build
+                // and in a core stage that died before crapper ran.
+                // includes keeps the other reports of reports/core out
+                // of the stored page.
+                if (fileExists('reports/core/crap.html')) {
+                    publishHTML(target: [
+                        reportDir: 'reports/core',
+                        reportFiles: 'crap.html',
+                        includes: 'crap.html',
+                        reportName: 'CRAP report',
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: false,
+                        keepAll: true,
+                    ])
+                }
                 archiveArtifacts(
                     artifacts: 'reports/**/*.xml, reports/*/crap.txt, ' +
                                'reports/*/crap.html',
