@@ -30,6 +30,41 @@ def runProject(Map args) {
     String distName       = name.replace('_', '-')
     String distPkg        = args.distPkg ?: "gpf-${distName}"  // PyPI-style name, e.g. "gpf-rest-client"
     String imageTag       = "gpf-${distName}-ci:${env.CI_TAG}"
+    // CRAP table of ${pkg} from crapper (#1187). Off by default: only
+    // the core image carries crapper. The LCOV report comes from the
+    // same pytest run as the Cobertura one, at the path that crapper
+    // reads under its project root.
+    boolean crap          = args.crap ?: false
+    String crapRoot       = "/workspace/${name}"
+    String lcovReport     = crap ?
+        "--cov-report=lcov:${crapRoot}/target/coverage/python/lcov.info" : ''
+    // Keep this text free of apostrophes: it lands inside the
+    // single-quoted sh -c string below. The Python files of the
+    // package are named one by one, because crapper has no exclude
+    // option. The list leaves out _version.py, which coverage omits
+    // too, so it would show as a row at 0%. The exit code of crapper
+    // does not reach pytest_exit: the report never changes the build
+    // result. The echo also prints the line count of crap.txt. The
+    // count includes the header lines of crapper, so it is not the
+    // number of function rows: zero lines means no report.
+    // scripts/crap_report_html.py renders crap.txt as crap.html, which
+    // the top-level post block publishes as the CRAP report page. The
+    // page also ranks the functions by CRAP times the churn of their
+    // file, from the git log that the Prepare workspace stage writes.
+    // The source root maps each namespace to its file.
+    // core/tests/small/test_crap_churn.py tests this text.
+    String crapStep       = !crap ? '' : """
+                crap_start=\$(date +%s)
+                crapper --use-existing-coverage --root ${crapRoot} \\
+                    \$(find ${pkg} -name "*.py" ! -name _version.py | sort) \\
+                    > /reports/crap.txt
+                crap_exit=\$?
+                crap_lines=\$(wc -l < /reports/crap.txt)
+                echo "crapper: exit \$crap_exit, took \$((\$(date +%s) - crap_start)) s, \$crap_lines lines in crap.txt"
+                python /workspace/scripts/crap_report_html.py \\
+                    /reports/crap.txt /reports/crap.html \\
+                    /reports/crap_churn_log.txt ${crapRoot}
+"""
 
     String pytestBlock = skipPytest ? '''
                 # pytest is skipped for this stage — see runProject() call
@@ -42,7 +77,7 @@ def runProject(Map args) {
                 pytest ${pytestArgs} \\
                     --junitxml=/reports/pytest.xml \\
                     --cov=${pkg} --cov-branch \\
-                    --cov-report=xml:/reports/coverage.xml \\
+                    --cov-report=xml:/reports/coverage.xml ${lcovReport} \\
                     ${tests}
                 pytest_exit=\$?
                 # Rewrite container-absolute <source>/workspace/...</source> to a
@@ -108,7 +143,7 @@ def runProject(Map args) {
                        --output-format=parseable \\
                        --recursive=y \\
                        --exit-zero ${pkg} > /reports/pylint.txt
-${pytestBlock}
+${pytestBlock}${crapStep}
                 # Build wheel + sdist for this project. hatch-vcs reads the
                 # mounted .git to produce a proper PEP 440 version.
                 uv build --package ${distPkg} --out-dir /dist
@@ -387,6 +422,29 @@ pipeline {
                                 '
                             rm -rf reports dist && mkdir -p reports dist
                         '''
+                        // The hotspot table of the CRAP report ranks each
+                        // function by CRAP times the number of commits in
+                        // the last 12 months that changed its file (#1187).
+                        // Git runs here on the agent, because the checkout
+                        // in the container has another owner. The step
+                        // runs after the line above, which deletes
+                        // reports/. It writes the raw log under
+                        // reports/core, and scripts/crap_report_html.py
+                        // follows the renames in it. A failed git log
+                        // leaves no file, and the page then says the churn
+                        // count is missing: the step never fails the build.
+                        // core/tests/small/test_crap_churn.py reads this step.
+                        sh label: 'Write the git log for the CRAP hotspots', script: '''
+                            mkdir -p reports/core
+                            churn=reports/core/crap_churn_log.txt
+                            if git log -M --name-status --since=12.months --format=@@commit:%H > "$churn.tmp"; then
+                                mv "$churn.tmp" "$churn"
+                                echo "CRAP hotspots: $(wc -l < "$churn") lines in the churn log"
+                            else
+                                rm -f "$churn.tmp"
+                                echo "CRAP hotspots: git log failed, the page has no hotspot table"
+                            fi
+                        '''
                     }
                 }
 
@@ -603,6 +661,9 @@ pipeline {
                                             mypyTarget: 'gpf',
                                             mypyExtra: '--config-file /workspace/mypy.ini',
                                             pytestArgs: '-n 5 --enable-http-testing --enable-s3-testing',
+                                            // CRAP table and CRAP report
+                                            // page of gpf (#1187).
+                                            crap: true,
                                             dockerRunExtra:
                                                 '--network "$COMPOSE_NETWORK" ' +
                                                 '-e HTTP_HOST=apache:80 ' +
@@ -1810,8 +1871,20 @@ print('gpf-web prefix settings OK')"
                         failOnError: false,
                     )
                 }
+                // The CRAP table of core (#1187) as a sidebar page of the
+                // build. allowMissing covers a docs-only build and a core
+                // stage that died before crapper ran.
+                publishHTML(target: [
+                    reportDir: 'reports/core',
+                    reportFiles: 'crap.html',
+                    reportName: 'CRAP report',
+                    allowMissing: true,
+                    alwaysLinkToLastBuild: false,
+                    keepAll: true,
+                ])
                 archiveArtifacts(
-                    artifacts: 'reports/**/*.xml',
+                    artifacts: 'reports/**/*.xml, reports/*/crap.txt, ' +
+                               'reports/*/crap.html',
                     allowEmptyArchive: true,
                     fingerprint: false,
                 )
