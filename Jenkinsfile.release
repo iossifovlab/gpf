@@ -557,6 +557,23 @@ pipeline {
                              "Anaconda.org/${ANACONDA_USER}"
                             '''
                         }
+
+                        // Warn when the pin is older than the newest
+                        // gain-core on the iossifovlab channel (gpf#1207).
+                        // The script only gives advice and exits 0 in
+                        // every case: an older pin can be deliberate.
+                        // DRY_RUN runs it. A tag cut before gpf#1207 has
+                        // no copy of the script, so the stage prints that
+                        // the check was skipped.
+                        if (fileExists('scripts/gain_core_pin_freshness.sh')) {
+                            sh 'bash scripts/gain_core_pin_freshness.sh'
+                        } else {
+                            echo(
+                                'Gain pin freshness: skipped, the tag ' +
+                                "${params.TAG_NAME} has no " +
+                                'scripts/gain_core_pin_freshness.sh'
+                            )
+                        }
                     }
                 }
             }
