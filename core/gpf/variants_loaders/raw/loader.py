@@ -129,29 +129,28 @@ class CLIArgument:
         use_defaults: bool = False,
     ) -> str | None:
         """Build an option."""
-        if self.arg_type == ArgumentType.ARGUMENT:
+        if self.arg_type == ArgumentType.ARGUMENT \
+                or self.destination is None \
+                or self.destination not in params:
             return None
-        for key, value in params.items():
-            if key == self.destination:
-                if self.has_value:
-                    if value is not None:
-                        if value == self.default_value:
-                            continue
-                        if self.raw:
-                            value = value.encode(
-                                "unicode-escape",
-                            ).decode().replace("\\\\", "\\")
-                        return f'{self.argument_name} "{value}"'
-                    if use_defaults and self.default_value is not None:
-                        value = str(self.default_value)
-                        if self.raw:
-                            value = value.encode(
-                                "unicode-escape",
-                            ).decode().replace("\\\\", "\\")
-                        return f'{self.argument_name} "{value}"'
-                else:
-                    return f"{self.argument_name}"
-        return None
+        if not self.has_value:
+            return self.argument_name
+        value = params[self.destination]
+        if value is None:
+            if not use_defaults or self.default_value is None:
+                return None
+            return self._format_option(str(self.default_value))
+        if value == self.default_value:
+            return None
+        return self._format_option(value)
+
+    def _format_option(self, value: str) -> str:
+        """Format the option with a value, escaped when raw is set."""
+        if self.raw:
+            value = value.encode(
+                "unicode-escape",
+            ).decode().replace("\\\\", "\\")
+        return f'{self.argument_name} "{value}"'
 
     def parse_cli_argument(
         self, argv: argparse.Namespace, *,
