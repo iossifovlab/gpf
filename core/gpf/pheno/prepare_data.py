@@ -351,29 +351,40 @@ class PreparePhenoBrowserBase:
 
     def run(self, **kwargs: Any) -> None:
         """Run browser preparations for all measures in a phenotype data."""
-
-        if self.pheno_regressions:
-            for reg_id, reg_data in self.pheno_regressions.items():
-                self.browser.save_regression(
-                    {
-                        "regression_id": reg_id,
-                        "instrument_name": reg_data.get("instrument_name"),
-                        "measure_name": reg_data.get("measure_name"),
-                        "display_name": reg_data.get("display_name"),
-                    },
-                )
+        self._save_regressions()
         with self.browser.connection.cursor() as cursor:
             cursor.execute("CHECKPOINT")
 
-        graph = TaskGraph()
+        self._run_measure_tasks(self._create_measure_graph(), **kwargs)
+        self._write_import_manifests()
 
+    def _save_regressions(self) -> None:
+        """Save the configured regressions into the browser."""
+        if not self.pheno_regressions:
+            return
+        for reg_id, reg_data in self.pheno_regressions.items():
+            self.browser.save_regression(
+                {
+                    "regression_id": reg_id,
+                    "instrument_name": reg_data.get("instrument_name"),
+                    "measure_name": reg_data.get("measure_name"),
+                    "display_name": reg_data.get("display_name"),
+                },
+            )
+
+    def _create_measure_graph(self) -> TaskGraph:
+        """Create a task graph with one task for each measure."""
+        graph = TaskGraph()
         for instrument in list(self.phenotype_data.instruments.values()):
             for measure in list(instrument.measures.values()):
                 self.add_measure_task(
                     graph, measure, str(self.pheno_db_dir),
                     self.storage_registry, str(self.cache_dir),
                 )
+        return graph
 
+    def _run_measure_tasks(self, graph: TaskGraph, **kwargs: Any) -> None:
+        """Run the measure tasks and save each result into the browser."""
         task_cache = TaskCache.create(
             force=kwargs.get("force", False),
             cache_dir=kwargs.get("task_status_dir"),
@@ -383,24 +394,34 @@ class PreparePhenoBrowserBase:
             try:
                 for result in task_graph_run_with_results(graph, xtor):
                     measure, regressions = result
-                    self.browser.save(cast(dict[str, str | None], measure))
-                    if regressions is None:
-                        continue
-                    for regression in regressions:
-                        self.browser.save_regression_values(regression)
+                    self._save_measure_result(measure, regressions)
             except Exception as e:
                 logger.exception("Failed to create images")
                 raise RuntimeError("Failed to create images") from e
 
-        is_group = self.phenotype_data.config["type"] == "group"
-        if is_group:
-            leaves = cast(PhenotypeGroup, self.phenotype_data).get_leaves()
-        else:
-            leaves = [cast(PhenotypeStudy, self.phenotype_data)]
+    def _save_measure_result(
+        self,
+        measure: dict[str, Any],
+        regressions: list[dict[str, Any]] | None,
+    ) -> None:
+        """Save a measure and its regression values into the browser."""
+        self.browser.save(cast(dict[str, str | None], measure))
+        if regressions is None:
+            return
+        for regression in regressions:
+            self.browser.save_regression_values(regression)
 
+    def _leaves(self) -> list[PhenotypeStudy]:
+        """Return the leaf studies of the phenotype data."""
+        if self.phenotype_data.config["type"] == "group":
+            return cast(PhenotypeGroup, self.phenotype_data).get_leaves()
+        return [cast(PhenotypeStudy, self.phenotype_data)]
+
+    def _write_import_manifests(self) -> None:
+        """Write the import manifests of the leaves into the browser."""
         manifests = []
 
-        for leaf in leaves:
+        for leaf in self._leaves():
             leaf_manifest = ImportManifest.from_table(
                 leaf.db.connection, IMPORT_METADATA_TABLE,
             )
