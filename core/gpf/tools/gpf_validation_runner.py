@@ -14,7 +14,6 @@ from xml.etree.ElementTree import (  # ruff: ignore[suspicious-xml-etree-import]
     tostring,
 )
 
-import numpy as np
 import pandas as pd
 import yaml
 from gain.utils.regions import Region
@@ -567,90 +566,6 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
                 print(variants.loc[diff], file=out)
 
-            return out.getvalue()
-
-    def _error_reporter(
-        self, ex: AssertionError,
-        variants_df: pd.DataFrame,
-        expected_df: pd.DataFrame,
-    ) -> str:
-        with io.StringIO() as out:
-            if not self.detailed_reporting:
-                print("expected:\n", expected_df.head(), file=out)
-                print("actual:\n", variants_df.head(), file=out)
-                print(ex, file=out)
-                return out.getvalue()
-
-            expected_columns = self._cleanup_variant_columns(
-                set(expected_df.columns))
-            variants_columns = self._cleanup_variant_columns(
-                set(variants_df.columns))
-            diff1 = expected_columns.difference(variants_columns)
-            if diff1:
-                print(
-                    "columns expected but not found in variants:",
-                    diff1, file=out)
-            diff2 = variants_columns.difference(expected_columns)
-            if diff2:
-                print(
-                    "columns found in variants but not expected:",
-                    diff2, file=out)
-            if diff1 or diff2:
-                return out.getvalue()
-
-            if all(expected_df.columns != expected_df.columns):
-                print(
-                    "columns are in different order: ",
-                    "expected>", expected_df.columns,
-                    "variants>", variants_df.columns,
-                    file=out)
-                return out.getvalue()
-
-            if len(expected_df) != len(variants_df):
-                print(
-                    "different number of variants: ",
-                    "expected>", len(expected_df),
-                    "variants>", len(variants_df),
-                    file=out)
-                return out.getvalue()
-
-            differences = (expected_df != variants_df).melt()
-            last_printed_idx = -1
-            for idxs, has_diff in differences.items():
-                if not has_diff:
-                    continue
-
-                idx, col_name = cast(tuple[int, str], idxs)
-                expected = expected_df[col_name][idx]
-                result = variants_df[col_name][idx]
-
-                if expected.dtype == float and \
-                        np.isclose(expected, result):
-                    continue
-
-                if expected.dtype == str and expected == result:
-                    continue
-                if expected.dtype == float and \
-                        np.isnan(expected) and np.isnan(result):
-                    continue
-
-                if last_printed_idx != idx:
-                    last_printed_idx = idx
-                    print(
-                        f"Differences in variant #{idx} "
-                        f"{expected_df['chromosome'][idx]} "
-                        f"{expected_df['position'][idx]} "
-                        f"{expected_df['reference'][idx]}->"
-                        f"{expected_df['alternative'][idx]} "
-                        f"{expected_df['cshl_variant'][idx]} ",
-                        file=out,
-                    )
-                print(
-                    f"\t{col_name}:\n"
-                    f"\t\tExpected: > {expected_df[col_name][idx]}\n"
-                    f"\t\tResult:   > {variants_df[col_name][idx]}",
-                    file=out,
-                )
             return out.getvalue()
 
     def _execute_variants_test_case(
