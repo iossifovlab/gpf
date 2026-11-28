@@ -380,102 +380,30 @@ class BaseQueryBuilder(ABC):
         return_unknown: bool | None = None,
         **kwargs: Any,  # ruff: ignore[unused-method-argument]
     ) -> str:
-        # pylint: disable=too-many-arguments,too-many-branches,unused-argument
-        where = []
+        # pylint: disable=too-many-arguments,unused-argument
+        where, regions = self._build_gene_where(
+            genes=genes, effect_types=effect_types, regions=regions)
 
-        if genes is not None and effect_types is not None:
-            regions = self._build_gene_regions_heuristic(genes, regions)
-            clause = self._build_iterable_struct_string_attr_where(
-                ["eg.effect_gene_symbols", "eg.effect_types"],
-                [genes, effect_types],
-            )
-            where.append(f"({clause})")
-
-        if genes is not None and effect_types is None:
-            regions = self._build_gene_regions_heuristic(genes, regions)
-            # effect gene is a struct under affect gene in V2 schema
-            where.append(
-                self._build_iterable_struct_string_attr_where(
-                    ["eg.effect_gene_symbols"], [genes],
-                ),
-            )
-        if effect_types is not None and genes is None:
-            # effect gene is a struct under affect gene in V2 schema
-            where.append(
-                self._build_iterable_struct_string_attr_where(
-                    ["eg.effect_types"], [effect_types],
-                ),
-            )
         if regions is not None:
             where.append(self._build_regions_where(regions))
-        if family_ids is not None:
-            where.append(
-                self._build_iterable_string_attr_where(
-                    self.where_accessors["family_id"], family_ids,
-                ),
-            )
-        if person_ids is not None:
-            person_ids = set(person_ids)
-            where.append(
-                self._build_iterable_string_attr_where(
-                    "pi" + self.dialect.array_item_suffix(), person_ids),
-            )
 
-        if inheritance is not None:
-            where.extend(
-                self._build_inheritance_where(
-                    "inheritance_in_members",
-                    inheritance,
-                ),
-            )
-        if roles is not None:
-            roles_query = self._transform_attribute_query(
-                Role, roles, column("allele_in_roles"),
-                complementary_type=Zygosity,
-                complementary_column=column("zygosity_in_roles"),
-            ).sql()
-            where.append(roles_query)
-        if sexes is not None:
-            sexes_query = self._transform_attribute_query(
-                Sex, sexes, column("allele_in_sexes"),
-                aliases=Sex.aliases(),
-                complementary_type=Zygosity,
-                complementary_column=column("zygosity_in_sexes"),
-            ).sql()
-            where.append(sexes_query)
-        if affected_statuses is not None:
-            statuses_query = \
-                self._transform_attribute_query(
-                    Status, affected_statuses,
-                    column("allele_in_statuses"),
-                    complementary_type=Zygosity,
-                    complementary_column=column("zygosity_in_status"),
-                ).sql()
-            where.append(statuses_query)
-        if variant_type is not None:
-            variant_type_query = \
-                self._transform_attribute_query(
-                    Allele.Type, variant_type,
-                    column("variant_type"),
-                    aliases=Allele.TYPE_DISPLAY_NAME,
-                ).sql()
-            where.append(variant_type_query)
-        if real_attr_filter is not None:
-            where.append(self._build_real_attr_where(real_attr_filter))
+        family_where, person_ids = self._build_family_and_person_where(
+            family_ids=family_ids, person_ids=person_ids)
+        where.extend(family_where)
 
-        if categorical_attr_filter is not None:
-            where.append(self._build_categorical_attr_where(
-                categorical_attr_filter))
-
-        if frequency_filter is not None:
-            where.append(
-                self._build_real_attr_where(
-                    frequency_filter, is_frequency=True,
-                ),
-            )
-
-        if ultra_rare:
-            where.append(self._build_ultra_rare_where(ultra_rare=ultra_rare))
+        where.extend(self._build_attribute_where(
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+            affected_statuses=affected_statuses,
+            variant_type=variant_type,
+        ))
+        where.extend(self._build_filter_where(
+            real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
+            frequency_filter=frequency_filter,
+            ultra_rare=ultra_rare,
+        ))
 
         where.extend([
             self._build_return_reference_and_return_unknown(
@@ -504,6 +432,136 @@ class BaseQueryBuilder(ABC):
             )
 
         return where_clause
+
+    def _build_gene_where(
+        self, *,
+        genes: list[str] | None,
+        effect_types: list[str] | None,
+        regions: list[Region] | None,
+    ) -> tuple[list[str], list[Region] | None]:
+        """Build the effect gene fragment and apply the gene heuristic.
+
+        Return the fragments and the regions that the rest of the
+        ``WHERE`` clause uses.
+        """
+        # effect gene is a struct under affect gene in V2 schema
+        if genes is not None:
+            regions = self._build_gene_regions_heuristic(genes, regions)
+            if effect_types is not None:
+                clause = self._build_iterable_struct_string_attr_where(
+                    ["eg.effect_gene_symbols", "eg.effect_types"],
+                    [genes, effect_types],
+                )
+                return [f"({clause})"], regions
+            return [
+                self._build_iterable_struct_string_attr_where(
+                    ["eg.effect_gene_symbols"], [genes],
+                ),
+            ], regions
+        if effect_types is not None:
+            return [
+                self._build_iterable_struct_string_attr_where(
+                    ["eg.effect_types"], [effect_types],
+                ),
+            ], regions
+        return [], regions
+
+    def _build_family_and_person_where(
+        self, *,
+        family_ids: Iterable[str] | None,
+        person_ids: Iterable[str] | None,
+    ) -> tuple[list[str], set[str] | None]:
+        """Build the family and person fragments.
+
+        Return the fragments and the person ids as a set.
+        """
+        where = []
+        if family_ids is not None:
+            where.append(
+                self._build_iterable_string_attr_where(
+                    self.where_accessors["family_id"], family_ids,
+                ),
+            )
+        person_set = None
+        if person_ids is not None:
+            person_set = set(person_ids)
+            where.append(
+                self._build_iterable_string_attr_where(
+                    "pi" + self.dialect.array_item_suffix(), person_set),
+            )
+        return where, person_set
+
+    def _build_attribute_where(
+        self, *,
+        inheritance: str | list[str] | None,
+        roles: str | None,
+        sexes: str | None,
+        affected_statuses: str | None,
+        variant_type: str | None,
+    ) -> list[str]:
+        """Build the inheritance and the attribute query fragments."""
+        where = []
+        if inheritance is not None:
+            where.extend(
+                self._build_inheritance_where(
+                    "inheritance_in_members",
+                    inheritance,
+                ),
+            )
+        if roles is not None:
+            where.append(self._transform_attribute_query(
+                Role, roles, column("allele_in_roles"),
+                complementary_type=Zygosity,
+                complementary_column=column("zygosity_in_roles"),
+            ).sql())
+        if sexes is not None:
+            where.append(self._transform_attribute_query(
+                Sex, sexes, column("allele_in_sexes"),
+                aliases=Sex.aliases(),
+                complementary_type=Zygosity,
+                complementary_column=column("zygosity_in_sexes"),
+            ).sql())
+        if affected_statuses is not None:
+            where.append(self._transform_attribute_query(
+                Status, affected_statuses,
+                column("allele_in_statuses"),
+                complementary_type=Zygosity,
+                complementary_column=column("zygosity_in_status"),
+            ).sql())
+        if variant_type is not None:
+            where.append(self._transform_attribute_query(
+                Allele.Type, variant_type,
+                column("variant_type"),
+                aliases=Allele.TYPE_DISPLAY_NAME,
+            ).sql())
+        return where
+
+    def _build_filter_where(
+        self, *,
+        real_attr_filter: RealAttrFilterType | None,
+        categorical_attr_filter: CategoricalAttrFilterType | None,
+        frequency_filter: RealAttrFilterType | None,
+        ultra_rare: bool | None,
+    ) -> list[str]:
+        """Build the attribute filter, frequency and ultra rare fragments."""
+        where = []
+        if real_attr_filter is not None:
+            where.append(self._build_real_attr_where(real_attr_filter))
+
+        if categorical_attr_filter is not None:
+            where.append(self._build_categorical_attr_where(
+                categorical_attr_filter))
+
+        if frequency_filter is not None:
+            where.append(
+                self._build_real_attr_where(
+                    frequency_filter, is_frequency=True,
+                ),
+            )
+
+        if ultra_rare:
+            where.append(self._build_ultra_rare_where(ultra_rare=ultra_rare))
+        return where
 
     @abstractmethod
     def _build_group_by(self) -> None:
