@@ -223,8 +223,102 @@ class RawFamilyVariants(abc.ABC):
                 return True
         return False
 
+    @staticmethod
+    def _match_inheritance(
+        allele: FamilyAllele, inheritance: list[Matcher],
+    ) -> bool:
+        """Return True if each inheritance matcher accepts the allele."""
+        for matcher in inheritance:
+            allele_inheritance = 0
+            for inh in allele.inheritance_in_members:
+                allele_inheritance |= inh.value
+            if not matcher(allele_inheritance):
+                return False
+        return True
+
     @classmethod
-    def filter_allele(  # ruff: ignore[complex-structure]
+    def _filter_allele_attributes(
+        cls,
+        allele: FamilyAllele,
+        inheritance: list[Matcher] | None,
+        real_attr_filter: RealAttrFilterType | None,
+        frequency_filter: RealAttrFilterType | None, *,
+        ultra_rare: bool | None,
+    ) -> bool:
+        """Return True if the allele passes the inheritance and attr checks."""
+        if inheritance is not None and \
+                not cls._match_inheritance(allele, inheritance):
+            return False
+        if real_attr_filter is not None and \
+                not cls.filter_real_attr(allele, real_attr_filter):
+            return False
+        if frequency_filter is not None and \
+                not cls.filter_real_attr(
+                    allele, frequency_filter, is_frequency=True):
+            return False
+        return not ultra_rare or cls.filter_real_attr(
+            allele, [("af_allele_count", (None, 1))], is_frequency=True)
+
+    @classmethod
+    def _filter_allele_values(
+        cls,
+        allele: FamilyAllele,
+        inheritance: list[Matcher] | None,
+        real_attr_filter: RealAttrFilterType | None,
+        frequency_filter: RealAttrFilterType | None, *,
+        ultra_rare: bool | None,
+        genes: list[str] | None,
+        effect_types: list[str] | None,
+    ) -> bool:
+        """Return True if the allele passes the attr and the gene checks."""
+        if not cls._filter_allele_attributes(
+                allele, inheritance, real_attr_filter, frequency_filter,
+                ultra_rare=ultra_rare):
+            return False
+        if genes is None and effect_types is None:
+            allele.matched_gene_effects = []
+            return True
+        return cls.filter_gene_effects(allele, effect_types, genes)
+
+    @staticmethod
+    def _match_members(
+        matcher: Matcher,
+        values: Sequence[Role | Sex | Status | None],
+        zygosity: int,
+    ) -> bool:
+        """Return True if the matcher accepts the members with the allele."""
+        allele_values = 0
+        for value in values:
+            if value is None:
+                continue
+            allele_values |= value.value
+        return bool(matcher(allele_values, zygosity))
+
+    @classmethod
+    def _filter_allele_members(
+        cls,
+        allele: FamilyAllele,
+        person_ids: Sequence[str] | None,
+        roles: Matcher | None,
+        sexes: Matcher | None,
+        affected_statuses: Matcher | None,
+    ) -> bool:
+        """Return True if the members with the allele pass the checks."""
+        if person_ids is not None and \
+                not set(allele.variant_in_members) & set(person_ids):
+            return False
+        if roles is not None and not cls._match_members(
+                roles, allele.allele_in_roles, allele.zygosity_in_roles):
+            return False
+        if sexes is not None and not cls._match_members(
+                sexes, allele.allele_in_sexes, allele.zygosity_in_sexes):
+            return False
+        return affected_statuses is None or cls._match_members(
+            affected_statuses,
+            allele.allele_in_statuses, allele.zygosity_in_status)
+
+    @classmethod
+    def filter_allele(
         cls,
         allele: FamilyAllele, *,
         genes: list[str] | None = None,
@@ -242,73 +336,39 @@ class RawFamilyVariants(abc.ABC):
         return_unknown: bool | None = None,
         **kwargs: Any,  # ruff: ignore[unused-class-method-argument]
     ) -> bool:
-        # pylint: disable=too-many-arguments,too-many-return-statements
-        # pylint: disable=too-many-branches,unused-argument
+        # pylint: disable=too-many-arguments,unused-argument
         """Return True if a family allele meets the required conditions."""
         assert isinstance(allele, FamilyAllele)
-        if inheritance is not None:
-            for matcher in inheritance:
-                allele_inheritance = 0
-                for inh in allele.inheritance_in_members:
-                    allele_inheritance |= inh.value
-                if not matcher(allele_inheritance):
-                    return False
-
-        if real_attr_filter is not None and \
-                not cls.filter_real_attr(allele, real_attr_filter):
-            return False
-        if frequency_filter is not None and \
-                not cls.filter_real_attr(
-                    allele, frequency_filter, is_frequency=True):
-            return False
-        if ultra_rare and not cls.filter_real_attr(
-                allele, [("af_allele_count", (None, 1))], is_frequency=True):
-            return False
-
-        if genes is None and effect_types is None:
+        # Each query calls this method once for each allele. When all the
+        # filters of a helper are None, the checks below skip the call of
+        # that helper, so the unfiltered path makes no extra call. A chained
+        # `is` check is true only when each of its operands is None.
+        if (
+            real_attr_filter is frequency_filter is None is inheritance
+            and ultra_rare is None
+            and genes is effect_types is None
+        ):
             allele.matched_gene_effects = []
-        elif not cls.filter_gene_effects(allele, effect_types, genes):
+        elif not cls._filter_allele_values(
+                allele, inheritance, real_attr_filter, frequency_filter,
+                ultra_rare=ultra_rare, genes=genes, effect_types=effect_types):
             return False
         if variant_type is not None:
             return variant_type(allele.allele_type.value)
 
+        # `allele_index == 0` is the body of `is_reference_allele`. It
+        # skips one property call on the unfiltered path.
         if (
-            not return_reference
+            allele.allele_index == 0
+            and not return_reference
             and not return_unknown
-            and allele.is_reference_allele
         ):
             return False
 
-        if person_ids is not None and \
-                not set(allele.variant_in_members) & set(person_ids):
-            return False
-        if roles is not None:
-            allele_roles = 0
-            for role in allele.allele_in_roles:
-                if role is None:
-                    continue
-                allele_roles |= role.value
-            if not roles(allele_roles, allele.zygosity_in_roles):
-                return False
-        if sexes is not None:
-            allele_sexes = 0
-            for sex in allele.allele_in_sexes:
-                if sex is None:
-                    continue
-                allele_sexes |= sex.value
-            if not sexes(allele_sexes, allele.zygosity_in_sexes):
-                return False
-        if affected_statuses is not None:
-            allele_statuses = 0
-            for status in allele.allele_in_statuses:
-                if status is None:
-                    continue
-                allele_statuses |= status.value
-            if not affected_statuses(
-                allele_statuses, allele.zygosity_in_status,
-            ):
-                return False
-        return True
+        if roles is sexes is affected_statuses is None is person_ids:
+            return True
+        return cls._filter_allele_members(
+            allele, person_ids, roles, sexes, affected_statuses)
 
     @classmethod
     def filter_summary_allele(
