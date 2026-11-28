@@ -390,38 +390,35 @@ def determine_destination(
     )
 
 
-def import_pheno_data(  # pylint: disable=R0912
-    config: PhenoImportConfig,
-    gpf_instance: GPFInstance | None = None,
-    task_graph_args: argparse.Namespace | None = None,
+def _default_task_graph_args() -> argparse.Namespace:
+    return argparse.Namespace(
+        jobs=1,
+        force=True,
+        task_status_dir=None,
+        dask_cluster_name=None,
+        dask_cluster_config_file=None,
+    )
+
+
+def _clear_existing_pheno_db(
+    pheno_db_filename: str, task_graph_args: argparse.Namespace,
 ) -> None:
-    """Import pheno data into DuckDB."""
-    os.makedirs(config.work_dir, exist_ok=True)
-
-    if task_graph_args is None:
-        task_graph_args = argparse.Namespace(
-            jobs=1,
-            force=True,
-            task_status_dir=None,
-            dask_cluster_name=None,
-            dask_cluster_config_file=None,
+    """Remove an existing pheno DB, or exit when force is not set."""
+    if not os.path.exists(pheno_db_filename):
+        return
+    if not task_graph_args.force:
+        print(
+            f"Pheno DB already exists at {pheno_db_filename}!\n"
+            "Use --force or specify another directory.",
         )
+        sys.exit(1)
+    os.remove(pheno_db_filename)
 
-    destination_storage_id, data_copy_destination, config_copy_destination = \
-        determine_destination(gpf_instance, config)
 
-    pheno_db_filename = os.path.join(config.work_dir, f"{config.id}.db")
-
-    if os.path.exists(pheno_db_filename):
-        if not task_graph_args.force:
-            print(
-                f"Pheno DB already exists at {pheno_db_filename}!\n"
-                "Use --force or specify another directory.",
-            )
-            sys.exit(1)
-        os.remove(pheno_db_filename)
-
-    # INFERENCE CONFIGS
+def _resolve_inference_configs(
+    config: PhenoImportConfig,
+) -> dict[str, Any]:
+    """Return the inference configs with the pheno_common entries added."""
     inference_configs: dict[str, Any] = {}
     if config.inference_config is not None:
         if isinstance(config.inference_config, str):
@@ -431,15 +428,115 @@ def import_pheno_data(  # pylint: disable=R0912
         else:
             inference_configs = config.inference_config
     add_pheno_common_inference(inference_configs)
+    return inference_configs
 
-    histogram_configs: MeasureHistogramConfigs | None = None
-    if config.histogram_configs is not None:
-        if isinstance(config.histogram_configs, str):
-            histogram_configs = load_histogram_configs(
-                config.input_dir, config.histogram_configs,
-            )
-        else:
-            histogram_configs = config.histogram_configs
+
+def _resolve_histogram_configs(
+    config: PhenoImportConfig,
+) -> MeasureHistogramConfigs | None:
+    """Return the histogram configs of an import config."""
+    if config.histogram_configs is None:
+        return None
+    if isinstance(config.histogram_configs, str):
+        return load_histogram_configs(
+            config.input_dir, config.histogram_configs,
+        )
+    return config.histogram_configs
+
+
+def _collect_import_instruments(
+    config: PhenoImportConfig,
+) -> list[ImportInstrument]:
+    """Collect the instruments, with pheno_common unless it is skipped."""
+    instruments = collect_instruments(config)
+
+    if not config.skip_pedigree_measures:
+        instruments.append(ImportInstrument(
+            [Path(config.input_dir, config.pedigree).absolute()],
+            "pheno_common",
+            "\t",
+            config.person_column,
+        ))
+    return instruments
+
+
+def _write_description_tables(
+    connection: duckdb.DuckDBPyConnection,
+    measure_descriptions: dict[str, str],
+    instrument_descriptions: dict[str, str],
+) -> None:
+    """Write the non-empty measure and instrument descriptions."""
+    if measure_descriptions:
+        write_descriptions(
+            connection,
+            "measure_id",
+            "measure_descriptions",
+            measure_descriptions,
+        )
+    if instrument_descriptions:
+        write_descriptions(
+            connection,
+            "instrument_name",
+            "instrument_descriptions",
+            instrument_descriptions,
+        )
+
+
+def _write_study_config(
+    config: PhenoImportConfig, destination_storage_id: str | None,
+) -> Path:
+    """Write the phenotype data config of the import into the work dir."""
+    overrides = config.study_config
+    if overrides is not None:
+        regressions = _build_regression_config(config, overrides)
+        overrides.regressions = regressions
+
+    output_config = generate_phenotype_data_config(
+        config.id, destination_storage_id, overrides)
+
+    pheno_conf_path = Path(config.work_dir, f"{config.id}.yaml")
+    pheno_conf_path.write_text(output_config)
+    return pheno_conf_path
+
+
+def _copy_to_destination(
+    source: Path | str, destination: Path | None, kind: str,
+) -> None:
+    """Copy an import output to its destination, when one is given."""
+    if not destination:
+        return
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        shutil.copy(source, destination)
+    except shutil.SameFileError:
+        logger.warning(
+            "Tried to copy pheno %s to where it already is %s",
+            kind,
+            destination,
+        )
+
+
+def import_pheno_data(
+    config: PhenoImportConfig,
+    gpf_instance: GPFInstance | None = None,
+    task_graph_args: argparse.Namespace | None = None,
+) -> None:
+    """Import pheno data into DuckDB."""
+    os.makedirs(config.work_dir, exist_ok=True)
+
+    if task_graph_args is None:
+        task_graph_args = _default_task_graph_args()
+
+    destination_storage_id, data_copy_destination, config_copy_destination = \
+        determine_destination(gpf_instance, config)
+
+    pheno_db_filename = os.path.join(config.work_dir, f"{config.id}.db")
+
+    _clear_existing_pheno_db(pheno_db_filename, task_graph_args)
+
+    inference_configs = _resolve_inference_configs(config)
+
+    histogram_configs = _resolve_histogram_configs(config)
 
     connection = duckdb.connect(pheno_db_filename)
     create_tables(connection)
@@ -454,15 +551,7 @@ def import_pheno_data(  # pylint: disable=R0912
     print("READING COLUMNS FROM INSTRUMENT FILE")
     start = time.time()
 
-    instruments = collect_instruments(config)
-
-    if not config.skip_pedigree_measures:
-        instruments.append(ImportInstrument(
-            [Path(config.input_dir, config.pedigree).absolute()],
-            "pheno_common",
-            "\t",
-            config.person_column,
-        ))
+    instruments = _collect_import_instruments(config)
 
     instrument_measure_names = read_instrument_measure_names(instruments)
 
@@ -511,20 +600,9 @@ def import_pheno_data(  # pylint: disable=R0912
 
     start = time.time()
     print("WRITING DESCRIPTIONS")
-    if measure_descriptions:
-        write_descriptions(
-            connection,
-            "measure_id",
-            "measure_descriptions",
-            measure_descriptions,
-        )
-    if instrument_descriptions:
-        write_descriptions(
-            connection,
-            "instrument_name",
-            "instrument_descriptions",
-            instrument_descriptions,
-        )
+    _write_description_tables(
+        connection, measure_descriptions, instrument_descriptions,
+    )
     print(f"DONE {time.time() - start}")
 
     ImportManifest.create_table(connection, IMPORT_METADATA_TABLE)
@@ -533,36 +611,10 @@ def import_pheno_data(  # pylint: disable=R0912
 
     connection.close()
 
-    overrides = config.study_config
-    if overrides is not None:
-        regressions = _build_regression_config(config, overrides)
-        overrides.regressions = regressions
+    pheno_conf_path = _write_study_config(config, destination_storage_id)
 
-    output_config = generate_phenotype_data_config(
-        config.id, destination_storage_id, overrides)
-
-    pheno_conf_path = Path(config.work_dir, f"{config.id}.yaml")
-    pheno_conf_path.write_text(output_config)
-
-    if config_copy_destination:
-        config_copy_destination.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            shutil.copy(pheno_conf_path, config_copy_destination)
-        except shutil.SameFileError:
-            logger.warning(
-                "Tried to copy pheno config to where it already is %s",
-                config_copy_destination,
-            )
-
-    if data_copy_destination:
-        data_copy_destination.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            shutil.copy(pheno_db_filename, data_copy_destination)
-        except shutil.SameFileError:
-            logger.warning(
-                "Tried to copy pheno data to where it already is %s",
-                data_copy_destination,
-            )
+    _copy_to_destination(pheno_conf_path, config_copy_destination, "config")
+    _copy_to_destination(pheno_db_filename, data_copy_destination, "data")
 
 
 def _build_regression_config(
