@@ -357,14 +357,8 @@ class DenovoLoader(VariantsGenotypesLoader):
         ))
         return arguments
 
-    @classmethod
-    def parse_cli_arguments(
-        cls, argv: argparse.Namespace, *,
-        use_defaults: bool = False,  # ruff: ignore[unused-class-method-argument]
-    ) -> tuple[list[str], dict[str, Any]]:
-        # pylint: disable=too-many-branches
-        logger.debug("CLI arguments: %s", argv)
-
+    @staticmethod
+    def _check_exclusive_denovo_options(argv: argparse.Namespace) -> None:
         if argv.denovo_location and (argv.denovo_chrom or argv.denovo_pos):
             logger.error(
                 "--denovo-location and (--denovo-chrom, --denovo-pos) "
@@ -387,37 +381,37 @@ class DenovoLoader(VariantsGenotypesLoader):
             )
             raise ValueError
 
+    @staticmethod
+    def _default_location_columns(argv: argparse.Namespace) -> None:
         if not (argv.denovo_location
                 or (argv.denovo_chrom and argv.denovo_pos)):
             argv.denovo_chrom = "chrom"
             argv.denovo_pos = "pos"
 
+    @staticmethod
+    def _default_variant_columns(argv: argparse.Namespace) -> None:
         if not (argv.denovo_variant or (argv.denovo_ref and argv.denovo_alt)):
             argv.denovo_ref = "ref"
             argv.denovo_alt = "alt"
 
+    @staticmethod
+    def _default_person_column(argv: argparse.Namespace) -> None:
         if not (argv.denovo_person_id
                 or (argv.denovo_family_id and (
                     argv.denovo_best_state or argv.denovo_genotype))):
             argv.denovo_person_id = "person_id"
 
-        if not argv.denovo_location:
-            if not argv.denovo_chrom:
-                argv.denovo_chrom = "chrom"
-            if not argv.denovo_pos:
-                argv.denovo_pos = "pos"
+    @classmethod
+    def parse_cli_arguments(
+        cls, argv: argparse.Namespace, *,
+        use_defaults: bool = False,  # ruff: ignore[unused-class-method-argument]
+    ) -> tuple[list[str], dict[str, Any]]:
+        logger.debug("CLI arguments: %s", argv)
 
-        if not argv.denovo_variant:
-            if not argv.denovo_ref:
-                argv.denovo_ref = "ref"
-            if not argv.denovo_alt:
-                argv.denovo_alt = "alt"
-
-        if not argv.denovo_person_id:
-            if not argv.denovo_family_id:
-                argv.denovo_family_id = "familyId"
-            if not argv.denovo_best_state and not argv.denovo_genotype:
-                argv.denovo_best_state = "bestState"
+        cls._check_exclusive_denovo_options(argv)
+        cls._default_location_columns(argv)
+        cls._default_variant_columns(argv)
+        cls._default_person_column(argv)
         assert not (argv.denovo_best_state and argv.denovo_genotype)
 
         if argv.denovo_sep is None:
