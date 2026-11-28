@@ -236,3 +236,41 @@ def test_wild_vcf_loader_pedigree_union(
 
     for person in families.persons.values():
         assert not person.missing, person
+
+
+def test_wild_vcf_loader_pedigree_intersection(
+    multivcf_pedigree: list[str],
+    multivcf_ped: str,
+    gpf_instance: GPFInstance,
+) -> None:
+    families = FamiliesLoader(multivcf_ped).load()
+    variants_loader = VcfLoader(
+        families,
+        multivcf_pedigree,
+        gpf_instance.reference_genome,
+        params={
+            "vcf_chromosomes": "1;2",
+            "vcf_pedigree_mode": "intersection",
+            "vcf_include_unknown_person_genotypes": True,
+            "vcf_include_unknown_family_genotypes": True,
+        },
+    )
+
+    res = list(variants_loader.full_variants_iterator())
+
+    assert len(res) > 0
+    assert variants_loader.vcf_loaders is not None
+    assert len(variants_loader.vcf_loaders) == 2
+    result = variants_loader.families
+    assert all(
+        vcf_loader.families is result
+        for vcf_loader in variants_loader.vcf_loaders)
+    not_sequenced = sorted(
+        person.person_id for person in result.persons.values()
+        if person.not_sequenced)
+    assert not_sequenced == [
+        "f1.dad", "f1.s1", "f3.mom", "f3.s1",
+        "f4.mom", "f4.s1", "f5.dad", "f5.s1",
+    ]
+    assert len(result.persons) == 20
+    assert len(result.real_persons) == 12
