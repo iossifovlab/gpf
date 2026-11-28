@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from typing import Any
 
 from gain.genomic_resources.gene_models.gene_models import (
@@ -36,6 +36,82 @@ def check_range_bound(bound: Any) -> None:
         # exception and not the TypeError that TRY004 asks for.
         raise ValueError(  # ruff: ignore[type-check-without-type-error]
             f"invalid range bound: {bound!r}")
+
+
+def _inheritance_matchers(
+    inheritance: str | list[str] | None,
+) -> list[Callable[[int], bool]]:
+    """Return one matcher function for each inheritance query."""
+    if inheritance is None:
+        return []
+    logger.debug(
+        "frequence_bin_heuristic inheritance: %s (%s)",
+        inheritance, type(inheritance),
+    )
+    if isinstance(inheritance, str):
+        inheritance = [inheritance]
+    return [
+        transform_attribute_query_to_function(Inheritance, inh)
+        for inh in inheritance
+    ]
+
+
+def _af_range_frequency_bins(
+    begin: float | None, end: float | None, rare_boundary: float,
+) -> set[str]:
+    """Return the frequency bins of one `af_allele_freq` range.
+
+    The checks treat a bound of 0.0 like None.
+    """
+    if end and end < rare_boundary:
+        return {"0", "1", "2"}
+    if (begin and begin >= rare_boundary) or \
+            (end is not None and end >= rare_boundary):
+        return {"0", "1", "2", "3"}
+    return set()
+
+
+def _real_attr_range_where(
+    accessor: str, left: float | None, right: float | None, *,
+    is_frequency: bool,
+) -> str | None:
+    """Return the WHERE fragment of one range, or None for no fragment."""
+    if left is None and right is None:
+        if is_frequency:
+            return None
+        return f"({accessor} is not null)"
+    if left is None:
+        if is_frequency:
+            return f"({accessor} <= {right} or {accessor} is null)"
+        return f"({accessor} <= {right})"
+    if right is None:
+        return f"({accessor} >= {left})"
+    return f"({accessor} >= {left} AND {accessor} <= {right})"
+
+
+def _mendelian_frequency_bins(
+    *,
+    has_inheritance: bool,
+    ultra_rare: bool | None,
+    frequency_filter: RealAttrFilterType | None,
+    rare_boundary: float,
+) -> set[str]:
+    """Return the frequency bins that the Mendelian check adds."""
+    if ultra_rare:
+        return {"0", "1"}
+    af_ranges = [
+        attr_range for name, attr_range in frequency_filter or []
+        if name == "af_allele_freq"
+    ]
+    if af_ranges:
+        frequency_bins: set[str] = set()
+        for begin, end in af_ranges:
+            frequency_bins |= _af_range_frequency_bins(
+                begin, end, rare_boundary)
+        return frequency_bins
+    if has_inheritance:
+        return {"0", "1", "2", "3"}
+    return set()
 
 
 class Dialect:
@@ -473,29 +549,11 @@ class BaseQueryBuilder(ABC):
             left, right = attr_range
             check_range_bound(left)
             check_range_bound(right)
-            attr_name = self.where_accessors[attr_name]
-
-            if left is None and right is None:
-                if not is_frequency:
-                    query.append(f"({attr_name} is not null)")
-            elif left is None:
-                assert right is not None
-                if is_frequency:
-                    query.append(
-                        f"({attr_name} <= {right} or {attr_name} is null)",
-                    )
-                else:
-                    query.append(
-                        f"({attr_name} <= {right})",
-                    )
-
-            elif right is None:
-                assert left is not None
-                query.append(f"({attr_name} >= {left})")
-            else:
-                query.append(
-                    f"({attr_name} >= {left} AND {attr_name} <= {right})",
-                )
+            fragment = _real_attr_range_where(
+                self.where_accessors[attr_name], left, right,
+                is_frequency=is_frequency)
+            if fragment is not None:
+                query.append(fragment)
         return " AND ".join(query)
 
     def _string_literal(self, value: str) -> str:
@@ -696,30 +754,12 @@ class BaseQueryBuilder(ABC):
     ) -> set[str]:
         frequency_bins: set[str] = set()
 
-        matchers = []
-        if inheritance is not None:
-            logger.debug(
-                "frequence_bin_heuristic inheritance: %s (%s)",
-                inheritance, type(inheritance),
-            )
-            if isinstance(inheritance, str):
-                inheritance = [inheritance]
+        matchers = _inheritance_matchers(inheritance)
+        if any(m(Inheritance.denovo.value) for m in matchers):
+            frequency_bins.add("0")
 
-            matchers = [
-                transform_attribute_query_to_function(Inheritance, inh)
-                for inh in inheritance
-            ]
-
-            if any(m(Inheritance.denovo.value) for m in matchers):
-                frequency_bins.add("0")
-
-        has_frequency_filter = False
-        if frequency_filter:
-            for name, _ in frequency_filter:
-                if name == "af_allele_freq":
-                    has_frequency_filter = True
-                    break
-
+        # The bitwise AND of the three values is 0, so each matcher gets
+        # the value 0 here and not a Mendelian value.
         if inheritance is None or any(
             m(
                 Inheritance.mendelian.value &
@@ -728,20 +768,12 @@ class BaseQueryBuilder(ABC):
             )
             for m in matchers
         ):
-            if ultra_rare:
-                frequency_bins |= {"0", "1"}
-            elif has_frequency_filter:
-                assert frequency_filter is not None
-                for name, (begin, end) in frequency_filter:
-                    if name == "af_allele_freq":
-
-                        if end and end < rare_boundary:
-                            frequency_bins |= {"0", "1", "2"}
-                        elif (begin and begin >= rare_boundary) or \
-                                (end is not None and end >= rare_boundary):
-                            frequency_bins |= {"0", "1", "2", "3"}
-            elif inheritance is not None:
-                frequency_bins |= {"0", "1", "2", "3"}
+            frequency_bins |= _mendelian_frequency_bins(
+                has_inheritance=inheritance is not None,
+                ultra_rare=ultra_rare,
+                frequency_filter=frequency_filter,
+                rare_boundary=rare_boundary,
+            )
         return frequency_bins
 
     def _build_frequency_bin_heuristic(

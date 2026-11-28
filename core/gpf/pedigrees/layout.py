@@ -575,51 +575,6 @@ class Layout:
 
         return moved
 
-    def _set_mates_equally_apart(self) -> int:
-        moved = 0
-
-        for level in self._individuals_by_rank:
-            mating_units = self._get_mates_on_level(level)
-
-            dual_mating_units = {
-                (mu1, mu2)
-                for mu1 in mating_units
-                for mu2 in mating_units
-                if (mu1.father is mu2.father) ^ (mu1.mother is mu2.mother)
-            }
-
-            for mu1, mu2 in dual_mating_units:
-                if mu1.father is mu2.father:
-                    ordered_parents_ids = [mu1.mother, mu1.father, mu2.mother]
-                else:
-                    ordered_parents_ids = [mu1.father, mu1.mother, mu2.father]
-
-                ordered_parents = [
-                    self._id_to_position[i] for i in ordered_parents_ids
-                ]
-
-                if ordered_parents[0].x > ordered_parents[2].x:
-                    ordered_parents[0], ordered_parents[2] = (
-                        ordered_parents[2],
-                        ordered_parents[0],
-                    )
-
-                dist1 = ordered_parents[1].x - ordered_parents[0].x
-                dist2 = ordered_parents[2].x - ordered_parents[1].x
-
-                assert dist1 > 0
-                assert dist2 > 0
-
-                if dist1 < 0 or dist2 < 0 or abs(dist1 - dist2) < 1e-5:
-                    return 0
-
-                if dist1 > dist2:
-                    moved += self._move(ordered_parents[2:], dist1 - dist2)
-                else:
-                    moved += self._move(ordered_parents[1:], dist2 - dist1)
-
-        return moved
-
     def _move_overlaps(self, gap_size: float = 8.0) -> int:
         moved = 0
         first_individual_position = self._id_to_position[
