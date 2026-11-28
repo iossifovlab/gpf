@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import logging
 import os
 
 import numpy as np
@@ -361,3 +362,30 @@ def test_fetch_family_variants(
 ) -> None:
     result = list(vcf_loader.fetch_family_variants(region=region))
     assert len(result) == expected
+
+
+def test_vcf_loader_multi_intersection_single_batch(
+    acgt_genome: ReferenceGenome,
+    multivcf_split1_vcf: str,
+    multivcf_split2_vcf: str,
+    multivcf_ped: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    families = FamiliesLoader(multivcf_ped).load()
+    vcf_loader = VcfLoader(
+        families,
+        [multivcf_split1_vcf, multivcf_split2_vcf],
+        acgt_genome,
+        fill_missing_ref=False,
+        params={"vcf_pedigree_mode": "intersection"},
+    )
+
+    with caplog.at_level(logging.WARNING):
+        variants = list(vcf_loader.full_variants_iterator())
+
+    assert len(variants) == 6
+    assert vcf_loader.vcf_loaders is not None
+    assert len(vcf_loader.vcf_loaders) == 1
+    assert vcf_loader.families is vcf_loader.vcf_loaders[0].families
+    assert vcf_loader.families is not families
+    assert "families intersection" not in caplog.text
