@@ -28,6 +28,83 @@ from gpf.variants.attributes import Role, Sex, Status
 logger = logging.getLogger(__name__)
 
 
+def _field_matches(l_value: Any, r_value: Any, unknown: Any) -> bool:
+    return l_value in (r_value, unknown) or r_value == unknown
+
+
+def _persons_match(l_person: Person, r_person: Person) -> bool:
+    """Check if two definitions of one person agree."""
+    return all((
+        _field_matches(l_person.sex, r_person.sex, Sex.unspecified),
+        _field_matches(l_person.status, r_person.status, Status.unspecified),
+        _field_matches(l_person.role, r_person.role, Role.unknown),
+        l_person.family_id == r_person.family_id,
+    ))
+
+
+def _pick_by_unspecified(l_person: Person, r_person: Person) -> Person:
+    """Pick the person whose sex, status or role is specified."""
+    checks = (
+        (l_person.sex == Sex.unspecified, r_person),
+        (r_person.sex == Sex.unspecified, l_person),
+        (l_person.status == Status.unspecified, r_person),
+        (r_person.status == Status.unspecified, l_person),
+        (l_person.role == Role.unknown, r_person),
+        (r_person.role == Role.unknown, l_person),
+    )
+    for check, person in checks:
+        if check:
+            return person
+    return r_person
+
+
+def _pick_person(
+    l_person: Person,
+    r_person: Person, *,
+    forced: bool,
+) -> Person:
+    """Pick one of two definitions of one person."""
+    # Use the other person if this one is generated
+    if l_person.generated or l_person.missing:
+        return r_person
+    if r_person.generated or r_person.missing:
+        return l_person
+
+    picked = _pick_by_unspecified(l_person, r_person)
+    if _persons_match(l_person, r_person):
+        return picked
+
+    messages = l_person.diff(r_person)
+    logger.warning(
+        "different definitions for person %s: %s",
+        l_person, " ".join(messages))
+    if not forced:
+        raise AssertionError(messages)
+    logger.warning(
+        "second person %s overwrites the first %s",
+        r_person, l_person)
+    return r_person
+
+
+def _build_merged_family(persons: list[Person]) -> Family:
+    """Build a family of new persons, with layout and tags."""
+    # Construct new instances of Person to avoid
+    # modifying the original family's Person instances
+    # pylint: disable=protected-access
+    merged = Family.from_persons([
+        Person(**person._attributes)  # ruff: ignore[private-member-access]
+        for person in persons
+    ])
+    layouts = Layout.from_family(merged)
+    for layout in layouts:
+        layout.apply_to_family(merged)
+
+    tagger = FamilyTagsBuilder()
+    tagger.tag_family(merged)
+
+    return merged
+
+
 def merge_families(
     l_fam: Family,
     r_fam: Family, *,
@@ -49,68 +126,11 @@ def merge_families(
     merged_persons.update(r_fam.persons)
 
     for person_id in people_intersection:
-        l_person = l_fam.persons[person_id]
-        r_person = r_fam.persons[person_id]
+        merged_persons[person_id] = _pick_person(
+            l_fam.persons[person_id], r_fam.persons[person_id],
+            forced=forced)
 
-        # Use the other person if this one is generated
-        if l_person.generated or l_person.missing:
-            merged_persons[person_id] = r_person
-            continue
-        if r_person.generated or r_person.missing:
-            merged_persons[person_id] = l_person
-            continue
-
-        if l_person.sex == Sex.unspecified:
-            merged_persons[person_id] = r_person
-        elif r_person.sex == Sex.unspecified:
-            merged_persons[person_id] = l_person
-        elif l_person.status == Status.unspecified:
-            merged_persons[person_id] = r_person
-        elif r_person.status == Status.unspecified:
-            merged_persons[person_id] = l_person
-        elif l_person.role == Role.unknown:
-            merged_persons[person_id] = r_person
-        elif r_person.role == Role.unknown:
-            merged_persons[person_id] = l_person
-
-        match = (l_person.sex == r_person.sex
-                 or l_person.sex == Sex.unspecified
-                 or r_person.sex == Sex.unspecified) \
-            and (l_person.status == r_person.status
-                 or l_person.status == Status.unspecified
-                 or r_person.status == Status.unspecified) \
-            and (l_person.role == r_person.role
-                 or l_person.role == Role.unknown
-                 or r_person.role == Role.unknown) \
-            and (l_person.family_id == r_person.family_id)
-        if not match:
-            messages = l_person.diff(r_person)
-            logger.warning(
-                "different definitions for person %s: %s",
-                l_person, " ".join(messages))
-            if forced:
-                logger.warning(
-                    "second person %s overwrites the first %s",
-                    r_person, l_person)
-                merged_persons[person_id] = r_person
-            else:
-                raise AssertionError(messages)
-
-    # Construct new instances of Person to avoid
-    # modifying the original family's Person instances
-    # pylint: disable=protected-access
-    merged = Family.from_persons([
-        Person(**person._attributes)  # ruff: ignore[private-member-access]
-        for person in merged_persons.values()
-    ])
-    layouts = Layout.from_family(merged)
-    for layout in layouts:
-        layout.apply_to_family(merged)
-
-    tagger = FamilyTagsBuilder()
-    tagger.tag_family(merged)
-
-    return merged
+    return _build_merged_family(list(merged_persons.values()))
 
 
 class FamiliesData(Mapping[str, Family]):
